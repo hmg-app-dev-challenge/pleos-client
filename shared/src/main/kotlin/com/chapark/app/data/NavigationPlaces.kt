@@ -15,7 +15,10 @@ object NavigationPlaces {
             "https://www.gocamping.or.kr/bsite/camp/info/read.do?c_no=3397"),
         NavigationPlace(Place("camp-gangdong","강동그린웨이 가족캠핑장","일자산 자락에서 보내는 여유",UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,6),
             37.5362195,127.1529466,"서울 강동구 천호대로206길 87",
-            "https://www.seoul.go.kr/storyw/campingjang/gangdong.do")
+            "https://www.seoul.go.kr/storyw/campingjang/gangdong.do"),
+        NavigationPlace(Place("camp-mongsanpo","몽산포 자동차야영장","태안 해안에서 준비하는 하룻밤",UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,12),
+            36.6702272173478,126.288448199746,"충남 태안군 남면 몽산포길 63-43",
+            "https://gocamping.or.kr/bsite/camp/info/read.do?c_no=6984&viewType=read01")
     )
     const val DEFAULT_ID="camp-nanji"
     fun find(id:String)=all.firstOrNull{it.place.id==id}

@@ -11,6 +11,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.chapark.app.data.NavigationPlaces
+import com.chapark.app.data.PlaceEvidenceCatalog
+import com.chapark.app.data.Scenery
 import com.chapark.app.domain.*
 import com.chapark.ivi.design.*
 import com.chapark.prototype.*
@@ -23,6 +25,9 @@ private fun condition(value:Condition)=when(value){Condition.ALLOWED->"허용";C
 
 @Composable fun JourneyScreen(ui:JourneyUi,send:(JourneyEvent)->Unit,onNavigation:()->Unit={},onDeleteHistory:(String)->Unit={}) {
     val s=ui.journey
+    var scenery by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf<String?>(null) }
+    var confirmedOnly by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
+    val candidates=PlaceEvidenceCatalog.filter(scenery?.let{Scenery.valueOf(it)},confirmedOnly,java.time.LocalDate.now())
     var history by remember { mutableStateOf(false) }
     var deleteId by remember { mutableStateOf<String?>(null) }
     var settings by remember { mutableStateOf(false) }
@@ -68,7 +73,7 @@ private fun condition(value:Condition)=when(value){Condition.ALLOWED->"허용";C
                                     if(s.batteryStatus!=ReadingStatus.AVAILABLE)Text(when(s.batteryStatus){ReadingStatus.UNSUPPORTED->"이 차량은 배터리 조회를 지원하지 않아요.";ReadingStatus.PERMISSION_DENIED->"배터리 조회 권한이 필요해요.";ReadingStatus.STALE->"배터리 정보를 다시 확인하고 있어요.";ReadingStatus.DRIVING_RESTRICTED->"정차 후 배터리를 다시 확인해 주세요.";ReadingStatus.INVALID->"배터리 값을 확인하지 못했어요.";else->"배터리 연결 상태를 확인해 주세요."},style=IviType.label)
                                     ui.notice?.let{Text(it,style=IviType.label,color=p.tertiary)}
                                     ui.navigationMessage?.let{Text(it,style=IviType.body,color=p.secondary)}
-                                    JourneyContent(s,send)
+                                    JourneyContent(s,send,candidates,scenery,confirmedOnly,{scenery=it},{confirmedOnly=it})
                                     if(s.step>0 && !s.completed) IviButton("이전 단계",size=IviButtonSize.MEDIUM,enabled=!ui.saving){send(JourneyEvent.Back)}
                                     Spacer(Modifier.height(24.dp))
                                 }
@@ -81,7 +86,7 @@ private fun condition(value:Condition)=when(value){Condition.ALLOWED->"허용";C
                     if(s.step==3) s.departureBlockReason?.let {
                         Text(it,style=IviType.label,color=p.secondary,modifier=Modifier.padding(top=12.dp).testTag("departure-block-reason"))
                     }
-                    JourneyFooter(s,ui.saving) {
+                    JourneyFooter(s,ui.saving || (s.step==2 && candidates.none{it.place.id==s.placeId})) {
                             when {
                                 s.completed -> send(JourneyEvent.NewTrip)
                                 s.step==6 -> confirm="finish"
@@ -178,7 +183,9 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
     Text(title,style=IviType.headline)
     Text(subtitle,style=IviType.body,color=LocalIviColors.current.secondary)
 }
-@Composable private fun JourneyContent(s:Journey,send:(JourneyEvent)->Unit) {
+@Composable private fun JourneyContent(s:Journey,send:(JourneyEvent)->Unit,
+    candidates:List<com.chapark.app.data.NavigationPlace>,scenery:String?,confirmedOnly:Boolean,
+    onScenery:(String?)->Unit,onConfirmed:(Boolean)->Unit) {
     val p=LocalIviColors.current
     when(s.step) {
         0 -> {
@@ -225,14 +232,23 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
         }
         2 -> {
             Heading("오늘의 쉼터를 비교해요","숙박 조건과 필요한 준비를 비교하고, 오늘의 쉼터를 골라보세요.")
-            BoxWithConstraints {
-                if(maxWidth>=1100.dp) Row(horizontalArrangement=Arrangement.spacedBy(20.dp)) {
-                    NavigationPlaces.all.map{it.place}.forEachIndexed{index,place->PlaceCard(s,place,index,Modifier.weight(1f),send)}
-                } else Column(verticalArrangement=Arrangement.spacedBy(24.dp)) {
-                    NavigationPlaces.all.map{it.place}.forEachIndexed{index,place->PlaceCard(s,place,index,Modifier,send)}
-                }
+            IviSegments(listOf("전체","바다","산","강","숲"),listOf(null,"SEA","MOUNTAIN","RIVER","FOREST").indexOf(scenery)){
+                onScenery(listOf(null,"SEA","MOUNTAIN","RIVER","FOREST")[it])
             }
+            IviToggleRow("이용 조건이 확인된 곳만",confirmedOnly,onConfirmed)
+            Text("주차·차내 숙박·야간 화장실과 최근 근거가 모두 확인된 후보를 골라요.",style=IviType.label)
+            if(candidates.isEmpty()) Panel {
+                Text("조건에 맞는 장소가 없어요",style=IviType.title)
+                Text("풍경 또는 이용 조건 필터를 바꿔 비교할 수 있어요.",style=IviType.body)
+                NavigationPlaces.all.filter{scenery==null || PlaceEvidenceCatalog.find(it.place.id).scenery.name==scenery}.forEach{
+                    Text("${it.place.name} · ${PlaceEvidenceCatalog.find(it.place.id).exclusions(it,java.time.LocalDate.now()).joinToString()}",style=IviType.smallBody)
+                }
+                IviButton("전체 장소 보기",size=IviButtonSize.MEDIUM){onScenery(null);onConfirmed(false)}
+            }
+            candidates.forEachIndexed { index,place->PlaceCard(s,place.place,index,Modifier,send) }
+            if(candidates.none{it.place.id==s.placeId} && candidates.isNotEmpty())Text("목록에서 이번 여행의 장소를 선택해 주세요.",style=IviType.label)
         }
+
         3 -> {
             SolarSummary(s)
             Heading("오늘의 준비 계획","${names[s.placeId]} · 조건을 바꾸면 필요한 행동도 달라져요.")
@@ -333,6 +349,21 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
         Text("야간 화장실 · ${condition(place.nightToilet)}",style=IviType.smallBody)
         Text("취사 · ${condition(place.cooking)}\n화기 · ${condition(place.fire)}",style=IviType.smallBody)
         Text("반려동물 · ${condition(place.pets)}",style=IviType.smallBody)
+        val evidence=PlaceEvidenceCatalog.find(place.id)
+        Text("주변 풍경 · ${evidence.scenery.label} · 조망 방향 확인 필요",style=IviType.label)
+        Text("지도 대표 위치 · 차량 진입구 확인 필요",style=IviType.label,color=p.tertiary)
+        val uri=androidx.compose.ui.platform.LocalUriHandler.current
+        evidence.facts.forEach{fact->
+            Text("${fact.label} · ${fact.detail}",style=IviType.smallBody)
+            Text("자료 확인 · ${fact.checkedOn ?: "미확인"}${if(!fact.fresh(java.time.LocalDate.now()))" · 최신 운영 정보 확인 필요" else ""}",style=IviType.label,color=p.tertiary)
+        }
+        evidence.facts.mapNotNull{it.url}.distinct().forEach{url->
+            Text("운영 정보 출처 · ${java.net.URI(url).host}",style=IviType.label,color=p.tertiary)
+            IviButton("운영 근거 보기",size=IviButtonSize.MEDIUM){runCatching{uri.openUri(url)}}
+        }
+        NavigationPlaces.find(place.id)?.source?.let{url->
+            IviButton("공식 장소 정보",size=IviButtonSize.MEDIUM){runCatching{uri.openUri(url)}}
+        }
         Text("방문 전 운영 시간 확인 필요",style=IviType.label,color=p.tertiary)
         IviButton(if(s.placeId==place.id)"선택됨" else "선택",filled=s.placeId==place.id,size=IviButtonSize.MEDIUM,modifier=Modifier.fillMaxWidth().testTag("place-${place.id}")) {send(JourneyEvent.Place(place.id))}
     }
