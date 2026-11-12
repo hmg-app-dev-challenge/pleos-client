@@ -52,6 +52,7 @@ class JourneyViewModel(app:Application):AndroidViewModel(app) {
             } catch(e:Exception){mutable.value=JourneyUi(loaded=true,error="저장된 여행을 읽지 못했습니다. 초기화 후 시작할 수 있습니다.")}
             for(command in commands) {
                 if(command is Command.DeleteHistory){
+                    if(mutable.value.journey.restricted)continue
                     try{store.deleteHistory(command.id);mutable.value=mutable.value.copy(history=store.history())}
                     catch(e:Exception){mutable.value=mutable.value.copy(notice="기록을 삭제하지 못했어요. 다시 시도해 주세요.")}
                     continue
@@ -66,13 +67,15 @@ class JourneyViewModel(app:Application):AndroidViewModel(app) {
                         else->null
                     }
                     if(event!=null && mutable.value.journey.step==4){
-                        val next=JourneyJournal.apply(mutable.value.journey,event,System.currentTimeMillis(),"SDK")
+                        val next=JourneyJournal.apply(mutable.value.journey.copy(restricted=false),event,System.currentTimeMillis(),"SDK").copy(restricted=mutable.value.journey.restricted)
                         if(next!=mutable.value.journey)persist(next)
                     }
                     continue
                 }
-                val event=(command as Command.Event).value
-                if(mutable.value.error!=null && event!=JourneyEvent.ResetScenario)continue
+                val rawEvent=(command as Command.Event).value
+                val event=if(rawEvent is JourneyEvent.Soc) rawEvent.copy(receivedAt=System.currentTimeMillis()) else rawEvent
+                if(mutable.value.journey.restricted && event !is JourneyEvent.Battery && event !is JourneyEvent.Driving)continue
+                if(mutable.value.error!=null && event!=JourneyEvent.ResetScenario && event !is JourneyEvent.Driving)continue
                 val old=mutable.value.journey
                 var reduced=realPlace(JourneyJournal.apply(old,event,System.currentTimeMillis(),if(event is JourneyEvent.Battery)"SDK" else "USER"))
                 if(event==JourneyEvent.NewTrip || event==JourneyEvent.ResetScenario){

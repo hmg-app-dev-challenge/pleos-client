@@ -13,7 +13,7 @@ import com.chapark.app.domain.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-data class BatterySnapshot(val value:Int?=null,val status:ReadingStatus=ReadingStatus.UNKNOWN,val source:Source=Source.UNKNOWN,val receivedAt:Long?=null)
+data class BatterySnapshot(val value:Int?=null,val status:ReadingStatus=ReadingStatus.UNKNOWN,val source:Source=Source.UNKNOWN,val receivedAt:Long?=null,val delivery:String="none")
 /** Public SOC API only, verified against Virtual Console's 0..100 percent contract. */
 class BatterySession(context:Context):AutoCloseable {
     private val context=context.applicationContext
@@ -28,11 +28,11 @@ class BatterySession(context:Context):AutoCloseable {
         close();val token=generation
         val source=if(Build.HARDWARE.contains("ranchu") || Build.HARDWARE.contains("goldfish"))Source.EMULATOR else Source.SDK
         fun post(block:()->Unit){handler.post{if(token==generation)block()}}
-        fun receive(value:Int?)=post{
-            mutable.value=if(value!=null && value in 0..100)BatterySnapshot(value,ReadingStatus.AVAILABLE,source,System.currentTimeMillis())
+        fun receive(value:Int?,delivery:String)=post{
+            mutable.value=if(value!=null && value in 0..100)BatterySnapshot(value,ReadingStatus.AVAILABLE,source,System.currentTimeMillis(),delivery)
                 else BatterySnapshot(status=ReadingStatus.INVALID,source=source)
         }
-        fun failed(e:Exception)=post{mutable.value=BatterySnapshot(status=if(e is SecurityException)ReadingStatus.PERMISSION_DENIED else ReadingStatus.DISCONNECTED,source=source)}
+        fun failed(e:Exception)=post{mutable.value=BatterySnapshot(status=BatteryErrors.status(e),source=source)}
         if(context.checkSelfPermission("pleos.car.permission.CAR_ENERGY")!=PackageManager.PERMISSION_GRANTED){
             mutable.value=BatterySnapshot(status=ReadingStatus.PERMISSION_DENIED,source=source);return
         }
@@ -44,14 +44,14 @@ class BatterySession(context:Context):AutoCloseable {
                     mutable.value=BatterySnapshot(status=ReadingStatus.UNSUPPORTED,source=source)
                 }else{
                     val l=object:EvBatteryStateOfChargeListener {
-                        override fun onEvBatteryStateOfChargeUpdated(value:Int?)=receive(value)
+                        override fun onEvBatteryStateOfChargeUpdated(value:Int?)=receive(value,"subscription")
                         override fun onFailed(e:Exception)=failed(e)
                     }
                     listener=l
                     try{b.registerEvBatteryStateOfCharge(l)}catch(e:Exception){failed(e)}
                     fun poll(){
                         if(token!=generation)return
-                        try{b.getEvBatteryStateOfCharge({receive(it)},{failed(it)})}catch(e:Exception){failed(e)}
+                        try{b.getEvBatteryStateOfCharge({receive(it,"read")},{failed(it)})}catch(e:Exception){failed(e)}
                         handler.postDelayed({poll()},10_000)
                     }
                     poll()

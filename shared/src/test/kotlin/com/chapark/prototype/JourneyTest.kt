@@ -6,9 +6,9 @@ import org.junit.Test
 
 class JourneyTest {
     private fun apply(s:Journey,e:JourneyEvent)=JourneyReducer.apply(s,e)
-    @Test fun resetRestoresReproducibleScenarioWhileNewTripKeepsProfile() {
+    @Test fun resetKeepsThemeWhileNewTripAlsoKeepsProfile() {
         val changed=Journey(input=TripInput(2,false,true,false),dark=true)
-        assertEquals(Journey(),apply(changed,JourneyEvent.ResetScenario))
+        assertEquals(Journey(dark=true),apply(changed,JourneyEvent.ResetScenario))
         assertEquals(changed.input,apply(changed,JourneyEvent.NewTrip).input)
     }
     @Test fun endToEndRequiresArrivalParkingAndManualChecks() {

@@ -81,4 +81,19 @@ class JourneyRegressionTest {
         capture("night-segments")
     }
 
+    @Test fun unsupportedBatteryIsHiddenAndPermissionFailureAllowsManualReading(){
+        var state by mutableStateOf(Journey(step=3,placeId="camp-nanji",soc=null,batteryStatus=com.chapark.app.domain.ReadingStatus.UNSUPPORTED))
+        compose.setContent{JourneyScreen(JourneyUi(state,loaded=true),{state=JourneyReducer.apply(state,it)})}
+        compose.onAllNodes(hasText("현재 배터리",substring=true)).assertCountEquals(0)
+        compose.onNodeWithText("충전 경유 검토").assertDoesNotExist()
+        compose.runOnIdle{state=state.copy(batteryStatus=com.chapark.app.domain.ReadingStatus.PERMISSION_DENIED)}
+        compose.onNode(hasSetTextAction()).performScrollTo().performTextReplacement("30")
+        compose.onNodeWithText("직접 입력한 잔량 사용").performScrollTo().performClick()
+        compose.runOnIdle{
+            assertEquals(com.chapark.app.domain.Source.MANUAL,state.socSource)
+            assertEquals(30,state.soc)
+        }
+        compose.onNodeWithText("충전 경유 검토").assertExists()
+    }
+
 }

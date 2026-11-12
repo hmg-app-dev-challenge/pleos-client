@@ -18,6 +18,7 @@ data class Journey(
     val batteryStatus:ReadingStatus=ReadingStatus.AVAILABLE,
     val socSource:Source=Source.DEMO, val socReceivedAtMillis:Long?=null,
 ) {
+    val batteryVisible get()=batteryStatus!=ReadingStatus.UNSUPPORTED
     val place get()=PlaceCatalog.find(placeId) ?: DemoPlaces.all.first()
     val decisions get()=reminders.sorted().map{DecisionItem("reminder-$it",Group.GEAR,"다시 챙기기 · $it","지난 여행에서 빠뜨렸다고 기록한 준비물이에요.")} + PlanningRules.evaluate(place,input,SocReading(soc?.toDouble(),
         if(soc==null && batteryStatus==ReadingStatus.AVAILABLE)ReadingStatus.UNKNOWN else batteryStatus,socSource))
@@ -47,7 +48,7 @@ sealed interface JourneyEvent {
     data class Conditions(val value:TripInput):JourneyEvent
     data class Place(val id:String):JourneyEvent
     data class Battery(val value:Int?,val status:ReadingStatus,val source:Source,val receivedAt:Long?):JourneyEvent
-    data class Soc(val value:Int?):JourneyEvent
+    data class Soc(val value:Int?,val receivedAt:Long?=null):JourneyEvent
     data class Check(val id:String):JourneyEvent
     data object RequestRoute:JourneyEvent
     data class RouteResponse(val success:Boolean):JourneyEvent
@@ -68,11 +69,14 @@ sealed interface JourneyEvent {
 /** Pure journey transitions; platform adapters supply events without direct SDK calls here. */
 object JourneyReducer {
     fun apply(old:Journey,event:JourneyEvent):Journey {
-        if(event==JourneyEvent.ResetScenario) return Journey()
+        if(event==JourneyEvent.ResetScenario) return if(old.restricted)old else Journey(dark=old.dark)
         if(event is JourneyEvent.Driving) return old.copy(restricted=event.value)
         if(event is JourneyEvent.Dark) return old.copy(dark=event.value)
         if(event is JourneyEvent.Battery){
             if(old.completed)return old
+            // A failed refresh cannot relabel or erase the user's explicit reading.
+            // A valid vehicle value, unsupported capability, or new trip replaces it.
+            if(old.socSource==Source.MANUAL && event.status !in setOf(ReadingStatus.AVAILABLE,ReadingStatus.UNSUPPORTED))return old
             val next=old.copy(soc=event.value?.takeIf{it in 0..100 && event.status==ReadingStatus.AVAILABLE},batteryStatus=event.status,socSource=event.source,socReceivedAtMillis=event.receivedAt)
             return if(old.step<=3)next.copy(checked=retainedChecks(old.decisions,next.decisions,old.checked)) else next
         }
@@ -100,7 +104,9 @@ object JourneyReducer {
             }
             is JourneyEvent.Conditions -> if(event.value.valid) update(old.copy(input=event.value)) else old
             is JourneyEvent.Place -> if(PlaceCatalog.all.any{it.id==event.id}) update(old.copy(placeId=event.id)) else old
-            is JourneyEvent.Soc -> if(event.value==null || event.value in 0..100) update(old.copy(soc=event.value)) else old
+            is JourneyEvent.Soc -> if(old.batteryVisible && (event.value==null || event.value in 0..100))
+                update(old.copy(soc=event.value,socSource=Source.MANUAL,socReceivedAtMillis=event.receivedAt,
+                    batteryStatus=if(event.value==null)ReadingStatus.UNKNOWN else ReadingStatus.AVAILABLE)) else old
             is JourneyEvent.Check -> if((old.step==3 && old.departureItems.any{it.id==event.id} || old.step==5 && old.canSleep && old.siteItems.any{it.id==event.id})) old.copy(checked=toggle(old.checked,event.id)) else old
             JourneyEvent.RequestRoute -> if(old.step==4 && old.route in setOf(RoutePhase.NONE,RoutePhase.FAILED)) old.copy(route=RoutePhase.REQUESTED) else old
             is JourneyEvent.RouteResponse -> if(old.step==4 && old.route==RoutePhase.REQUESTED) old.copy(route=if(event.success)RoutePhase.GUIDING else RoutePhase.FAILED) else old

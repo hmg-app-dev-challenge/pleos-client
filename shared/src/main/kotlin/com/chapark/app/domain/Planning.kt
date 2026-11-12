@@ -2,7 +2,7 @@ package com.chapark.app.domain
 
 enum class Condition { ALLOWED, RESTRICTED, UNKNOWN }
 enum class Source { SDK, MANUAL, EMULATOR, DEMO, UNKNOWN }
-enum class ReadingStatus { AVAILABLE, STALE, UNSUPPORTED, PERMISSION_DENIED, DISCONNECTED, INVALID, UNKNOWN }
+enum class ReadingStatus { AVAILABLE, STALE, UNSUPPORTED, PERMISSION_DENIED, DISCONNECTED, DRIVING_RESTRICTED, INVALID, UNKNOWN }
 
 /** Only a verified, normalized percentage may enter the decision engine. */
 data class SocReading(val percent: Double?, val status: ReadingStatus, val source: Source) {
@@ -26,7 +26,8 @@ data class DecisionItem(val id: String, val group: Group, val title: String, val
 object PlanningRules {
     const val DEMO_SOC_THRESHOLD = 35.0
     fun evaluate(place: Place, input: TripInput, soc: SocReading): List<DecisionItem> = buildList {
-        if (!soc.usable) add(DecisionItem("battery-check", Group.BEFORE, "배터리 확인 필요", "유효한 잔량을 확인하지 못했어요."))
+        if (soc.status==ReadingStatus.UNSUPPORTED) Unit
+        else if (!soc.usable) add(DecisionItem("battery-check", Group.BEFORE, "배터리 확인 필요", "유효한 잔량을 확인하지 못했어요."))
         else if (soc.percent!! < input.batteryThreshold)
             add(DecisionItem("charge-review", Group.BEFORE, "충전 경유 검토", "현재 잔량이 확인 기준 ${input.batteryThreshold}% 미만이에요. 출발 전 충전 계획을 확인하세요."))
         when (place.overnight) {

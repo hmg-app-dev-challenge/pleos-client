@@ -54,7 +54,7 @@ private fun condition(value:Condition)=when(value){Condition.ALLOWED->"허용";C
                         Text("정차 후 이어서\n확인할 수 있어요",style=IviType.headline)
                         Text("작성한 계획은 저장되어 있어요. 안전한 곳에 정차한 뒤 확인해 주세요.",style=IviType.body)
                         Text("${s.step+1} / 7 · ${steps[s.step]}",style=IviType.title)
-                        Text("배터리 ${s.soc?.let{"$it%"} ?: "확인 필요"} · ${sourceLabel(s.socSource)}",style=IviType.title)
+                        if(s.batteryVisible) Text("배터리 ${s.soc?.let{"$it%"} ?: "확인 필요"} · ${sourceLabel(s.socSource)}",style=IviType.title)
                         Text(if(s.route==RoutePhase.GUIDING)"길 안내 중" else "길 안내 상태 확인 필요",style=IviType.title)
                     }
                 } else {
@@ -65,7 +65,7 @@ private fun condition(value:Condition)=when(value){Condition.ALLOWED->"허용";C
                         Row(horizontalArrangement=Arrangement.spacedBy(32.dp)) {
                             key(s.step,s.completed) {
                                 Column(Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState()).testTag("journey-content"),verticalArrangement=Arrangement.spacedBy(24.dp)) {
-                                    if(s.batteryStatus!=ReadingStatus.AVAILABLE)Text(when(s.batteryStatus){ReadingStatus.UNSUPPORTED->"이 차량은 배터리 조회를 지원하지 않아요.";ReadingStatus.PERMISSION_DENIED->"배터리 조회 권한이 필요해요.";ReadingStatus.STALE->"배터리 정보를 다시 확인하고 있어요.";else->"배터리 연결 상태를 확인해 주세요."},style=IviType.label)
+                                    if(s.batteryStatus!=ReadingStatus.AVAILABLE)Text(when(s.batteryStatus){ReadingStatus.UNSUPPORTED->"이 차량은 배터리 조회를 지원하지 않아요.";ReadingStatus.PERMISSION_DENIED->"배터리 조회 권한이 필요해요.";ReadingStatus.STALE->"배터리 정보를 다시 확인하고 있어요.";ReadingStatus.DRIVING_RESTRICTED->"정차 후 배터리를 다시 확인해 주세요.";ReadingStatus.INVALID->"배터리 값을 확인하지 못했어요.";else->"배터리 연결 상태를 확인해 주세요."},style=IviType.label)
                                     ui.notice?.let{Text(it,style=IviType.label,color=p.tertiary)}
                                     ui.navigationMessage?.let{Text(it,style=IviType.body,color=p.secondary)}
                                     JourneyContent(s,send)
@@ -186,7 +186,7 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
             Panel {
                 Text("오늘의 여행",style=IviType.title)
                 Text("내 차와 함께하는 하룻밤",style=IviType.body)
-                Text("배터리 ${s.soc?.let{"$it%"} ?: "미확인"} · ${sourceLabel(s.socSource)}",style=IviType.smallTitle)
+                if(s.batteryVisible) Text("배터리 ${s.soc?.let{"$it%"} ?: "미확인"} · ${sourceLabel(s.socSource)}",style=IviType.smallTitle)
                 Text("${s.input.people}인 · ${if(s.input.cooking)"간단 조리 예정" else "준비한 식사"} · ${if(s.input.sleepingBag)"침낭 보유" else "침낭 미보유"}",style=IviType.body)
             }
             Text("출발 전 충전 계획과 현장 운영 시간을 확인해 주세요.",style=IviType.label,color=p.tertiary)
@@ -212,7 +212,7 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
                 AdjustValue("인원", "${s.input.people}명",s.input.people>1,s.input.people<Int.MAX_VALUE,
                     {send(JourneyEvent.Conditions(s.input.copy(people=s.input.people-1)))},
                     {send(JourneyEvent.Conditions(s.input.copy(people=s.input.people+1)))})
-                AdjustValue("배터리 확인 기준", "${s.input.batteryThreshold}%",s.input.batteryThreshold>0,s.input.batteryThreshold<100,
+                if(s.batteryVisible) AdjustValue("배터리 확인 기준", "${s.input.batteryThreshold}%",s.input.batteryThreshold>0,s.input.batteryThreshold<100,
                     {send(JourneyEvent.Conditions(s.input.copy(batteryThreshold=(s.input.batteryThreshold-5).coerceAtLeast(0))))},
                     {send(JourneyEvent.Conditions(s.input.copy(batteryThreshold=(s.input.batteryThreshold+5).coerceAtMost(100))))})
                 AdjustValue("철수 예정", "다음 날 ${s.input.endHour}시",true,true,
@@ -237,8 +237,7 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
             SolarSummary(s)
             Heading("오늘의 준비 계획","${names[s.placeId]} · 조건을 바꾸면 필요한 행동도 달라져요.")
             Panel {
-                Text("현재 배터리 · ${sourceLabel(s.socSource)}",style=IviType.smallTitle)
-                Text(s.soc?.let { "$it%" } ?: "확인 필요",style=IviType.title)
+                if(s.batteryVisible) BatteryReading(s,send)
                 Text("출발 전 ${s.departureCheckedCount} / ${s.departureItems.size}개 확인 · 날짜와 준비 항목 확인 후 이동할 수 있어요",style=IviType.label,color=p.tertiary)
             }
             if(s.input.schedule?.departureEnd(s.input.endHour)==null) Panel {
@@ -298,7 +297,7 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
                     }
                     val time=java.time.Instant.ofEpochMilli(record.observedAtMillis).atZone(zone).format(java.time.format.DateTimeFormatter.ofPattern("MM-dd HH:mm"))
                     Text("$time · $label",style=IviType.smallBody)
-                    if(record.kind in setOf("PREPARATION_COMPLETED","TRIP_COMPLETED"))
+                    if(record.kind in setOf("PREPARATION_COMPLETED","TRIP_COMPLETED") && (s.batteryVisible || record.soc!=null))
                         Text("배터리 ${record.soc?.let{"$it%"} ?: "미확인"} · ${sourceLabel(record.socSource)}",style=IviType.label)
                 }
                 if(s.records.isEmpty())Text("이전 여행의 상세 시각은 수집되지 않았어요.",style=IviType.label)
@@ -345,8 +344,10 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
         Text(names[s.placeId] ?: "오늘의 쉼터",style=IviType.title)
         Text("오늘의 목적지",style=IviType.label,color=p.tertiary)
         HorizontalDivider(color=p.divider)
-        Text(s.soc?.let{"$it%"} ?: "미확인",style=IviType.headline)
-        Text("배터리 · ${sourceLabel(s.socSource)}",style=IviType.label,color=p.tertiary)
+        if(s.batteryVisible){
+            Text(s.soc?.let{"$it%"} ?: "미확인",style=IviType.headline)
+            Text("배터리 · ${sourceLabel(s.socSource)}",style=IviType.label,color=p.tertiary)
+        }
         Text("${s.input.people}인\n${if(s.input.cooking)"간단 조리 예정" else "준비한 식사"}\n${if(s.input.sleepingBag)"침낭 보유" else "침낭 미보유"}",style=IviType.body)
         HorizontalDivider(color=p.divider)
         Text("${s.checkedCount}/${s.decisions.size}개 준비 확인",style=IviType.smallTitle)
@@ -393,5 +394,23 @@ private fun sourceLabel(source:Source)=when(source){Source.SDK->"차량";Source.
         Text("장소 좌표로 계산 · 북쪽 0° / 동쪽 90° · ${zone.id}",style=IviType.label)
         Text("조망 방향 확인 필요 · 일몰 전 도착, 일출 이후 철수를 권장해요.",style=IviType.smallBody)
         Text("이동·충전 시간이 확인되지 않아 정확한 출발 시각은 안내하지 않아요.",style=IviType.label)
+    }
+}
+
+@Composable private fun BatteryReading(s:Journey,send:(JourneyEvent)->Unit){
+    Text("현재 배터리 · ${sourceLabel(s.socSource)}",style=IviType.smallTitle)
+    Text(s.soc?.let{"$it%"} ?: "확인 필요",style=IviType.title)
+    if(s.socSource==Source.MANUAL) {
+        Text("직접 확인한 잔량이에요. 차량의 현재 잔량이 달라지면 다시 입력해 주세요.",style=IviType.label)
+        s.socReceivedAtMillis?.let{Text("입력 시각 · ${java.time.Instant.ofEpochMilli(it).atZone(java.time.ZoneId.systemDefault()).format(java.time.format.DateTimeFormatter.ofPattern("MM-dd HH:mm"))}",style=IviType.label)}
+    }
+    if(s.batteryStatus!=ReadingStatus.AVAILABLE || s.socSource==Source.MANUAL){
+        var value by androidx.compose.runtime.saveable.rememberSaveable(s.tripId){mutableStateOf("")}
+        OutlinedTextField(value,{if(it.length<=3 && it.all(Char::isDigit))value=it},
+            label={Text("직접 확인한 배터리 잔량 (%)")},singleLine=true,modifier=Modifier.fillMaxWidth())
+        val parsed=value.toIntOrNull()
+        IviButton("직접 입력한 잔량 사용",size=IviButtonSize.MEDIUM,enabled=parsed!=null && parsed in 0..100){
+            send(JourneyEvent.Soc(parsed));value=""
+        }
     }
 }
