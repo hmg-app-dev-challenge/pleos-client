@@ -12,7 +12,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 data class JourneyUi(val journey:Journey=Journey(),val loaded:Boolean=false,val saving:Boolean=false,
-    val error:String?=null,val notice:String?=null,val navigationMessage:String?=null,val navigationReady:Boolean=false,val waypointNeedsConfirmation:Boolean=false,val history:List<ArchivedTrip> = emptyList(),val syncStatus:String="기기에 저장됨",val catalogStatus:String="")
+    val error:String?=null,val notice:String?=null,val navigationMessage:String?=null,val navigationReady:Boolean=false,val waypointNeedsConfirmation:Boolean=false,val history:List<ArchivedTrip> = emptyList(),val syncStatus:String="기기에 저장됨",val catalogStatus:String="",val savedPlans:List<PlanChoice> = emptyList())
+data class PlanChoice(val id:String,val title:String)
 class JourneyViewModel(app:Application):AndroidViewModel(app) {
     private val store=JourneyStore(app)
     private val sync=RecordSync(store)
@@ -22,11 +23,14 @@ class JourneyViewModel(app:Application):AndroidViewModel(app) {
     private val mutable=MutableStateFlow(JourneyUi())
     val state=mutable.asStateFlow()
     private sealed interface Command {
+        data object LoadPlans:Command
+        data class ImportPlan(val id:String):Command
         data object ForkPlan:Command
         data class DeleteHistory(val id:String):Command
         data class Event(val value:JourneyEvent):Command
         data class Navigation(val value:NavigationSnapshot):Command
     }
+    private var importPlans:List<SavedPlan> = emptyList()
     private val commands=Channel<Command>(Channel.UNLIMITED)
     private fun realPlace(s:Journey)=if(NavigationPlaces.find(s.placeId)!=null)s
         else if(s.step==0) s.copy(placeId=NavigationPlaces.find(NavigationPlaces.DEFAULT_ID)?.place?.id ?: NavigationPlaces.all.first().place.id) else s
@@ -54,6 +58,22 @@ class JourneyViewModel(app:Application):AndroidViewModel(app) {
                 }
             } catch(e:Exception){mutable.value=JourneyUi(loaded=true,error="저장된 여행을 읽지 못했습니다. 초기화 후 시작할 수 있습니다.")}
             for(command in commands) {
+                if(command is Command.LoadPlans){
+                    if(mutable.value.journey.restricted || mutable.value.journey.step!=0)continue
+                    try{
+                        importPlans=PlanImport.list().filter{it.id!=mutable.value.journey.tripId}
+                        mutable.value=mutable.value.copy(savedPlans=importPlans.map{PlanChoice(it.id,"${it.input.schedule?.date ?: "날짜 확인 필요"} · ${it.name} · ${it.input.people}명")},notice=if(importPlans.isEmpty())"가져올 수 있는 계획이 없어요." else null)
+                    }catch(e:Exception){mutable.value=mutable.value.copy(notice="저장된 계획에 연결하지 못했어요. 기기에서 계속 계획할 수 있습니다.")}
+                    continue
+                }
+                if(command is Command.ImportPlan){
+                    if(mutable.value.journey.restricted || mutable.value.journey.step!=0)continue
+                    val plan=importPlans.find{it.id==command.id} ?: continue
+                    val b=battery.state.value
+                    persist(JourneyReducer.apply(plan.asNewJourney(mutable.value.journey.dark),JourneyEvent.Battery(b.value,b.status,b.source,b.receivedAt)))
+                    mutable.value=mutable.value.copy(savedPlans=emptyList(),notice="계획 조건을 가져왔어요. 준비와 현장 확인은 이번 여행에서 다시 진행합니다.")
+                    continue
+                }
                 if(command is Command.ForkPlan){
                     if(mutable.value.journey.restricted || mutable.value.journey.completed)continue
                     persist(mutable.value.journey.copy(tripId=java.util.UUID.randomUUID().toString()))
@@ -116,6 +136,8 @@ class JourneyViewModel(app:Application):AndroidViewModel(app) {
         catch(e:Exception){mutable.value=mutable.value.copy(saving=false,error="저장하지 못했습니다. 저장 공간을 확인한 뒤 다시 실행해 주세요.")}
     }
     fun send(event:JourneyEvent){if(mutable.value.loaded)commands.trySend(Command.Event(event))}
+    fun loadPlans(){commands.trySend(Command.LoadPlans)}
+    fun importPlan(id:String){commands.trySend(Command.ImportPlan(id))}
     fun forkPlan(){commands.trySend(Command.ForkPlan)}
     fun deleteHistory(id:String){commands.trySend(Command.DeleteHistory(id))}
     fun confirmWaypoint(){if(!mutable.value.journey.restricted)navigation.confirmWaypointByUser()}

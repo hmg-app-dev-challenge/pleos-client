@@ -5,6 +5,6 @@ test_plan_revision_retry_conflict_and_deletion (test_api.ApiTest.test_plan_revis
 test_retry_conflict_and_delete_tombstone (test_api.ApiTest.test_retry_conflict_and_delete_tombstone) ... ok
 
 ----------------------------------------------------------------------
-Ran 5 tests in 0.560s
+Ran 5 tests in 0.556s
 
 OK

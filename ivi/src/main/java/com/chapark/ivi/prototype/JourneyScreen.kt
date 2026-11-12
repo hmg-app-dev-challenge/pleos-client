@@ -23,11 +23,12 @@ private val sleepItems=linkedMapOf("parking" to "주차 위치와 현장 숙박 
 private val exitItems=linkedMapOf("settings" to "직접 변경한 차량 설정 확인", "gear" to "침구와 개인 장비 모두 챙기기", "waste" to "쓰레기 수거와 주변 정리", "surroundings" to "출발 전 차량 주변 확인")
 private fun condition(value:Condition)=when(value){Condition.ALLOWED->"허용";Condition.RESTRICTED->"제한";Condition.UNKNOWN->"미확인"}
 
-@Composable fun JourneyScreen(ui:JourneyUi,send:(JourneyEvent)->Unit,onNavigation:()->Unit={},onDeleteHistory:(String)->Unit={},onConfirmWaypoint:()->Unit={},onForkPlan:()->Unit={}) {
+@Composable fun JourneyScreen(ui:JourneyUi,send:(JourneyEvent)->Unit,onNavigation:()->Unit={},onDeleteHistory:(String)->Unit={},onConfirmWaypoint:()->Unit={},onForkPlan:()->Unit={},onLoadPlans:()->Unit={},onImportPlan:(String)->Unit={}) {
     val s=ui.journey
     var scenery by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf<String?>(null) }
     var confirmedOnly by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
     val candidates=PlaceEvidenceCatalog.filter(scenery?.let{Scenery.valueOf(it)},confirmedOnly,java.time.LocalDate.now())
+    var importId by remember { mutableStateOf<String?>(null) }
     var history by remember { mutableStateOf(false) }
     var deleteId by remember { mutableStateOf<String?>(null) }
     var settings by remember { mutableStateOf(false) }
@@ -46,6 +47,9 @@ private fun condition(value:Condition)=when(value){Condition.ALLOWED->"허용";C
                 Spacer(Modifier.height(16.dp))
                 Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.End) {
                     Text(if(ui.saving)"저장 중" else if(ui.error!=null)"저장 오류" else "기기에 저장됨",style=IviType.label,color=p.tertiary)
+                }
+                if(s.step==0 && !s.restricted && com.chapark.ivi.BuildConfig.DEBUG) {
+                    IviButton("저장된 계획 가져오기",size=IviButtonSize.MEDIUM,onClick={importId=null;onLoadPlans()})
                 }
                 if(ui.catalogStatus.isNotBlank()) Text(ui.catalogStatus,style=IviType.label,color=p.tertiary)
                 if(ui.syncStatus!="기기에 저장됨") Text(ui.syncStatus,style=IviType.label,color=p.tertiary)
@@ -135,6 +139,15 @@ private fun condition(value:Condition)=when(value){Condition.ALLOWED->"허용";C
                 IviButton("기록 닫기"){history=false}
             }
         }
+        if(ui.savedPlans.isNotEmpty() && importId==null && !s.restricted && s.step==0) androidx.compose.ui.window.Dialog(onDismissRequest={importId="dismissed"}) {
+            Panel(Modifier.heightIn(max=800.dp).verticalScroll(rememberScrollState())){
+                Text("계획 조건 가져오기",style=IviType.title)
+                Text("선택한 조건으로 새 여행을 만듭니다. 완료 체크와 차량 상태는 가져오지 않습니다.",style=IviType.smallBody)
+                ui.savedPlans.forEach{plan->IviButton(plan.title,size=IviButtonSize.MEDIUM,onClick={importId=plan.id})}
+                IviButton("닫기",onClick={importId="dismissed"})
+            }
+        }
+        importId?.takeIf{it!="dismissed" && !s.restricted}?.let{id->IviConfirm("이 조건으로 새 여행을 만들까요?","서버의 원본은 유지하고 준비 확인을 처음부터 진행합니다.","가져오기",{importId=null;onImportPlan(id)},{importId=null})}
         if(confirm=="fork" && !s.restricted) IviConfirm("계획을 별도로 보관할까요?","이 기기의 계획을 새 여행으로 보관합니다. 서버의 기존 계획은 덮어쓰지 않습니다.","별도로 보관",{confirm=null;onForkPlan()},{confirm=null})
         deleteId?.takeIf{!s.restricted}?.let{id->IviConfirm("여행 기록을 삭제할까요?","이 기기에 보관한 해당 여행 기록을 삭제합니다.","삭제",{deleteId=null;onDeleteHistory(id)},{deleteId=null})}
         if(settings && !s.restricted) JourneySettings(s,send,onClose={settings=false},onReset={settings=false;confirm="reset"})

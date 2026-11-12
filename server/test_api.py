@@ -65,7 +65,10 @@ class ApiTest(unittest.TestCase):
         second['baseRevision']=1
         self.assertEqual(2,self.request('PUT',path,second)[1]['revision'])
         self.assertEqual(4,self.request('GET',path)[1]['data']['people'])
+        self.assertTrue(any(p['id']=='plan-test' for p in self.request('GET','/v1/plans')[1]['plans']))
+        self.assertEqual(401,self.request('GET','/v1/plans',token=False)[0])
         self.assertEqual(200,self.request('DELETE',path)[0])
+        self.assertFalse(any(p['id']=='plan-test' for p in self.request('GET','/v1/plans')[1]['plans']))
         self.assertEqual(410,self.request('GET',path)[0])
         self.assertEqual(410,self.request('PUT',path,second)[0])
 

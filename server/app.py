@@ -37,6 +37,9 @@ class Handler(BaseHTTPRequestHandler):
             return self.reply(200,{'schemaVersion':1,'version':'v211-1','engine':'bundled-shared',
                 'departureRequires':['validSchedule','allDepartureChecks'],'siteChecksAfterArrival':True,
                 'batteryThreshold':'user','unsupportedBattery':'hidden'})
+        if self.path=='/v1/plans':
+            with LOCK: rows=DB.execute('SELECT id,payload,revision FROM plans WHERE deleted=0').fetchall()
+            return self.reply(200,{'schemaVersion':1,'plans':[{'id':i,'data':json.loads(p),'revision':r} for i,p,r in rows]})
         if self.path.startswith('/v1/plans/'):
             key=self.path.removeprefix('/v1/plans/')
             with LOCK: row=DB.execute('SELECT payload,revision,deleted FROM plans WHERE id=?',(key,)).fetchone()
