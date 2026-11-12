@@ -182,10 +182,10 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
     val p=LocalIviColors.current
     when(s.step) {
         0 -> {
-            Heading("오늘 밤,\n내 차로 떠나는 쉼.","금요일 퇴근 후, 어디서 어떻게 쉴지 함께 준비해요.")
+            Heading("오늘 밤,\n내 차로 떠나는 쉼.","어디서 어떻게 쉴지, 오늘 밤의 작은 여행을 준비해요.")
             Panel {
                 Text("오늘의 여행",style=IviType.title)
-                Text("회사 주차장 · 1박 차박 · 전기차",style=IviType.body)
+                Text("내 차와 함께하는 하룻밤",style=IviType.body)
                 Text("배터리 ${s.soc?.let{"$it%"} ?: "미확인"} · ${sourceLabel(s.socSource)}",style=IviType.smallTitle)
                 Text("${s.input.people}인 · ${if(s.input.cooking)"간단 조리 예정" else "준비한 식사"} · ${if(s.input.sleepingBag)"침낭 보유" else "침낭 미보유"}",style=IviType.body)
             }
@@ -283,12 +283,12 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
             Text("차내 화기를 사용하지 마세요. 실제 사용은 차량 사용 설명서와 현장 운영 안내를 따르세요.",style=IviType.label,color=p.tertiary)
         }
         6 -> if(s.completed) {
-            Heading("오늘의 차박을 마쳤어요","이번 여행의 준비와 확인 기록을 저장했어요.")
+            Heading("오늘의 차박을 마쳤어요","내 차와 보낸 하룻밤의 기억을 저장했어요.")
             Panel {
                 Text(names[s.placeId] ?: "오늘의 쉼터",style=IviType.title)
                 Text("수면 준비 ${s.sleepChecks.size}/4 · 철수 확인 ${s.exitChecks.size}/4",style=IviType.body)
                 Text("직접 확인한 준비 항목 ${s.checkedCount}/${s.decisions.size}",style=IviType.body)
-                Text("이번 여행의 기록",style=IviType.smallTitle)
+                Text("내 차와 보낸 하룻밤 기억",style=IviType.smallTitle)
                 val zone=runCatching{java.time.ZoneId.of(s.input.schedule?.zoneId ?: "UTC")}.getOrDefault(java.time.ZoneOffset.UTC)
                 s.records.filter{it.subject==null}.forEach { record->
                     val label=when(record.kind){

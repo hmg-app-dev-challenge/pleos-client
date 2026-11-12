@@ -118,7 +118,7 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
             Heading("오늘 밤,\n내 차로 떠나는 쉼.","장소부터 잠들기 전 준비까지 하나씩 확인하고 편안하게 출발하세요.")
             Panel {
                 Text("오늘의 여행",style=MaterialTheme.typography.titleMedium)
-                Text("회사 주차장 · 1박 차박 · 전기차")
+                Text("내 차와 함께하는 하룻밤")
                 Text("배터리 ${s.soc}% · 예시",style=MaterialTheme.typography.titleLarge)
                 Text("${s.input.people}인 · ${if(s.input.cooking)"간단 조리 예정" else "준비한 식사"} · ${if(s.input.sleepingBag)"침낭 보유" else "침낭 미보유"}")
             }
@@ -181,7 +181,7 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
             Text("차내 화기를 사용하지 마세요. 차량 사용 설명서와 현장 운영 안내를 따라주세요.")
         }
         6->if(s.completed){
-            Heading("오늘의 차박을 마쳤어요","이번 여행의 준비와 확인 기록을 저장했어요.")
+            Heading("오늘의 차박을 마쳤어요","내 차와 보낸 하룻밤의 기억을 저장했어요.")
             Panel {Text(s.place.name,style=MaterialTheme.typography.titleLarge);Text("수면 준비 ${s.sleepChecks.size}/4 · 철수 확인 ${s.exitChecks.size}/4");Text("다음 여행도 차Park와 함께 준비해 보세요.")}
         }else{
             Heading("떠나기 전,\n한 번 더.","직접 바꾼 설정과 가져온 물건을 확인하고 마무리해요.")
