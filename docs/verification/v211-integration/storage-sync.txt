@@ -1,0 +1,12 @@
+
+com.chapark.ivi.CatalogCacheTest:..
+com.chapark.ivi.JourneyStoreTest:STORE_BEFORE: step=4, completed=false, uid=1010176
+..
+com.chapark.ivi.RecordSyncTest:..
+
+Time: 3.344
+
+OK (6 tests)
+
+
+

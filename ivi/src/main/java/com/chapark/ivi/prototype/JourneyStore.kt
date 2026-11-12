@@ -43,7 +43,7 @@ class JourneyStore(context:Context) {
             tripId=p[stringPreferencesKey("tripId")],chargerId=p[stringPreferencesKey("chargerId")]?.takeIf{com.chapark.app.data.ChargingPlaces.find(it)!=null},restMode=p[stringPreferencesKey("restMode")] ?: "REST",
             forgotten=checks("forgotten"),reminders=checks("reminders"),followUps=checks("followUps"),
             records=JourneyRecordCodec.decode(p[stringPreferencesKey("records")] ?: "[]"),
-            placeId=p[stringPreferencesKey("place")]?.takeIf{ id->PlaceCatalog.all.any{it.id==id} } ?: "demo-b",
+            placeId=p[stringPreferencesKey("place")]?.takeIf{it.isNotBlank() && it.length<=100} ?: "demo-b",
             soc=if(bool("socMissing"))null else int("soc",20).takeIf{it in 0..100},
             checked=checks("checked"),route=if(route==RoutePhase.REQUESTED)RoutePhase.FAILED else route,
             parked=bool("parked") && route==RoutePhase.ARRIVED,
@@ -64,6 +64,61 @@ class JourneyStore(context:Context) {
         val p=store.data.first();val archive=JSONObject(p[stringPreferencesKey("archive")] ?: "{}")
         return archive.keys().asSequence().associateWith{archive.getJSONObject(it).toString()} to (p[stringSetPreferencesKey("deletedArchives")] ?: emptySet())
     }
+    internal suspend fun planSnapshot():Triple<String,Long,String>? {
+        val p=store.data.first();val s=decode(p).first;val id=s.tripId ?: return null
+        if(id in (p[stringSetPreferencesKey("deletedArchives")] ?: emptySet()))return null
+        val revision=JSONObject(p[stringPreferencesKey("syncRevisions")] ?: "{}").optLong(id,0)
+        val data=JSONObject().apply{
+            put("schemaVersion",1);put("placeId",s.placeId);put("chargerId",s.chargerId)
+            put("people",s.input.people);put("cooking",s.input.cooking);put("pets",s.input.pets);put("sleepingBag",s.input.sleepingBag)
+            put("threshold",s.input.batteryThreshold);put("endHour",s.input.endHour)
+            put("date",s.input.schedule?.date);put("zone",s.input.schedule?.zoneId)
+            put("step",s.step);put("completed",s.completed)
+            put("checked",JSONArray(s.checked.sorted()));put("sleepChecks",JSONArray(s.sleepChecks.sorted()));put("exitChecks",JSONArray(s.exitChecks.sorted()))
+            put("forgotten",JSONArray(s.forgotten.sorted()));put("records",JSONArray(JourneyRecordCodec.encode(s.records)))
+        }
+        return Triple(id,revision,data.toString())
+    }
+    internal suspend fun acknowledgePlan(id:String,revision:Long){store.edit{p->
+        val revisions=JSONObject(p[stringPreferencesKey("syncRevisions")] ?: "{}")
+        revisions.put(id,revision);p[stringPreferencesKey("syncRevisions")]=revisions.toString()
+    }}
+    /** Download is additive. Conflicting immutable records are kept locally and reported. */
+    internal suspend fun mergeRecords(raw:String):Boolean {
+        val root=JSONObject(raw);require(root.getInt("schemaVersion")==1)
+        val rows=root.getJSONArray("records");require(rows.length()<=10000)
+        var conflict=false
+        store.edit{p->
+            val archive=JSONObject(p[stringPreferencesKey("archive")] ?: "{}")
+            val deleted=(p[stringSetPreferencesKey("deletedArchives")] ?: emptySet()).toMutableSet()
+            val tombstones=root.optJSONArray("deleted") ?: JSONArray()
+            for(i in 0 until tombstones.length())deleted.add(tombstones.getString(i))
+            deleted.forEach{archive.remove(it)}
+            for(i in 0 until rows.length()){
+                val row=rows.getJSONObject(i);val id=row.getString("id");val data=row.getJSONObject("data")
+                require(id.matches(Regex("[A-Za-z0-9_-]{1,100}")))
+                require(data.getString("placeName").length in 1..300)
+                val encoded=data.getJSONArray("records").toString()
+                require(encoded.length<=1_000_000)
+                JourneyRecordCodec.decode(encoded)
+                if(id !in deleted){
+                    val old=archive.optJSONObject(id)
+                    if(old==null)archive.put(id,data)
+                    else if(canonical(old)!=canonical(data))conflict=true
+                }
+            }
+            p[stringPreferencesKey("archive")]=archive.toString()
+            p[stringSetPreferencesKey("deletedArchives")]=deleted
+        }
+        return conflict
+    }
+    private fun canonical(value:Any?):String=when(value){
+        is JSONObject->value.keys().asSequence().sorted().joinToString(prefix="{",postfix="}"){JSONObject.quote(it)+":"+canonical(value.get(it))}
+        is JSONArray->(0 until value.length()).joinToString(prefix="[",postfix="]"){canonical(value.get(it))}
+        is String->JSONObject.quote(value)
+        null,JSONObject.NULL->"null"
+        else->value.toString()
+    }
     suspend fun history():List<ArchivedTrip> {
         val archive=JSONObject(store.data.first()[stringPreferencesKey("archive")] ?: "{}")
         return archive.keys().asSequence().map{ id->
@@ -81,7 +136,8 @@ class JourneyStore(context:Context) {
     suspend fun save(s:Journey) { store.edit { p->
         val archive=JSONObject(p[stringPreferencesKey("archive")] ?: "{}")
         val deleted=p[stringSetPreferencesKey("deletedArchives")] ?: emptySet()
-        if(s.completed && s.tripId!=null && s.tripId !in deleted)archive.put(s.tripId,JSONObject().apply {
+        val syncRevisions=p[stringPreferencesKey("syncRevisions")] ?: "{}"
+        if(s.completed && s.tripId!=null && s.tripId !in deleted && !archive.has(s.tripId))archive.put(s.tripId,JSONObject().apply {
             put("chargerId",s.chargerId);put("placeId",s.placeId);put("placeName",s.place.name)
             put("date",s.input.schedule?.date);put("zone",s.input.schedule?.zoneId)
             put("forgotten",JSONArray(s.forgotten.toList()));
@@ -89,6 +145,7 @@ class JourneyStore(context:Context) {
             put("records",JSONArray(JourneyRecordCodec.encode(s.records)))
         })
         p.clear()
+        p[stringPreferencesKey("syncRevisions")]=syncRevisions
         p[stringPreferencesKey("archive")]=archive.toString()
         p[stringSetPreferencesKey("deletedArchives")]=deleted
         p[intPreferencesKey("schema")]=6

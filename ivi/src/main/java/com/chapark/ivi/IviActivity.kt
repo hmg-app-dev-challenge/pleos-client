@@ -22,7 +22,7 @@ class IviActivity:ComponentActivity() {
             val ui by vm.state.collectAsStateWithLifecycle()
             LaunchedEffect(ux.allowsDetailedInteraction,ui.loaded){if(ui.loaded)vm.send(JourneyEvent.Driving(!ux.allowsDetailedInteraction))}
             val presented=ui.copy(journey=ui.journey.copy(restricted=!ux.allowsDetailedInteraction))
-            JourneyScreen(presented,vm::send,vm::openNavigation,vm::deleteHistory,vm::confirmWaypoint)
+            JourneyScreen(presented,vm::send,vm::openNavigation,vm::deleteHistory,vm::confirmWaypoint,vm::forkPlan)
         }
     }
     override fun onStart(){super.onStart();uxMonitor.start()}

@@ -1,0 +1,10 @@
+test_authentication_required_for_read_and_write (test_api.ApiTest.test_authentication_required_for_read_and_write) ... ok
+test_catalog_and_rule_contracts_are_versioned_and_authenticated (test_api.ApiTest.test_catalog_and_rule_contracts_are_versioned_and_authenticated) ... ok
+test_invalid_record_and_identifier (test_api.ApiTest.test_invalid_record_and_identifier) ... ok
+test_plan_revision_retry_conflict_and_deletion (test_api.ApiTest.test_plan_revision_retry_conflict_and_deletion) ... ok
+test_retry_conflict_and_delete_tombstone (test_api.ApiTest.test_retry_conflict_and_delete_tombstone) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.560s
+
+OK

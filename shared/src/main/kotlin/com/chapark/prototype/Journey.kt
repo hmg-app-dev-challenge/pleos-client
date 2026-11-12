@@ -19,7 +19,7 @@ data class Journey(
     val socSource:Source=Source.DEMO, val socReceivedAtMillis:Long?=null,
 ) {
     val batteryVisible get()=batteryStatus!=ReadingStatus.UNSUPPORTED
-    val place get()=PlaceCatalog.find(placeId) ?: DemoPlaces.all.first()
+    val place get()=PlaceCatalog.find(placeId) ?: Place(placeId,"장소 정보 확인 필요","저장된 장소 자료를 확인해 주세요.",Condition.UNKNOWN,Condition.UNKNOWN,Condition.UNKNOWN,Condition.UNKNOWN,Condition.UNKNOWN,12)
     val decisions get()=followUps.sorted().map{DecisionItem("followup-$it",Group.BEFORE,"다시 확인 · $it","지난 여행에서 확인하지 못한 정보예요. 이번 장소의 조건도 확인해 주세요.")} + reminders.sorted().map{DecisionItem("reminder-$it",Group.GEAR,"다시 챙기기 · $it","지난 여행에서 빠뜨렸다고 기록한 준비물이에요.")} + PlanningRules.evaluate(place,input,SocReading(soc?.toDouble(),
         if(soc==null && batteryStatus==ReadingStatus.AVAILABLE)ReadingStatus.UNKNOWN else batteryStatus,socSource))
     val checkedCount get()=decisions.count { it.id in checked }

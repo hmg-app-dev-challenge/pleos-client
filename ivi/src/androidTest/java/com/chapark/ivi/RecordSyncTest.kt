@@ -12,6 +12,30 @@ import java.util.UUID
 import org.json.JSONObject
 
 class RecordSyncTest {
+    @Test fun activePlanRevisionRetriesAndRemoteRecordDeletionMerge()=runBlocking {
+        val store=JourneyStore(InstrumentationRegistry.getInstrumentation().targetContext)
+        val original=store.load().first;val id="plan-test-${UUID.randomUUID()}"
+        try{
+            store.save(Journey(tripId=id,placeId="camp-nanji"))
+            assertEquals("기기·서버에 저장됨",RecordSync(store).sync())
+            assertEquals(1L,store.planSnapshot()!!.second)
+            assertEquals("기기·서버에 저장됨",RecordSync(store).sync())
+            assertEquals(1L,store.planSnapshot()!!.second)
+            store.save(store.load().first.copy(input=store.load().first.input.copy(people=3)))
+            assertEquals("기기·서버에 저장됨",RecordSync(store).sync())
+            assertEquals(2L,store.planSnapshot()!!.second)
+            val data=JSONObject().put("placeId","camp-nanji").put("placeName","한강").put("records",org.json.JSONArray())
+            val download=JSONObject().put("schemaVersion",1).put("records",org.json.JSONArray().put(JSONObject().put("id",id).put("data",data)))
+            assertFalse(store.mergeRecords(download.toString()))
+            assertNotNull(store.archivedRecord(id))
+            data.put("placeName","변경된 이름")
+            assertTrue(store.mergeRecords(download.toString()))
+            assertEquals("한강",JSONObject(store.archivedRecord(id)!!).getString("placeName"))
+            download.put("deleted",org.json.JSONArray().put(id))
+            assertFalse(store.mergeRecords(download.toString()))
+            assertNull(store.archivedRecord(id))
+        }finally{store.deleteHistory(id);RecordSync(store).sync();store.save(original)}
+    }
     @Test fun completedRecordUploadsAndDeletionSurvivesRetry()= runBlocking {
         val store=JourneyStore(InstrumentationRegistry.getInstrumentation().targetContext)
         val original=store.load().first

@@ -18,12 +18,12 @@ import com.chapark.ivi.design.*
 import com.chapark.prototype.*
 
 private val steps=listOf("시작","조건 확인","장소 비교","준비 계획","이동","수면 준비","철수")
-private val names=com.chapark.app.data.PlaceCatalog.all.associate { it.id to it.name }
+private val names get()=com.chapark.app.data.PlaceCatalog.all.associate { it.id to it.name }
 private val sleepItems=linkedMapOf("parking" to "주차 위치와 현장 숙박 조건 확인", "ventilation" to "환기 방법과 비상 이동 동선 확인", "climate" to "차량 기본 설정에서 공조 직접 확인", "lights" to "차량 기본 설정에서 조명 직접 확인")
 private val exitItems=linkedMapOf("settings" to "직접 변경한 차량 설정 확인", "gear" to "침구와 개인 장비 모두 챙기기", "waste" to "쓰레기 수거와 주변 정리", "surroundings" to "출발 전 차량 주변 확인")
 private fun condition(value:Condition)=when(value){Condition.ALLOWED->"허용";Condition.RESTRICTED->"제한";Condition.UNKNOWN->"미확인"}
 
-@Composable fun JourneyScreen(ui:JourneyUi,send:(JourneyEvent)->Unit,onNavigation:()->Unit={},onDeleteHistory:(String)->Unit={},onConfirmWaypoint:()->Unit={}) {
+@Composable fun JourneyScreen(ui:JourneyUi,send:(JourneyEvent)->Unit,onNavigation:()->Unit={},onDeleteHistory:(String)->Unit={},onConfirmWaypoint:()->Unit={},onForkPlan:()->Unit={}) {
     val s=ui.journey
     var scenery by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf<String?>(null) }
     var confirmedOnly by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
@@ -47,7 +47,9 @@ private fun condition(value:Condition)=when(value){Condition.ALLOWED->"허용";C
                 Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.End) {
                     Text(if(ui.saving)"저장 중" else if(ui.error!=null)"저장 오류" else "기기에 저장됨",style=IviType.label,color=p.tertiary)
                 }
+                if(ui.catalogStatus.isNotBlank()) Text(ui.catalogStatus,style=IviType.label,color=p.tertiary)
                 if(ui.syncStatus!="기기에 저장됨") Text(ui.syncStatus,style=IviType.label,color=p.tertiary)
+                if("계획 충돌" in ui.syncStatus && !s.restricted && !s.completed) IviButton("이 기기 계획을 별도로 저장",size=IviButtonSize.MEDIUM,onClick={confirm="fork"})
                 Spacer(Modifier.height(24.dp))
                 if(ui.error!=null) {
                     Column(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(24.dp)) {
@@ -133,6 +135,7 @@ private fun condition(value:Condition)=when(value){Condition.ALLOWED->"허용";C
                 IviButton("기록 닫기"){history=false}
             }
         }
+        if(confirm=="fork" && !s.restricted) IviConfirm("계획을 별도로 보관할까요?","이 기기의 계획을 새 여행으로 보관합니다. 서버의 기존 계획은 덮어쓰지 않습니다.","별도로 보관",{confirm=null;onForkPlan()},{confirm=null})
         deleteId?.takeIf{!s.restricted}?.let{id->IviConfirm("여행 기록을 삭제할까요?","이 기기에 보관한 해당 여행 기록을 삭제합니다.","삭제",{deleteId=null;onDeleteHistory(id)},{deleteId=null})}
         if(settings && !s.restricted) JourneySettings(s,send,onClose={settings=false},onReset={settings=false;confirm="reset"})
         when(if(s.restricted)null else confirm) {
@@ -264,7 +267,7 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
 
         3 -> {
             SolarSummary(s)
-            Heading("오늘의 준비 계획","${names[s.placeId]} · 조건을 바꾸면 필요한 행동도 달라져요.")
+            Heading("오늘의 준비 계획","${names[s.placeId] ?: s.place.name} · 조건을 바꾸면 필요한 행동도 달라져요.")
             Panel {
                 if(s.batteryVisible) BatteryReading(s,send)
                 Text("출발 전 ${s.departureCheckedCount} / ${s.departureItems.size}개 확인 · 날짜와 준비 항목 확인 후 이동할 수 있어요",style=IviType.label,color=p.tertiary)
@@ -302,7 +305,7 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
             }
         }
         4 -> {
-            Heading("${names[s.placeId]}까지","차량 내비게이션에서 길 안내를 이어가세요.")
+            Heading("${names[s.placeId] ?: s.place.name}까지","차량 내비게이션에서 길 안내를 이어가세요.")
             Text(NavigationPlaces.find(s.placeId)?.address ?: "주소 확인 필요",style=IviType.smallBody)
             com.chapark.app.data.ChargingPlaces.find(s.chargerId)?.let{Text("경유 · ${it.name} · ${it.address}",style=IviType.smallBody)}
             Panel {

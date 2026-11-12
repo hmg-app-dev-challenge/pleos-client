@@ -54,4 +54,28 @@ class ApiTest(unittest.TestCase):
         for method in ['PUT','DELETE']:
             self.assertEqual(400,self.request(method,'/v1/records/a/b',{})[0])
 
+    def test_plan_revision_retry_conflict_and_deletion(self):
+        path='/v1/plans/plan-test'
+        first={'baseRevision':0,'data':{'schemaVersion':1,'placeId':'camp-nanji','people':3}}
+        self.assertEqual(401,self.request('PUT',path,first,token=False)[0])
+        self.assertEqual(1,self.request('PUT',path,first)[1]['revision'])
+        self.assertEqual(1,self.request('PUT',path,first)[1]['revision'])
+        second={'baseRevision':0,'data':dict(first['data'],people=4)}
+        self.assertEqual(409,self.request('PUT',path,second)[0])
+        second['baseRevision']=1
+        self.assertEqual(2,self.request('PUT',path,second)[1]['revision'])
+        self.assertEqual(4,self.request('GET',path)[1]['data']['people'])
+        self.assertEqual(200,self.request('DELETE',path)[0])
+        self.assertEqual(410,self.request('GET',path)[0])
+        self.assertEqual(410,self.request('PUT',path,second)[0])
+
+    def test_catalog_and_rule_contracts_are_versioned_and_authenticated(self):
+        self.assertEqual(401,self.request('GET','/v1/catalog',token=False)[0])
+        catalog=self.request('GET','/v1/catalog')[1]
+        rules=self.request('GET','/v1/rules')[1]
+        self.assertEqual(1,catalog['schemaVersion'])
+        self.assertEqual(rules['version'],catalog['ruleVersion'])
+        self.assertEqual(4,len(catalog['places']))
+        self.assertEqual(4,len({p['id'] for p in catalog['places']}))
+
 if __name__=='__main__': unittest.main()

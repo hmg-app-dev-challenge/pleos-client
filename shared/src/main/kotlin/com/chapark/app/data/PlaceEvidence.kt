@@ -21,7 +21,7 @@ object PlaceEvidenceCatalog {
     const val VERSION="2026-11-13.1"
     private const val POLICY="https://reservation.knps.or.kr/contents/usagePolicy.do"
     private const val MONG="https://reservation.knps.or.kr/contents/C/serviceGuide.do?deptId=B081002&parkId=B08&prdDvcd=C"
-    fun find(id:String):PlaceEvidence=when(id){
+    fun find(id:String):PlaceEvidence=AcceptedCatalog.snapshot?.evidence?.get(id) ?: when(id){
         "camp-mongsanpo"->PlaceEvidence(Scenery.SEA,listOf(
             Evidence("차내 숙박","B010·B011·B012·B028의 도킹텐트 차박만 안내돼 있어요. 차량만으로 숙박 가능한지는 예약 전 확인해 주세요.",POLICY,"2026-11-13"),
             Evidence("야간 화장실","화장실 시설은 있으나 야간 운영 시간은 확인이 필요해요.",MONG,"2026-11-13"),

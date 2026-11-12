@@ -6,7 +6,8 @@ import com.chapark.app.domain.Condition.UNKNOWN
 /** Official public map coordinates, not surveyed vehicle entrances. No third-party POI IDs. */
 data class NavigationPlace(val place:Place,val latitude:Double,val longitude:Double,val address:String,val source:String)
 object NavigationPlaces {
-    val all=listOf(
+    val all get()=AcceptedCatalog.snapshot?.places ?: bundled
+    val bundled=listOf(
         NavigationPlace(Place("camp-jungnang","중랑캠핑숲","숲 가까이에서 준비하는 하루",UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,12),
             37.6049551146885,127.109960818343,"서울 중랑구 망우로87길 110",
             "https://korean.visitseoul.net/nature/중랑캠핑숲/KOP035307"),
