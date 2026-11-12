@@ -2,7 +2,7 @@
 
 처음 가는 차박 장소의 조건과 차량 배터리를 함께 확인하고, 준비·길 안내·철수를 ‘내 차와 보낸 하룻밤 기억’으로 연결하는 Pleos 차량 앱 프로토타입. 핵심 메시지는 **내 차로 오늘 밤**이다.
 
-기획 기준은 **v2.1.1**, 앱 기반 버전은 `0.3.0-prototype`이다. 문서 개정은 전체 기능 구현 완료를 의미하지 않는다. [2.1.1 상세 변경 검토](docs/V2_1_1_CHANGE_REVIEW.md)와 [구현 현황](docs/IMPLEMENTATION_STATUS.md)을 참고한다.
+기획 기준은 **v2.1.1**, IVI 앱 버전은 `0.4.0`이다. 문서 개정은 전체 기능 구현 완료를 의미하지 않는다. [2.1.1 상세 변경 검토](docs/V2_1_1_CHANGE_REVIEW.md)와 [구현 현황](docs/IMPLEMENTATION_STATUS.md)을 참고한다.
 
 ## 현재 구현된 사용 흐름
 
@@ -22,7 +22,7 @@
 - `:ivi`: 차량 UI, Pleos 원본 IVI 치수·Light/Dark·좁은 창 재배치. DataStore 영속 저장.
 - `:shared`: 공통 여행 상태·조건별 준비 규칙·내부 fixture.
 
-IVI 목적지는 공식 지도 좌표가 있는 중랑캠핑숲·난지캠핑장·강동그린웨이 가족캠핑장이다. 숙박·취사 등의 운영 조건은 미확인으로 처리한다. IVI의 실제 NaviHelper 경로 요청과 내비 화면 전환을 Pleos 에뮬레이터에서 검증했다. IVI SOC는 공개 Vehicle SDK 공급자에 연결했고 에뮬레이터 20% 일치를 확인했다. 폰 SOC·기온과 폰 장소는 내부 fixture이며 차량 설정 변경은 연결하지 않았다. 지도 배경 타일 표시·자동 이동 재생·실차 UX/권한은 별도 검증이 필요하다. [내비 연동 및 검증](docs/NAVIGATION_INTEGRATION.md)을 참고한다.
+IVI 목적지는 공식 지도 좌표가 있는 중랑캠핑숲·난지캠핑장·강동그린웨이 가족캠핑장·몽산포다. 선택 충전 경유, 풍경/조건 필터, 근거 캐시와 실제/계산 사건 기억을 지원한다. 숙박·취사 등의 운영 조건은 미확인으로 처리한다. IVI의 실제 NaviHelper 경로 요청과 내비 화면 전환을 Pleos 에뮬레이터에서 검증했다. IVI SOC는 공개 Vehicle SDK 공급자에 연결했고 에뮬레이터 20→37→20 구독 변화를 확인했다. 폰 SOC·기온과 폰 장소는 내부 fixture이며 차량 설정 변경은 연결하지 않았다. 지도 배경 타일 표시·자동 이동 재생·실차 UX/권한은 별도 검증이 필요하다. [내비 연동 및 검증](docs/NAVIGATION_INTEGRATION.md)을 참고한다.
 
 ## 실행
 
@@ -32,6 +32,8 @@ Android Studio에서 이 폴더를 열고 폰은 `app`, Pleos는 `ivi`를 선택
 JAVA_HOME='/Applications/Android Studio.app/Contents/jbr/Contents/Home' ./gradlew :shared:test :app:testDebugUnitTest :ivi:testDebugUnitTest :app:assembleDebug :ivi:assembleDebug :app:lintDebug :ivi:lintDebug
 scripts/run-pleos-emulator.sh -port 5556
 ```
+
+최신 서명 release와 검증 범위는 [인수 기록](docs/V2_1_1_ACCEPTANCE.md), 단계별 커밋은 [실행 기록](docs/V2_1_1_EXECUTION.md)을 참고한다.
 
 실행 중인 AVD는 다시 실행하지 않는다. APK는 `app/build/outputs/apk/debug/app-debug.apk`, `ivi/build/outputs/apk/debug/ivi-debug.apk`다. 서명된 제출용 release가 아닌 개발용 APK다.
 

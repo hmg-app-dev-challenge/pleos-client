@@ -27,6 +27,8 @@ class JourneyFlowTest {
     @Test fun completeProductJourneyWithAutomaticPreparationAndManualParking() {
         waitText("설정")
         compose.onNodeWithText("설정").performClick()
+        val initiallyDark=kotlinx.coroutines.runBlocking { com.chapark.ivi.prototype.JourneyStore(InstrumentationRegistry.getInstrumentation().targetContext).load().first.dark }
+        if(initiallyDark)click("어두운 화면")
         click("새 여행 계획");waitText("여행 계획을 새로 만들까요?");compose.onNodeWithText("처음부터").performClick()
         waitText("오늘 밤 차박 시작");screenshot("s1-start.png")
         next();waitText("장소 후보 비교")

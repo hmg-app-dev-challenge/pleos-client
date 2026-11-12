@@ -1,0 +1,10 @@
+
+com.chapark.ivi.JourneyRegressionTest:....
+com.chapark.ivi.JourneyLayoutTest:.
+
+Time: 11.825
+
+OK (5 tests)
+
+
+

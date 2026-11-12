@@ -1,0 +1,17 @@
+{
+  "appVersion": "0.4.0",
+  "versionCode": 2,
+  "releaseContainsLocalServerToken": false,
+  "artifacts": [
+    {
+      "path": "/Users/woongaaaa/Desktop/ChaPark-IVI-0.4.0-release.apk",
+      "bytes": 26224770,
+      "sha256": "1311a96c413834857d17c9fac360221dafe801cc0efc49f39f00a5dd42b4f775"
+    },
+    {
+      "path": "/Users/woongaaaa/Desktop/ChaPark-IVI-0.4.0-flow.mp4",
+      "bytes": 15929240,
+      "sha256": "30c48a64f63f1255f26735edbb64d48e43b86b321a784c46d2ce49617908f086"
+    }
+  ]
+}

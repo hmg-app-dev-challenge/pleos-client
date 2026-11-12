@@ -1,0 +1,136 @@
+Starting: Intent { cmp=com.chapark.ivi/.IviActivity }
+Activity Resolver Table:
+  Non-Data Actions:
+      android.intent.action.MAIN:
+        50a9a61 com.chapark.ivi/.IviActivity filter 8937986
+          Action: "android.intent.action.MAIN"
+          Category: "android.intent.category.LAUNCHER"
+
+Receiver Resolver Table:
+  Non-Data Actions:
+      androidx.profileinstaller.action.SAVE_PROFILE:
+        975c247 com.chapark.ivi/androidx.profileinstaller.ProfileInstallReceiver filter e9da812
+          Action: "androidx.profileinstaller.action.SAVE_PROFILE"
+      androidx.profileinstaller.action.INSTALL_PROFILE:
+        975c247 com.chapark.ivi/androidx.profileinstaller.ProfileInstallReceiver filter 23f8a74
+          Action: "androidx.profileinstaller.action.INSTALL_PROFILE"
+      androidx.profileinstaller.action.SKIP_FILE:
+        975c247 com.chapark.ivi/androidx.profileinstaller.ProfileInstallReceiver filter af57b9d
+          Action: "androidx.profileinstaller.action.SKIP_FILE"
+      androidx.profileinstaller.action.BENCHMARK_OPERATION:
+        975c247 com.chapark.ivi/androidx.profileinstaller.ProfileInstallReceiver filter 2423be3
+          Action: "androidx.profileinstaller.action.BENCHMARK_OPERATION"
+
+Domain verification status:
+
+Permissions:
+  Permission [com.chapark.ivi.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION] (58ddb3c):
+    sourcePackage=com.chapark.ivi
+    uid=10175 gids=[] type=0 prot=signature
+    perm=PermissionInfo{29ad0c5 com.chapark.ivi.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION}
+    flags=0x0
+
+Registered ContentProviders:
+  com.chapark.ivi/androidx.startup.InitializationProvider:
+    Provider{4e51a1a com.chapark.ivi/androidx.startup.InitializationProvider}
+
+ContentProvider Authorities:
+  [com.chapark.ivi.androidx-startup]:
+    Provider{4e51a1a com.chapark.ivi/androidx.startup.InitializationProvider}
+      applicationInfo=ApplicationInfo{d9c394b com.chapark.ivi}
+
+Key Set Manager:
+  [com.chapark.ivi]
+      Signing KeySets: 21
+
+Packages:
+  Package [com.chapark.ivi] (71a2fb1):
+    appId=10175
+    pkg=Package{4946c96 com.chapark.ivi}
+    codePath=/data/app/~~M4FtXQv6FciX1MnbyNW2EQ==/com.chapark.ivi-h3NlIMyW2kdeH5Bvuk-IFw==
+    resourcePath=/data/app/~~M4FtXQv6FciX1MnbyNW2EQ==/com.chapark.ivi-h3NlIMyW2kdeH5Bvuk-IFw==
+    legacyNativeLibraryDir=/data/app/~~M4FtXQv6FciX1MnbyNW2EQ==/com.chapark.ivi-h3NlIMyW2kdeH5Bvuk-IFw==/lib
+    extractNativeLibs=false
+    primaryCpuAbi=arm64-v8a
+    secondaryCpuAbi=null
+    cpuAbiOverride=null
+    versionCode=2 minSdk=28 targetSdk=34
+    minExtensionVersions=[]
+    versionName=0.4.0
+    usesNonSdkApi=false
+    splits=[base]
+    apkSigningVersion=2
+    flags=[ HAS_CODE ALLOW_CLEAR_USER_DATA ]
+    privateFlags=[ PRIVATE_FLAG_ACTIVITIES_RESIZE_MODE_RESIZEABLE_VIA_SDK_VERSION ALLOW_AUDIO_PLAYBACK_CAPTURE PRIVATE_FLAG_ALLOW_NATIVE_HEAP_POINTER_TAGGING ]
+    forceQueryable=false
+    queriesIntents=[Intent { act=ai.pleos.playground.vehicle.VEHICLE_START }, Intent { act=ai.pleos.playground.intent.action.NAVI_START }]
+    dataDir=/data/user/0/com.chapark.ivi
+    supportsScreens=[small, medium, large, xlarge, resizeable, anyDensity]
+    usesOptionalLibraries:
+      android.car
+    timeStamp=2026-11-12 08:27:31
+    lastUpdateTime=2026-11-12 08:27:31
+    installerPackageName=null
+    installerPackageUid=-1
+    initiatingPackageName=com.android.shell
+    originatingPackageName=null
+    packageSource=1
+    appMetadataFilePath=null
+    signatures=PackageSignatures{e4c2017 version:2, signatures:[a9410447], past signatures:[]}
+    installPermissionsFixed=true
+    pkgFlags=[ HAS_CODE ALLOW_CLEAR_USER_DATA ]
+    privatePkgFlags=[ PRIVATE_FLAG_ACTIVITIES_RESIZE_MODE_RESIZEABLE_VIA_SDK_VERSION ALLOW_AUDIO_PLAYBACK_CAPTURE PRIVATE_FLAG_ALLOW_NATIVE_HEAP_POINTER_TAGGING ]
+    apexModuleName=null
+    declared permissions:
+      com.chapark.ivi.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION: prot=signature
+    requested permissions:
+      pleos.car.permission.CAR_ENERGY
+      pleos.car.permission.NAVI_ROUTE
+      pleos.car.permission.NAVI_ROUTE_SEARCH
+      pleos.car.permission.NAVI_CUSTOM_MAP
+      android.permission.INTERNET
+      ai.pleos.playground.service.vehicle.VEHICLE_BINDING
+      com.chapark.ivi.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION
+    install permissions:
+      pleos.car.permission.NAVI_ROUTE_SEARCH: granted=true
+      ai.pleos.playground.service.vehicle.VEHICLE_BINDING: granted=true
+      pleos.car.permission.NAVI_CUSTOM_MAP: granted=true
+      pleos.car.permission.NAVI_ROUTE: granted=true
+      android.permission.INTERNET: granted=true
+      com.chapark.ivi.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION: granted=true
+      pleos.car.permission.CAR_ENERGY: granted=true
+    User 0: ceDataInode=312029 installed=true hidden=false suspended=false distractionFlags=0 stopped=true notLaunched=true enabled=0 instant=false virtual=false
+      installReason=0
+      firstInstallTime=2026-11-12 08:27:31
+      uninstallReason=0
+      gids=[3003]
+      runtime permissions:
+    User 10: ceDataInode=279079 installed=true hidden=false suspended=false distractionFlags=0 stopped=false notLaunched=false enabled=0 instant=false virtual=false
+      installReason=0
+      firstInstallTime=2026-11-12 08:27:31
+      uninstallReason=0
+      gids=[3003]
+      runtime permissions:
+
+Queries:
+  system apps queryable: false
+  queries via forceQueryable:
+  queries via package name:
+  queries via component:
+    com.android.settings.intelligence:
+      com.chapark.ivi
+  queryable via interaction:
+    User 0:
+    User 10:
+  queryable via uses-library:
+
+Dexopt state:
+  [com.chapark.ivi]
+    path: /data/app/~~M4FtXQv6FciX1MnbyNW2EQ==/com.chapark.ivi-h3NlIMyW2kdeH5Bvuk-IFw==/base.apk
+      arm64: [status=verify] [reason=install] [primary-abi]
+        [location is /data/app/~~M4FtXQv6FciX1MnbyNW2EQ==/com.chapark.ivi-h3NlIMyW2kdeH5Bvuk-IFw==/oat/arm64/base.odex]
+
+Compiler stats:
+  [com.chapark.ivi]
+     base.apk - 1474
+

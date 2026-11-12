@@ -1,0 +1,9 @@
+
+com.chapark.ivi.JourneyFlowTest:.
+
+Time: 23.033
+
+OK (1 test)
+
+
+

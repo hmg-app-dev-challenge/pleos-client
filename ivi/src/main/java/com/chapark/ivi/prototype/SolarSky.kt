@@ -45,7 +45,7 @@ import kotlin.math.sin
                 }
             }
         }
-        Text("계산된 해의 시간 표현 · 실제 풍경이나 날씨를 재현하지 않아요.",style=IviType.label,color=p.secondary)
+        Text("해의 시각을 담은 화면 · 현장 풍경과 날씨는 별도로 확인해 주세요.",style=IviType.label,color=p.secondary)
         if(rise==null || set==null)Text("이 날짜에는 일출 또는 일몰 시각을 구할 수 없어요.",style=IviType.label)
     }
 }

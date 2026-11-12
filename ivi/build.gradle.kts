@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -11,9 +13,19 @@ android {
         applicationId = "com.chapark.ivi"
         minSdk = 28
         targetSdk = 34
-        versionCode = 1
-        versionName = "0.3.0-prototype"
+        versionCode = 2
+        versionName = "0.4.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+    val releaseProperties=rootProject.file(".local-signing/release.properties")
+    if(releaseProperties.exists()) {
+        val keys=Properties().apply { releaseProperties.inputStream().use { load(it) } }
+        signingConfigs.create("localRelease") {
+            storeFile=rootProject.file(".local-signing/chapark-release.jks")
+            storePassword=keys.getProperty("storePassword")
+            keyAlias="chapark"
+            keyPassword=keys.getProperty("keyPassword")
+        }
     }
     buildTypes {
         getByName("debug") {
@@ -21,7 +33,10 @@ android {
             val token=if(tokenFile.exists())tokenFile.readText().trim() else ""
             buildConfigField("String","LOCAL_API_TOKEN","\"$token\"")
         }
-        getByName("release") { buildConfigField("String","LOCAL_API_TOKEN","\"\"") }
+        getByName("release") {
+            buildConfigField("String","LOCAL_API_TOKEN","\"\"")
+            if(releaseProperties.exists())signingConfig=signingConfigs.getByName("localRelease")
+        }
     }
     buildFeatures { compose = true; buildConfig = true }
     compileOptions {
