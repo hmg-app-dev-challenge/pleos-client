@@ -18,8 +18,8 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.caverock.androidsvg.SVG
 
-val IviColors.green:Color get()=if(ink==Color.White)Color(0xFF00E074) else Color(0xFF02C265)
-private val IviColors.selected:Color get()=if(ink==Color.White)Color.White.copy(alpha=.2f) else Color.White
+val IviColors.green:Color get()=if(isDark)Color(0xFF00E074) else Color(0xFF02C265)
+private val IviColors.selected:Color get()=if(isDark)Color.White.copy(alpha=.2f) else Color.White
 
 /** 17:429/435: 80×48 track, 8 padding, 32 knob. Row adds an 80dp touch target. */
 @Composable fun IviToggleRow(text:String,checked:Boolean,onChange:(Boolean)->Unit) {
@@ -27,9 +27,9 @@ private val IviColors.selected:Color get()=if(ink==Color.White)Color.White.copy(
     Row(Modifier.fillMaxWidth().heightIn(min=100.dp).toggleable(checked,interactionSource=remember{MutableInteractionSource()},indication=null,role=Role.Switch,onValueChange=onChange).padding(vertical=16.dp),
         verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(24.dp)) {
         Text(text,Modifier.weight(1f),style=IviType.body)
-        Box(Modifier.size(80.dp,48.dp).background(if(checked)p.green else p.ink.copy(alpha=if(p.ink==Color.White).1f else .3f),RoundedCornerShape(16.dp)).padding(8.dp),
+        Box(Modifier.size(80.dp,48.dp).background(if(checked)p.green else p.ink.copy(alpha=if(p.isDark).1f else .3f),RoundedCornerShape(16.dp)).padding(8.dp),
             contentAlignment=if(checked)Alignment.CenterEnd else Alignment.CenterStart) {
-            Box(Modifier.size(32.dp).shadow(8.dp,RoundedCornerShape(8.dp),ambientColor=Color.Black.copy(alpha=.08f),spotColor=Color.Black.copy(alpha=.08f)).background(if(checked || p.ink!=Color.White)Color.White else Color(0xFFA4A8AE),RoundedCornerShape(8.dp)))
+            Box(Modifier.size(32.dp).shadow(8.dp,RoundedCornerShape(8.dp),ambientColor=Color.Black.copy(alpha=.08f),spotColor=Color.Black.copy(alpha=.08f)).background(if(checked || !p.isDark)Color.White else Color(0xFFA4A8AE),RoundedCornerShape(8.dp)))
         }
     }
 }

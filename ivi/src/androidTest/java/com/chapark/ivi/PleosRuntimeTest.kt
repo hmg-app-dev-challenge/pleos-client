@@ -33,7 +33,7 @@ class PleosRuntimeTest {
 
     @Test fun missingCarLibraryKeepsDetailsLocked() {
         val instrument=InstrumentationRegistry.getInstrumentation()
-        if(instrument.targetContext.packageManager.systemSharedLibraryNames?.contains("android.car")==true) return
+        if(runCatching{Class.forName("android.car.Car")}.isSuccess) return
         instrument.runOnMainSync {
             val monitor=createUxMonitor(instrument.targetContext)
             monitor.start()

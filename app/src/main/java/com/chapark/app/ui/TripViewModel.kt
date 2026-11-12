@@ -21,7 +21,9 @@ class TripViewModel(private val saved:SavedStateHandle):ViewModel() {
         return base.copy(
             step=(saved.get<Int>("journey.step") ?: 0).coerceIn(0,6),
             input=base.input.copy(people=saved["journey.people"] ?: 1,cooking=saved["journey.cooking"] ?: true,
-                pets=saved["journey.pets"] ?: false,sleepingBag=saved["journey.bag"] ?: true),
+                pets=saved["journey.pets"] ?: false,sleepingBag=saved["journey.bag"] ?: true,
+                batteryThreshold=saved["journey.threshold"] ?: 35,endHour=saved["journey.endHour"] ?: 10,
+                schedule=saved.get<String>("journey.date")?.let{com.chapark.app.domain.TripSchedule(it,saved["journey.zone"] ?: "")}),
             placeId=saved["journey.place"] ?: base.placeId,
             route=if(route==RoutePhase.REQUESTED)RoutePhase.FAILED else route,
             parked=saved["journey.parked"] ?: false,
@@ -35,6 +37,8 @@ class TripViewModel(private val saved:SavedStateHandle):ViewModel() {
         val next=JourneyReducer.apply(mutable.value,event)
         if(next.route!=RoutePhase.REQUESTED) { routeJob?.cancel();routeJob=null }
         mutable.value=next
+        saved["journey.date"]=next.input.schedule?.date;saved["journey.zone"]=next.input.schedule?.zoneId
+        saved["journey.threshold"]=next.input.batteryThreshold;saved["journey.endHour"]=next.input.endHour
         saved["journey.step"]=next.step;saved["journey.people"]=next.input.people
         saved["journey.cooking"]=next.input.cooking;saved["journey.pets"]=next.input.pets;saved["journey.bag"]=next.input.sleepingBag
         saved["journey.place"]=next.placeId;saved["journey.route"]=next.route.name;saved["journey.parked"]=next.parked

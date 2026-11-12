@@ -15,13 +15,12 @@ class IviActivity:ComponentActivity() {
     override fun onCreate(savedInstanceState:Bundle?) {
         super.onCreate(savedInstanceState)
         uxMonitor=createUxMonitor(this)
-        val localPrototype=BuildConfig.DEBUG && (Build.HARDWARE.contains("ranchu") || Build.HARDWARE.contains("goldfish"))
         setContent {
             val ux by uxMonitor.state.collectAsStateWithLifecycle()
             val vm:JourneyViewModel=viewModel()
             val ui by vm.state.collectAsStateWithLifecycle()
-            val presented=if(localPrototype)ui else ui.copy(journey=ui.journey.copy(restricted=!ux.allowsDetailedInteraction))
-            JourneyScreen(presented,vm::send)
+            val presented=ui.copy(journey=ui.journey.copy(restricted=!ux.allowsDetailedInteraction))
+            JourneyScreen(presented,vm::send,vm::openNavigation,vm::deleteHistory)
         }
     }
     override fun onStart(){super.onStart();uxMonitor.start()}

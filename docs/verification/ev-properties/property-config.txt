@@ -1,0 +1,4 @@
+    propId: 0x11600309 is registered by 3 client(s).
+    propId: 0x1160030c is registered by 1 client(s).
+    android.hardware.automotive.vehicle.VehiclePropConfig{prop: 291504905, access: 1, changeMode: 2, areaConfigs: [], configArray: [], configString: , minSampleRate: 1.0, maxSampleRate: 100.0}
+    android.hardware.automotive.vehicle.VehiclePropConfig{prop: 291504908, access: 1, changeMode: 2, areaConfigs: [], configArray: [], configString: , minSampleRate: 1.0, maxSampleRate: 10.0}

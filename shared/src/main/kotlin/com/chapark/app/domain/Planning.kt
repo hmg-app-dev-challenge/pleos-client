@@ -1,7 +1,7 @@
 package com.chapark.app.domain
 
 enum class Condition { ALLOWED, RESTRICTED, UNKNOWN }
-enum class Source { SDK, MANUAL, DEMO }
+enum class Source { SDK, MANUAL, EMULATOR, DEMO, UNKNOWN }
 enum class ReadingStatus { AVAILABLE, STALE, UNSUPPORTED, PERMISSION_DENIED, DISCONNECTED, INVALID, UNKNOWN }
 
 /** Only a verified, normalized percentage may enter the decision engine. */
@@ -16,7 +16,10 @@ data class Place(
     val demoTemperatureC: Int,
 )
 data class TripInput(val people: Int = 1, val cooking: Boolean = false,
-    val pets: Boolean = false, val sleepingBag: Boolean = true)
+    val pets: Boolean = false, val sleepingBag: Boolean = true,
+    val batteryThreshold: Int = 35, val endHour: Int = 10, val schedule:TripSchedule?=null) {
+    val valid get() = people > 0 && batteryThreshold in 0..100 && endHour in 0..23 && (schedule==null || schedule.valid)
+}
 enum class Group(val label: String) { BEFORE("출발 전 행동"), SITE("현장 확인"), GEAR("준비물") }
 data class DecisionItem(val id: String, val group: Group, val title: String, val reason: String)
 
@@ -24,8 +27,8 @@ object PlanningRules {
     const val DEMO_SOC_THRESHOLD = 35.0
     fun evaluate(place: Place, input: TripInput, soc: SocReading): List<DecisionItem> = buildList {
         if (!soc.usable) add(DecisionItem("battery-check", Group.BEFORE, "배터리 확인 필요", "유효한 잔량을 확인하지 못했어요."))
-        else if (soc.percent!! < DEMO_SOC_THRESHOLD)
-            add(DecisionItem("charge-review", Group.BEFORE, "충전 경유 검토", "현재 잔량이 35% 미만이에요. 출발 전 충전 계획을 확인하세요."))
+        else if (soc.percent!! < input.batteryThreshold)
+            add(DecisionItem("charge-review", Group.BEFORE, "충전 경유 검토", "현재 잔량이 확인 기준 ${input.batteryThreshold}% 미만이에요. 출발 전 충전 계획을 확인하세요."))
         when (place.overnight) {
             Condition.RESTRICTED -> add(DecisionItem("overnight-denied", Group.BEFORE, "다른 장소를 선택해 주세요", "차내 숙박 제한 장소예요."))
             Condition.UNKNOWN -> add(DecisionItem("overnight-check", Group.BEFORE, "차내 숙박 조건 확인", "주차 허용과 숙박 허용은 달라요."))
@@ -50,6 +53,8 @@ object PlanningRules {
         }
         if (place.demoTemperatureC < 10 && !input.sleepingBag)
             add(DecisionItem("warmth", Group.GEAR, "보온 침구 추가 또는 장소 재검토", "예상 기온 ${place.demoTemperatureC}°C · 침낭 미보유"))
+        add(DecisionItem("bedding-count", Group.GEAR, "${input.people}명분 침구·매트 확인", "인원에 맞는 수량과 실제 잠자리를 확인하세요."))
+        if (input.people >= 3) add(DecisionItem("extra-sleeping-space", Group.BEFORE, "추가 잠자리 검토", "${input.people}명이 차에서 잘 수 있다는 뜻은 아니에요. 공간과 텐트 등 추가 잠자리를 확인하세요."))
         if (input.sleepingBag) add(DecisionItem("sleeping-bag", Group.GEAR, "침낭 챙김 확인", "보유와 실제 챙김은 별개예요."))
         add(DecisionItem("water", Group.GEAR, "생수·쓰레기 봉투", "기본 준비물"))
         add(DecisionItem("site-rules", Group.SITE, "현장 운영 안내 확인", "숙박·주차·취사 조건을 현장에서 다시 확인하세요."))

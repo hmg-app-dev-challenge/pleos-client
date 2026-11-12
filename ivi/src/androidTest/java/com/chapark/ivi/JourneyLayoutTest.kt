@@ -28,7 +28,7 @@ class JourneyLayoutTest {
             }
         }
         for(dark in listOf(false,true)) for(step in 0..6) {
-            compose.runOnIdle { current=Journey(step=step,dark=dark,route=if(step>=5)RoutePhase.ARRIVED else RoutePhase.NONE,
+            compose.runOnIdle { current=Journey(placeId="camp-nanji",step=step,dark=dark,route=if(step>=5)RoutePhase.ARRIVED else RoutePhase.NONE,
                 parked=step>=5,sleepChecks=if(step==6)Journey.SLEEP_IDS else emptySet(),sleepReady=step==6) }
             compose.waitForIdle()
             compose.onNodeWithTag("journey-next").assertIsDisplayed()

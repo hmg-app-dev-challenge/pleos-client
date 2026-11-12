@@ -1,0 +1,45 @@
+Compiled from "SourceFile"
+public interface ai.pleos.playground.vehicle.api.EvBattery {
+  public static void setEvChargeCurrentDrawLimit$default(ai.pleos.playground.vehicle.api.EvBattery, float, kotlin.jvm.functions.Function1, kotlin.jvm.functions.Function1, int, java.lang.Object);
+  public static void setEvChargePercentLimit$default(ai.pleos.playground.vehicle.api.EvBattery, float, kotlin.jvm.functions.Function1, kotlin.jvm.functions.Function1, int, java.lang.Object);
+  public static void setEvChargePortOpen$default(ai.pleos.playground.vehicle.api.EvBattery, boolean, kotlin.jvm.functions.Function1, kotlin.jvm.functions.Function1, int, java.lang.Object);
+  public static void setEvChargeSwitch$default(ai.pleos.playground.vehicle.api.EvBattery, boolean, kotlin.jvm.functions.Function1, kotlin.jvm.functions.Function1, int, java.lang.Object);
+  public abstract void checkInstantaneousEvEfficiencyCapabilities(kotlin.jvm.functions.Function1<? super ai.pleos.playground.vehicle.api.model.capability.CapabilityConfig, kotlin.Unit>, kotlin.jvm.functions.Function1<? super java.lang.Exception, kotlin.Unit>);
+  public abstract void checkSinceChargeEvEfficiencyCapabilities(kotlin.jvm.functions.Function1<? super ai.pleos.playground.vehicle.api.model.capability.CapabilityConfig, kotlin.Unit>, kotlin.jvm.functions.Function1<? super java.lang.Exception, kotlin.Unit>);
+  public abstract void checkCumulativeEvEfficiencyCapabilities(kotlin.jvm.functions.Function1<? super ai.pleos.playground.vehicle.api.model.capability.CapabilityConfig, kotlin.Unit>, kotlin.jvm.functions.Function1<? super java.lang.Exception, kotlin.Unit>);
+  public abstract void checkCurrentEvEfficiencyCapabilities(kotlin.jvm.functions.Function1<? super ai.pleos.playground.vehicle.api.model.capability.CapabilityConfig, kotlin.Unit>, kotlin.jvm.functions.Function1<? super java.lang.Exception, kotlin.Unit>);
+  public abstract void checkEvBatteryStateOfChargeCapabilities(kotlin.jvm.functions.Function1<? super ai.pleos.playground.vehicle.api.model.capability.CapabilityConfig, kotlin.Unit>, kotlin.jvm.functions.Function1<? super java.lang.Exception, kotlin.Unit>);
+  public abstract void checkEvChargeCurrentDrawLimitCapabilities(kotlin.jvm.functions.Function1<? super java.util.List<java.lang.Float>, kotlin.Unit>, kotlin.jvm.functions.Function1<? super java.lang.Exception, kotlin.Unit>);
+  public abstract void checkEvChargeCurrentDrawLimitCapabilities(kotlin.jvm.functions.Function2<? super ai.pleos.playground.vehicle.api.model.capability.CapabilityConfig, ? super java.util.List<java.lang.Float>, kotlin.Unit>, kotlin.jvm.functions.Function1<? super java.lang.Exception, kotlin.Unit>);
+  public abstract void checkEvChargePercentLimitCapabilities(kotlin.jvm.functions.Function2<? super ai.pleos.playground.vehicle.api.model.capability.CapabilityConfig, ? super java.util.List<java.lang.Float>, kotlin.Unit>, kotlin.jvm.functions.Function1<? super java.lang.Exception, kotlin.Unit>);
+  public abstract void checkEvChargePortOpenCapabilities(kotlin.jvm.functions.Function1<? super ai.pleos.playground.vehicle.api.model.capability.CapabilityConfig, kotlin.Unit>, kotlin.jvm.functions.Function1<? super java.lang.Exception, kotlin.Unit>);
+  public abstract void checkEvChargeSwitchCapabilities(kotlin.jvm.functions.Function1<? super ai.pleos.playground.vehicle.api.model.capability.CapabilityConfig, kotlin.Unit>, kotlin.jvm.functions.Function1<? super java.lang.Exception, kotlin.Unit>);
+  public abstract void getInstantaneousEvEfficiency(kotlin.jvm.functions.Function1<? super java.lang.Float, kotlin.Unit>, kotlin.jvm.functions.Function1<? super java.lang.Exception, kotlin.Unit>);
+  public abstract void getSinceChargeEvEfficiency(kotlin.jvm.functions.Function1<? super java.lang.Float, kotlin.Unit>, kotlin.jvm.functions.Function1<? super java.lang.Exception, kotlin.Unit>);
+  public abstract void getCumulativeEvEfficiency(kotlin.jvm.functions.Function1<? super java.lang.Float, kotlin.Unit>, kotlin.jvm.functions.Function1<? super java.lang.Exception, kotlin.Unit>);
+  public abstract void getCurrentEvEfficiency(kotlin.jvm.functions.Function1<? super java.lang.Float, kotlin.Unit>, kotlin.jvm.functions.Function1<? super java.lang.Exception, kotlin.Unit>);
+  public abstract void getEvBatteryStateOfCharge(kotlin.jvm.functions.Function1<? super java.lang.Integer, kotlin.Unit>, kotlin.jvm.functions.Function1<? super java.lang.Exception, kotlin.Unit>);
+  public abstract void getEvBatteryLevel(kotlin.jvm.functions.Function1<? super java.lang.Float, kotlin.Unit>, kotlin.jvm.functions.Function1<? super java.lang.Exception, kotlin.Unit>);
+  public abstract void registerCurrentEvEfficiency(ai.pleos.playground.vehicle.listener.EvBatteryEfficiencyListener);
+  public abstract void unregisterCurrentEvEfficiency(ai.pleos.playground.vehicle.listener.EvBatteryEfficiencyListener);
+  public abstract void registerEvBatteryStateOfCharge(ai.pleos.playground.vehicle.listener.EvBatteryStateOfChargeListener);
+  public abstract void unregisterEvBatteryStateOfCharge(ai.pleos.playground.vehicle.listener.EvBatteryStateOfChargeListener);
+  public abstract void setEvChargeCurrentDrawLimit(float, kotlin.jvm.functions.Function1<? super java.lang.Float, kotlin.Unit>, kotlin.jvm.functions.Function1<? super java.lang.Exception, kotlin.Unit>);
+  public abstract void getEvChargeCurrentDrawLimit(kotlin.jvm.functions.Function1<? super java.lang.Float, kotlin.Unit>, kotlin.jvm.functions.Function1<? super java.lang.Exception, kotlin.Unit>);
+  public abstract void setEvChargePercentLimit(float, kotlin.jvm.functions.Function1<? super java.lang.Float, kotlin.Unit>, kotlin.jvm.functions.Function1<? super java.lang.Exception, kotlin.Unit>);
+  public abstract void isEvChargePortOpen(kotlin.jvm.functions.Function1<? super java.lang.Boolean, kotlin.Unit>, kotlin.jvm.functions.Function1<? super java.lang.Exception, kotlin.Unit>);
+  public abstract void setEvChargePortOpen(boolean, kotlin.jvm.functions.Function1<? super java.lang.Boolean, kotlin.Unit>, kotlin.jvm.functions.Function1<? super java.lang.Exception, kotlin.Unit>);
+  public abstract void setEvChargeSwitch(boolean, kotlin.jvm.functions.Function1<? super java.lang.Boolean, kotlin.Unit>, kotlin.jvm.functions.Function1<? super java.lang.Exception, kotlin.Unit>);
+  public abstract void getEvChargeSwitchState(kotlin.jvm.functions.Function1<? super java.lang.Boolean, kotlin.Unit>, kotlin.jvm.functions.Function1<? super java.lang.Exception, kotlin.Unit>);
+  public abstract void getEvBatteryCapacity(kotlin.jvm.functions.Function1<? super java.lang.Float, kotlin.Unit>, kotlin.jvm.functions.Function1<? super java.lang.Exception, kotlin.Unit>);
+  public abstract void registerInstantaneousEvEfficiency(ai.pleos.playground.vehicle.listener.EvBatteryEfficiencyListener);
+  public abstract void unregisterInstantaneousEvEfficiency(ai.pleos.playground.vehicle.listener.EvBatteryEfficiencyListener);
+  public abstract void registerSinceChargeEvEfficiency(ai.pleos.playground.vehicle.listener.EvBatteryEfficiencyListener);
+  public abstract void unregisterSinceChargeEvEfficiency(ai.pleos.playground.vehicle.listener.EvBatteryEfficiencyListener);
+  public abstract void registerCumulativeEvEfficiency(ai.pleos.playground.vehicle.listener.EvBatteryEfficiencyListener);
+  public abstract void unregisterCumulativeEvEfficiency(ai.pleos.playground.vehicle.listener.EvBatteryEfficiencyListener);
+  public abstract void registerEvBatteryLevel(ai.pleos.playground.vehicle.listener.EvBatteryLevelListener);
+  public abstract void unregisterEvBatteryLevel(ai.pleos.playground.vehicle.listener.EvBatteryLevelListener);
+  public abstract void registerEvChargePortOpen(ai.pleos.playground.vehicle.listener.EvChargePortOpenListener);
+  public abstract void unregisterEvChargePortOpen(ai.pleos.playground.vehicle.listener.EvChargePortOpenListener);
+}

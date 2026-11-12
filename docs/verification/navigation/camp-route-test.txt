@@ -1,0 +1,10 @@
+
+com.chapark.ivi.NaviRouteProbeTest:NAVI_ROUTE: NavigationSnapshot(phase=GUIDING, message=null, destinationName=난지캠핑장, routeConfirmed=true)
+.
+
+Time: 8.866
+
+OK (1 test)
+
+
+

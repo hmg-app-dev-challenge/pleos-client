@@ -61,7 +61,6 @@ private val exitItems=linkedMapOf("settings" to "직접 변경한 차량 설정 
                         PleosButton(action.first,modifier=Modifier.testTag("journey-next"),enabled=action.second) {
                             when {
                                 s.completed->send(JourneyEvent.NewTrip)
-                                s.step==3 && s.checkedCount<s.decisions.size->confirm="depart"
                                 s.step==6->confirm="finish"
                                 s.step==4->when(s.route) {
                                     RoutePhase.NONE,RoutePhase.FAILED->send(JourneyEvent.RequestRoute)
@@ -90,8 +89,8 @@ private val exitItems=linkedMapOf("settings" to "직접 변경한 차량 설정 
             Dialog(onDismissRequest={confirm=null}) {
                 Panel {
                     Text(title,style=MaterialTheme.typography.headlineSmall);Text(body)
-                    PleosButton(when(kind){"reset"->"처음부터";"finish"->"종료";else->"이동 계획 보기"}) {
-                        confirm=null;send(when(kind){"reset"->JourneyEvent.ResetScenario;"finish"->JourneyEvent.Finish;else->JourneyEvent.Next})
+                    PleosButton(when(kind){"reset"->"처음부터";"finish"->"종료";else->"확인"}) {
+                        confirm=null;send(when(kind){"reset"->JourneyEvent.ResetScenario;"finish"->JourneyEvent.Finish;else->JourneyEvent.Back})
                     }
                     PleosButton("취소",filled=false){confirm=null}
                 }
@@ -104,13 +103,13 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
     s.step==0->"오늘 밤 차박 시작" to true
     s.step==1->"장소 후보 비교" to true
     s.step==2->"선택한 장소로 계획" to true
-    s.step==3->"준비 계획 확인 · 이동" to true
+    s.step==3->"준비 계획 확인 · 이동" to s.canDepart
     s.step==4->when(s.route){
         RoutePhase.NONE->"이동 시작" to true;RoutePhase.REQUESTED->"이동 정보 준비 중" to false
         RoutePhase.GUIDING->"도착했어요" to true;RoutePhase.FAILED->"다시 시도" to true
         RoutePhase.ARRIVED->(if(s.parked)"수면 준비로" else "주차했어요") to true
     }
-    s.step==5->"수면 준비 확인 · 다음 날" to s.sleepChecks.containsAll(Journey.SLEEP_IDS)
+    s.step==5->"수면 준비 확인 · 다음 날" to (s.canSleep && s.siteReady && s.sleepChecks.containsAll(Journey.SLEEP_IDS))
     else->"차박 종료" to s.canFinish
 }
 @Composable private fun Content(s:Journey,send:(JourneyEvent)->Unit) {
@@ -120,13 +119,22 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
             Panel {
                 Text("오늘의 여행",style=MaterialTheme.typography.titleMedium)
                 Text("회사 주차장 · 1박 차박 · 전기차")
-                Text("배터리 ${s.soc}%",style=MaterialTheme.typography.titleLarge)
+                Text("배터리 ${s.soc}% · 예시",style=MaterialTheme.typography.titleLarge)
                 Text("${s.input.people}인 · ${if(s.input.cooking)"간단 조리 예정" else "준비한 식사"} · ${if(s.input.sleepingBag)"침낭 보유" else "침낭 미보유"}")
             }
         }
         1->{
             Heading("누구와, 어떻게\n보낼 예정인가요?","이번 여행에 맞는 조건을 알려주세요.")
-            Panel {Text("함께하는 인원");PleosSegments(listOf("1명","2명"),s.input.people-1){send(JourneyEvent.Conditions(s.input.copy(people=it+1)))}}
+            Panel {
+                Text("여행 날짜 · ${s.input.schedule?.date ?: "선택 전"}")
+                Text("시간대 · ${s.input.schedule?.zoneId ?: "선택 전"}")
+                PleosButton("오늘 날짜로 계획"){
+                    val zone=java.time.ZoneId.systemDefault()
+                    send(JourneyEvent.Conditions(s.input.copy(schedule=com.chapark.app.domain.TripSchedule(java.time.LocalDate.now(zone).toString(),zone.id))))
+                }
+                Text("함께하는 인원");Text("${s.input.people}명")
+                PleosButton("인원 줄이기",enabled=s.input.people>1){send(JourneyEvent.Conditions(s.input.copy(people=s.input.people-1)))}
+                PleosButton("인원 늘리기",enabled=s.input.people<Int.MAX_VALUE){send(JourneyEvent.Conditions(s.input.copy(people=s.input.people+1)))}}
             Choice("현장에서 조리할 예정",s.input.cooking){send(JourneyEvent.Conditions(s.input.copy(cooking=it)))}
             Choice("반려동물과 함께",s.input.pets){send(JourneyEvent.Conditions(s.input.copy(pets=it)))}
             Choice("침낭을 보유하고 있어요",s.input.sleepingBag){send(JourneyEvent.Conditions(s.input.copy(sleepingBag=it)))}
@@ -143,8 +151,13 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
         }
         3->{
             Heading("오늘의 준비 계획",s.place.name)
-            Text("현재 배터리 ${s.soc?.let{"$it%"} ?: "확인 필요"} · ${s.checkedCount}/${s.decisions.size}개 확인")
-            Group.entries.forEach {group->
+            Text("현재 배터리 ${s.soc?.let{"$it%"} ?: "확인 필요"} · 예시 · 출발 전 ${s.departureCheckedCount}/${s.departureItems.size}개 확인")
+            s.departureBlockReason?.let { Text(it) }
+            if(s.input.schedule?.departureEnd(s.input.endHour)==null) PleosButton("오늘 날짜로 계획") {
+                val zone=java.time.ZoneId.systemDefault()
+                send(JourneyEvent.Conditions(s.input.copy(schedule=com.chapark.app.domain.TripSchedule(java.time.LocalDate.now(zone).toString(),zone.id))))
+            }
+            Group.entries.filter{it!=Group.SITE}.forEach {group->
                 val items=s.decisions.filter{it.group==group}
                 if(items.isNotEmpty()) Panel {
                     Text(group.label,style=MaterialTheme.typography.titleMedium)
@@ -162,6 +175,7 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
             }
         }
         5->{
+            Panel {s.siteItems.forEach{item->Check(item.title,item.id in s.checked){send(JourneyEvent.Check(item.id))}}}
             Heading("잠들기 전,\n하나씩 확인해요","편안히 쉴 수 있도록 주변과 차량 설정을 확인해 주세요.")
             Panel {Text("차량의 공조와 조명을 원하는 상태로 맞춘 뒤 체크해 주세요.");sleepItems.forEach{(id,title)->Check(title,id in s.sleepChecks){send(JourneyEvent.SleepCheck(id))}}}
             Text("차내 화기를 사용하지 마세요. 차량 사용 설명서와 현장 운영 안내를 따라주세요.")

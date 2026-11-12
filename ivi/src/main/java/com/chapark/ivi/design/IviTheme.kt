@@ -12,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.*
@@ -26,13 +27,14 @@ private val asta = FontFamily(
     Font(R.font.asta_sans, FontWeight.Bold, variationSettings=FontVariation.Settings(FontVariation.weight(700))),
     Font(R.font.asta_sans, FontWeight.ExtraBold, variationSettings=FontVariation.Settings(FontVariation.weight(800))))
 data class IviColors(val background: Color, val surface: Color, val ink: Color, val filled: Color, val filledPressed: Color, val onFilled: Color) {
+    val isDark get() = background.luminance() < .5f
     val basic get() = ink.copy(alpha=.05f)
     val basicPressed get() = ink.copy(alpha=.1f)
     val secondary get() = ink.copy(alpha=.84f)
     val tertiary get() = ink.copy(alpha=.64f)
     val quaternary get() = ink.copy(alpha=.32f)
     val divider get() = ink.copy(alpha=.1f)
-    val basicDisabled get() = if (ink == Color.White) Color(0xFF131417).copy(alpha=.2f) else Color.White.copy(alpha=.2f)
+    val basicDisabled get() = if (isDark) Color(0xFF131417).copy(alpha=.2f) else Color.White.copy(alpha=.2f)
 }
 private val light = IviColors(Color(0xFFF7F8FA),Color.White,Color(0xFF131417),Color(0xFF44464E),Color(0xFF313236),Color.White)
 private val dark = IviColors(Color(0xFF1D1E21),Color(0xFF313236),Color.White,Color(0xFFE0E1E6),Color(0xFFC7C9CE),Color(0xFF131417))
@@ -47,11 +49,14 @@ object IviType {
     val smallBody = style(26,34,FontWeight.Normal)
     val label = style(24,28,FontWeight.Normal)
 }
-@Composable fun IviTheme(isDark:Boolean, content:@Composable ()->Unit) {
-    val colors = if(isDark) dark else light
-    CompositionLocalProvider(LocalIviColors provides colors) {
-        MaterialTheme(colorScheme=lightColorScheme(background=colors.background,onBackground=colors.ink,
-            surface=colors.surface,onSurface=colors.ink,primary=colors.filled,onPrimary=colors.onFilled),
+private val night = IviColors(Color(0xFF19140F),Color(0xFF29221B),Color(0xFFFFE4BD),Color(0xFFE1C49D),Color(0xFFC4A681),Color(0xFF19140F))
+@Composable fun IviTheme(isDark:Boolean, nightMode:Boolean=false, content:@Composable ()->Unit) {
+    val colors = if(nightMode) night else if(isDark) dark else light
+    CompositionLocalProvider(LocalIviColors provides colors, LocalContentColor provides colors.ink) {
+        MaterialTheme(colorScheme=(if(colors.isDark) darkColorScheme() else lightColorScheme()).copy(
+            background=colors.background,onBackground=colors.ink, surface=colors.surface,onSurface=colors.ink,
+            primary=colors.filled,onPrimary=colors.onFilled,onSurfaceVariant=colors.secondary,
+            surfaceVariant=colors.surface,surfaceContainer=colors.surface,outline=colors.tertiary,outlineVariant=colors.divider),
             typography=Typography(bodyLarge=IviType.body,bodyMedium=IviType.smallBody,labelLarge=IviType.smallTitle), content=content)
     }
 }

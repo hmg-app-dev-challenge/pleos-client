@@ -36,11 +36,16 @@ class PhoneLayoutTest {
         }
         for(dark in listOf(false,true)) {
             send(JourneyEvent.ResetScenario);send(JourneyEvent.Dark(dark))
-            for(stage in 0..3){check(stage,dark);send(JourneyEvent.Next)}
+            for(stage in 0..3){
+                check(stage,dark)
+                if(stage==1)send(JourneyEvent.Conditions(vm.state.value.input.copy(schedule=com.chapark.app.domain.TripSchedule("2026-11-12","Asia/Seoul"))))
+                if(stage==3)vm.state.value.departureItems.forEach{send(JourneyEvent.Check(it.id))}
+                send(JourneyEvent.Next)
+            }
             send(JourneyEvent.RequestRoute)
             ui.waitUntil(5_000){vm.state.value.route==RoutePhase.GUIDING}
             check(4,dark);send(JourneyEvent.Arrive);send(JourneyEvent.Park);send(JourneyEvent.Next)
-            check(5,dark);Journey.SLEEP_IDS.forEach{send(JourneyEvent.SleepCheck(it))};send(JourneyEvent.Next)
+            check(5,dark);vm.state.value.siteItems.forEach{send(JourneyEvent.Check(it.id))};Journey.SLEEP_IDS.forEach{send(JourneyEvent.SleepCheck(it))};send(JourneyEvent.Next)
             check(6,dark);Journey.EXIT_IDS.forEach{send(JourneyEvent.ExitCheck(it))};send(JourneyEvent.Finish)
             check(7,dark)
         }

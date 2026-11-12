@@ -1,0 +1,12 @@
+
+com.chapark.ivi.JourneyFlowTest:.
+com.chapark.ivi.JourneyStoreTest:STORE_BEFORE: step=6, completed=true, uid=1010176
+..
+com.chapark.ivi.JourneyLayoutTest:.
+
+Time: 17.458
+
+OK (4 tests)
+
+
+

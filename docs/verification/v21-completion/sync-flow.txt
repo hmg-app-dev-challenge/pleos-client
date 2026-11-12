@@ -1,0 +1,10 @@
+
+com.chapark.ivi.RecordSyncTest:.
+com.chapark.ivi.JourneyFlowTest:.
+
+Time: 16.401
+
+OK (2 tests)
+
+
+

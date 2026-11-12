@@ -1,0 +1,91 @@
+Car service dump usage:
+[NO ARG]
+	  dumps everything (all services and HALs)
+--help
+	  shows this help
+--version
+	  shows the version of all car components
+--list
+	  lists the name of all services
+--list-hals
+	  lists the name of all HALs
+--services <SVC1> [SVC2] [SVCN]
+	  dumps just the specific services, where SVC is just the service class
+	  name (like CarUserService)
+--vms-hal
+	  dumps the VMS HAL metrics
+--hal [HAL1] [HAL2] [HALN]
+	  dumps just the specified HALs (or all of them if none specified),
+	  where HAL is just the class name (like UserHalService)
+--user-metrics
+	  dumps user switching and stopping metrics
+--first-user-metrics
+	  dumps how long it took to unlock first user since Android started
+
+	  (or -1 if not unlocked)
+--data-dir
+	  dumps CarService data dir (and whether it exists)
+--rro
+	  dumps only the RROs
+-h
+	  shows commands usage (NOTE: commands are not available on USER builds
+[ANYTHING ELSE]
+	  runs the given command (use --h to see the available commands)
+<?xml version="1.0" encoding="utf-8"?>
+<permissions>
+    <library
+        name="ai.pleos.playground.car"
+        file="/system/framework/ai.pleos.playground.car.jar" />
+</permissions>
+      ai.pleos.service.car.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION: granted=true
+      android.car.permission.CONTROL_CAR_ENERGY_PORTS: granted=true
+      android.permission.NFC: granted=true
+      android.car.permission.CAR_ENERGY_PORTS: granted=true
+      android.permission.MODIFY_AUDIO_SETTINGS_PRIVILEGED: granted=true
+      android.car.permission.CONTROL_CAR_MIRRORS: granted=true
+      android.permission.INTERNAL_SYSTEM_WINDOW: granted=true
+      android.permission.BIND_ROTATION_RESOLVER_SERVICE: granted=true
+      android.permission.NETWORK_SETTINGS: granted=true
+      android.permission.CHANGE_OVERLAY_PACKAGES: granted=true
+      com.android.car.settings.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION: granted=true
+      ai.umos.vehiclecontrol.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION: granted=true
+--
+      ai.pleos.service.car.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION: granted=true
+      android.car.permission.CONTROL_CAR_ENERGY_PORTS: granted=true
+      android.permission.NFC: granted=true
+      android.car.permission.CAR_ENERGY_PORTS: granted=true
+      android.permission.MODIFY_AUDIO_SETTINGS_PRIVILEGED: granted=true
+      android.car.permission.CONTROL_CAR_MIRRORS: granted=true
+      android.permission.INTERNAL_SYSTEM_WINDOW: granted=true
+      android.permission.BIND_ROTATION_RESOLVER_SERVICE: granted=true
+      android.permission.NETWORK_SETTINGS: granted=true
+      android.permission.CHANGE_OVERLAY_PACKAGES: granted=true
+      com.android.car.settings.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION: granted=true
+      ai.umos.vehiclecontrol.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION: granted=true
+--
+        android.permission.BLUETOOTH_CONNECT: granted=true, flags=[ SYSTEM_FIXED|GRANTED_BY_DEFAULT|RESTRICTION_SYSTEM_EXEMPT]
+        android.car.permission.CAR_SPEED: granted=true, flags=[ SYSTEM_FIXED|GRANTED_BY_DEFAULT]
+        android.permission.READ_EXTERNAL_STORAGE: granted=true, flags=[ SYSTEM_FIXED|GRANTED_BY_DEFAULT|RESTRICTION_SYSTEM_EXEMPT|RESTRICTION_UPGRADE_EXEMPT]
+        android.car.permission.CAR_ENERGY: granted=true, flags=[ SYSTEM_FIXED|GRANTED_BY_DEFAULT]
+        android.permission.ACCESS_COARSE_LOCATION: granted=true, flags=[ SYSTEM_FIXED|GRANTED_BY_DEFAULT|RESTRICTION_SYSTEM_EXEMPT]
+        android.permission.READ_PHONE_STATE: granted=true, flags=[ SYSTEM_FIXED|GRANTED_BY_DEFAULT|RESTRICTION_SYSTEM_EXEMPT]
+        android.permission.SEND_SMS: granted=true, flags=[ SYSTEM_FIXED|GRANTED_BY_DEFAULT|RESTRICTION_SYSTEM_EXEMPT|RESTRICTION_UPGRADE_EXEMPT]
+        android.permission.CALL_PHONE: granted=true, flags=[ SYSTEM_FIXED|GRANTED_BY_DEFAULT|RESTRICTION_SYSTEM_EXEMPT]
+        android.permission.READ_MEDIA_IMAGES: granted=true, flags=[ SYSTEM_FIXED|GRANTED_BY_DEFAULT|RESTRICTION_SYSTEM_EXEMPT]
+        android.permission.WRITE_CONTACTS: granted=true, flags=[ SYSTEM_FIXED|GRANTED_BY_DEFAULT|RESTRICTION_SYSTEM_EXEMPT]
+        android.permission.CAMERA: granted=true, flags=[ SYSTEM_FIXED|GRANTED_BY_DEFAULT|RESTRICTION_SYSTEM_EXEMPT]
+        android.permission.WRITE_CALL_LOG: granted=true, flags=[ SYSTEM_FIXED|GRANTED_BY_DEFAULT|RESTRICTION_SYSTEM_EXEMPT|RESTRICTION_UPGRADE_EXEMPT]
+--
+        android.permission.BLUETOOTH_CONNECT: granted=true, flags=[ SYSTEM_FIXED|GRANTED_BY_DEFAULT|USER_SENSITIVE_WHEN_GRANTED|USER_SENSITIVE_WHEN_DENIED|RESTRICTION_SYSTEM_EXEMPT]
+        android.car.permission.CAR_SPEED: granted=true, flags=[ SYSTEM_FIXED|GRANTED_BY_DEFAULT]
+        android.permission.READ_EXTERNAL_STORAGE: granted=true, flags=[ SYSTEM_FIXED|GRANTED_BY_DEFAULT|USER_SENSITIVE_WHEN_GRANTED|USER_SENSITIVE_WHEN_DENIED|RESTRICTION_SYSTEM_EXEMPT|RESTRICTION_UPGRADE_EXEMPT]
+        android.car.permission.CAR_ENERGY: granted=true, flags=[ SYSTEM_FIXED|GRANTED_BY_DEFAULT]
+        android.permission.ACCESS_COARSE_LOCATION: granted=true, flags=[ SYSTEM_FIXED|GRANTED_BY_DEFAULT|USER_SENSITIVE_WHEN_GRANTED|USER_SENSITIVE_WHEN_DENIED|RESTRICTION_SYSTEM_EXEMPT]
+        android.permission.READ_PHONE_STATE: granted=true, flags=[ SYSTEM_FIXED|GRANTED_BY_DEFAULT|RESTRICTION_SYSTEM_EXEMPT]
+        android.permission.SEND_SMS: granted=true, flags=[ SYSTEM_FIXED|GRANTED_BY_DEFAULT|RESTRICTION_SYSTEM_EXEMPT|RESTRICTION_UPGRADE_EXEMPT]
+        android.permission.CALL_PHONE: granted=true, flags=[ SYSTEM_FIXED|GRANTED_BY_DEFAULT|RESTRICTION_SYSTEM_EXEMPT]
+        android.permission.READ_MEDIA_IMAGES: granted=true, flags=[ SYSTEM_FIXED|GRANTED_BY_DEFAULT|USER_SENSITIVE_WHEN_GRANTED|USER_SENSITIVE_WHEN_DENIED|RESTRICTION_SYSTEM_EXEMPT]
+        android.permission.WRITE_CONTACTS: granted=true, flags=[ SYSTEM_FIXED|GRANTED_BY_DEFAULT|RESTRICTION_SYSTEM_EXEMPT]
+        android.permission.CAMERA: granted=true, flags=[ SYSTEM_FIXED|GRANTED_BY_DEFAULT|RESTRICTION_SYSTEM_EXEMPT]
+        android.permission.WRITE_CALL_LOG: granted=true, flags=[ SYSTEM_FIXED|GRANTED_BY_DEFAULT|RESTRICTION_SYSTEM_EXEMPT|RESTRICTION_UPGRADE_EXEMPT]
+

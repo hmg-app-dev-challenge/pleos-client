@@ -1,0 +1,29 @@
+
+com.chapark.ivi.NaviRouteProbeTest:NAVI: location CurrentLocationInfo(latitude=37.4127212, longitude=127.094681, heading=0.0, address=수정구 시흥동, routeId=, currentRouteIndex=0)
+NAVI: routeState RouteStateInfo(termsAgreement=true, naviMode=SAFE_GUIDING, isRouting=false, routeOption=RECOMMENDED, remainDestinationChargingInt=0, remainWaypointChargingInt=[0, 0], trafficStatus=TrafficStatus(summary=TrafficCongestionSummary(totalCongestionDist=0.0, totalCongestionTime=60, totalCongestionAvrSpeed=0.0), congestionItemList=[], trafficEventList=[]))
+NAVI: started RouteStartInfo(duration=60, distance=50, tollFare=0, name=42dot, remainDestinationChargingValue=77391)
+NAVI: status ROUTE_DRIVE
+NAVI: routeState RouteStateInfo(termsAgreement=true, naviMode=ROUTE_GUIDING, isRouting=false, routeOption=RECOMMENDED, remainDestinationChargingInt=77391, remainWaypointChargingInt=[0, 0], trafficStatus=TrafficStatus(summary=TrafficCongestionSummary(totalCongestionDist=0.0, totalCongestionTime=60, totalCongestionAvrSpeed=0.0), congestionItemList=[], trafficEventList=[]))
+NAVI: routeState RouteStateInfo(termsAgreement=true, naviMode=ROUTE_GUIDING, isRouting=false, routeOption=RECOMMENDED, remainDestinationChargingInt=77391, remainWaypointChargingInt=[0, 0], trafficStatus=TrafficStatus(summary=TrafficCongestionSummary(totalCongestionDist=0.0, totalCongestionTime=60, totalCongestionAvrSpeed=0.0), congestionItemList=[], trafficEventList=[]))
+NAVI: destination DestinationInfo(latitude=37.41289678, longitude=127.09383464, displayLatitude=null, displayLongitude=null, name=42dot, address=수정구 시흥동, remainDistance=50, remainTime=60, tollFare=0, poiId=36khp37hh8gqcm5nqhe5, poiSubId=null, poiProvider=)
+
+Error in requestOfficialReferenceDestination(com.chapark.ivi.NaviRouteProbeTest):
+java.lang.AssertionError: No route response: [location CurrentLocationInfo(latitude=37.4127212, longitude=127.094681, heading=0.0, address=수정구 시흥동, routeId=, currentRouteIndex=0), routeState RouteStateInfo(termsAgreement=true, naviMode=SAFE_GUIDING, isRouting=false, routeOption=RECOMMENDED, remainDestinationChargingInt=0, remainWaypointChargingInt=[0, 0], trafficStatus=TrafficStatus(summary=TrafficCongestionSummary(totalCongestionDist=0.0, totalCongestionTime=60, totalCongestionAvrSpeed=0.0), congestionItemList=[], trafficEventList=[])), started RouteStartInfo(duration=60, distance=50, tollFare=0, name=42dot, remainDestinationChargingValue=77391), status ROUTE_DRIVE, routeState RouteStateInfo(termsAgreement=true, naviMode=ROUTE_GUIDING, isRouting=false, routeOption=RECOMMENDED, remainDestinationChargingInt=77391, remainWaypointChargingInt=[0, 0], trafficStatus=TrafficStatus(summary=TrafficCongestionSummary(totalCongestionDist=0.0, totalCongestionTime=60, totalCongestionAvrSpeed=0.0), congestionItemList=[], trafficEventList=[])), routeState RouteStateInfo(termsAgreement=true, naviMode=ROUTE_GUIDING, isRouting=false, routeOption=RECOMMENDED, remainDestinationChargingInt=77391, remainWaypointChargingInt=[0, 0], trafficStatus=TrafficStatus(summary=TrafficCongestionSummary(totalCongestionDist=0.0, totalCongestionTime=60, totalCongestionAvrSpeed=0.0), congestionItemList=[], trafficEventList=[])), destination DestinationInfo(latitude=37.41289678, longitude=127.09383464, displayLatitude=null, displayLongitude=null, name=42dot, address=수정구 시흥동, remainDistance=50, remainTime=60, tollFare=0, poiId=36khp37hh8gqcm5nqhe5, poiSubId=null, poiProvider=)]
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.assertTrue(Assert.java:42)
+	at com.chapark.ivi.NaviRouteProbeTest.requestOfficialReferenceDestination(NaviRouteProbeTest.kt:43)
+
+
+Time: 31.659
+There was 1 failure:
+1) requestOfficialReferenceDestination(com.chapark.ivi.NaviRouteProbeTest)
+java.lang.AssertionError: No route response: [location CurrentLocationInfo(latitude=37.4127212, longitude=127.094681, heading=0.0, address=수정구 시흥동, routeId=, currentRouteIndex=0), routeState RouteStateInfo(termsAgreement=true, naviMode=SAFE_GUIDING, isRouting=false, routeOption=RECOMMENDED, remainDestinationChargingInt=0, remainWaypointChargingInt=[0, 0], trafficStatus=TrafficStatus(summary=TrafficCongestionSummary(totalCongestionDist=0.0, totalCongestionTime=60, totalCongestionAvrSpeed=0.0), congestionItemList=[], trafficEventList=[])), started RouteStartInfo(duration=60, distance=50, tollFare=0, name=42dot, remainDestinationChargingValue=77391), status ROUTE_DRIVE, routeState RouteStateInfo(termsAgreement=true, naviMode=ROUTE_GUIDING, isRouting=false, routeOption=RECOMMENDED, remainDestinationChargingInt=77391, remainWaypointChargingInt=[0, 0], trafficStatus=TrafficStatus(summary=TrafficCongestionSummary(totalCongestionDist=0.0, totalCongestionTime=60, totalCongestionAvrSpeed=0.0), congestionItemList=[], trafficEventList=[])), routeState RouteStateInfo(termsAgreement=true, naviMode=ROUTE_GUIDING, isRouting=false, routeOption=RECOMMENDED, remainDestinationChargingInt=77391, remainWaypointChargingInt=[0, 0], trafficStatus=TrafficStatus(summary=TrafficCongestionSummary(totalCongestionDist=0.0, totalCongestionTime=60, totalCongestionAvrSpeed=0.0), congestionItemList=[], trafficEventList=[])), destination DestinationInfo(latitude=37.41289678, longitude=127.09383464, displayLatitude=null, displayLongitude=null, name=42dot, address=수정구 시흥동, remainDistance=50, remainTime=60, tollFare=0, poiId=36khp37hh8gqcm5nqhe5, poiSubId=null, poiProvider=)]
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.assertTrue(Assert.java:42)
+	at com.chapark.ivi.NaviRouteProbeTest.requestOfficialReferenceDestination(NaviRouteProbeTest.kt:43)
+
+FAILURES!!!
+Tests run: 1,  Failures: 1
+
+
+

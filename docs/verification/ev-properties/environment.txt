@@ -1,0 +1,52 @@
+library:ai.pleos.playground.car
+library:android.ext.adservices
+library:android.ext.shared
+library:android.hidl.base-V1.0-java
+library:android.hidl.manager-V1.0-java
+library:android.net.ipsec.ike
+library:android.test.base
+library:android.test.mock
+library:android.test.runner
+library:androidx.window.extensions
+library:androidx.window.sidecar
+library:car-frameworks-service
+library:com.android.cts.ctsshim.shared_library
+library:com.android.future.usb.accessory
+library:com.android.location.provider
+library:com.android.media.remotedisplay
+library:com.android.mediadrm.signer
+library:com.android.oem.tokens
+library:javax.obex
+library:org.apache.http.legacy
+library:org.chromium.trichromelibrary
+28	android.automotive.telemetry.internal.ICarTelemetryInternal/default: [android.automotive.telemetry.internal.ICarTelemetryInternal]
+29	android.automotive.watchdog.ICarWatchdog/default: [android.automotive.watchdog.ICarWatchdog]
+30	android.automotive.watchdog.internal.ICarWatchdog/default: [android.automotive.watchdog.internal.ICarWatchdog]
+31	android.frameworks.automotive.display.ICarDisplayProxy/default: []
+32	android.frameworks.automotive.powerpolicy.ICarPowerPolicyServer/default: [android.frameworks.automotive.powerpolicy.ICarPowerPolicyServer]
+33	android.frameworks.automotive.powerpolicy.internal.ICarPowerPolicySystemNotification/default: [android.frameworks.automotive.powerpolicy.internal.ICarPowerPolicySystemNotification]
+34	android.frameworks.automotive.telemetry.ICarTelemetry/default: [android.frameworks.automotive.telemetry.ICarTelemetry]
+117	car_service: [android.car.ICar]
+118	carrier_config: [com.android.internal.telephony.ICarrierConfigLoader]
+121	com.android.car.procfsinspector: [com.android.car.procfsinspector.IProcfsInspector]
+132	device.generic.car.emulator.IVehicleBus/protocanbus: []
+      pleos.car.permission.CAR_ENERGY
+      pleos.car.permission.NAVI_ROUTE_SEARCH: granted=true
+      ai.pleos.playground.service.vehicle.VEHICLE_BINDING: granted=true
+      pleos.car.permission.NAVI_CUSTOM_MAP: granted=true
+      pleos.car.permission.NAVI_ROUTE: granted=true
+      com.chapark.ivi.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION: granted=true
+      pleos.car.permission.CAR_ENERGY: granted=true
+/system/etc/permissions/ai.pleos.playground.car.xml
+/system/etc/permissions/android.car.cluster.xml
+/system/etc/permissions/android.car.usb.handler.xml
+/system/etc/permissions/car-frameworks-service.xml
+/system/etc/permissions/car_core_hardware.xml
+/system/etc/permissions/car_splitscreen.xml
+/system/etc/permissions/com.android.car.activityresolver.xml
+/system/etc/permissions/com.android.car.carlauncher.xml
+/system/etc/permissions/com.android.car.rotary.xml
+/system/etc/permissions/com.android.car.settings.xml
+/system/etc/permissions/com.android.car.shell.xml
+/system/etc/permissions/com.android.car.xml
+

@@ -17,7 +17,7 @@ class JourneyEntryTest {
         compose.onNodeWithText("새 여행 계획").performScrollTo().performClick()
         waitText("여행 계획을 새로 만들까요?");compose.onNodeWithText("처음부터").performClick()
         waitText("오늘 밤 차박 시작");waitText("기기에 저장됨")
-        compose.onNodeWithText("배터리 20%").assertExists()
+        waitText("배터리 20% · 에뮬레이터")
         compose.onNodeWithText("1인 · 간단 조리 예정 · 침낭 보유").assertExists()
         listOf("시연","데모","가상","재현","SDK","미연동").forEach { word ->
             compose.onAllNodes(hasText(word,substring=true)).assertCountEquals(0)

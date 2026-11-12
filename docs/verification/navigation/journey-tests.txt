@@ -1,0 +1,39 @@
+
+com.chapark.ivi.JourneyFlowTest:
+Error in completeProductJourneyWithAutomaticPreparationAndManualParking(com.chapark.ivi.JourneyFlowTest):
+java.lang.IllegalStateException: No compose hierarchies found in the app. Possible reasons include: (1) the Activity that calls setContent did not launch; (2) setContent was not called; (3) setContent was called before the ComposeTestRule ran. If setContent is called by the Activity, make sure the Activity is launched after the ComposeTestRule runs
+	at androidx.compose.ui.test.TestContext.getAllSemanticsNodes$ui_test_release(TestOwner.kt:87)
+	at androidx.compose.ui.test.TestContext.getAllSemanticsNodes$ui_test_release$default(TestOwner.kt:81)
+	at androidx.compose.ui.test.SemanticsNodeInteractionCollection.fetchSemanticsNodes(SemanticsNodeInteraction.kt:256)
+	at androidx.compose.ui.test.SemanticsNodeInteractionCollection.fetchSemanticsNodes$default(SemanticsNodeInteraction.kt:249)
+	at com.chapark.ivi.JourneyFlowTest.waitText$lambda$0(JourneyFlowTest.kt:14)
+	at com.chapark.ivi.JourneyFlowTest.$r8$lambda$OgoeAg2Ef3LSkySoAHG9cWMNYGk(Unknown Source:0)
+	at com.chapark.ivi.JourneyFlowTest$$ExternalSyntheticLambda0.invoke(D8$$SyntheticClass:0)
+	at androidx.compose.ui.test.AndroidComposeUiTestEnvironment$AndroidComposeUiTestImpl.waitUntil(ComposeUiTest.android.kt:434)
+	at androidx.compose.ui.test.junit4.AndroidComposeTestRule.waitUntil(AndroidComposeTestRule.android.kt:306)
+	at com.chapark.ivi.JourneyFlowTest.waitText(JourneyFlowTest.kt:14)
+	at com.chapark.ivi.JourneyFlowTest.completeProductJourneyWithAutomaticPreparationAndManualParking(JourneyFlowTest.kt:39)
+
+com.chapark.ivi.JourneyLayoutTest:.
+
+Time: 6.11
+There was 1 failure:
+1) completeProductJourneyWithAutomaticPreparationAndManualParking(com.chapark.ivi.JourneyFlowTest)
+java.lang.IllegalStateException: No compose hierarchies found in the app. Possible reasons include: (1) the Activity that calls setContent did not launch; (2) setContent was not called; (3) setContent was called before the ComposeTestRule ran. If setContent is called by the Activity, make sure the Activity is launched after the ComposeTestRule runs
+	at androidx.compose.ui.test.TestContext.getAllSemanticsNodes$ui_test_release(TestOwner.kt:87)
+	at androidx.compose.ui.test.TestContext.getAllSemanticsNodes$ui_test_release$default(TestOwner.kt:81)
+	at androidx.compose.ui.test.SemanticsNodeInteractionCollection.fetchSemanticsNodes(SemanticsNodeInteraction.kt:256)
+	at androidx.compose.ui.test.SemanticsNodeInteractionCollection.fetchSemanticsNodes$default(SemanticsNodeInteraction.kt:249)
+	at com.chapark.ivi.JourneyFlowTest.waitText$lambda$0(JourneyFlowTest.kt:14)
+	at com.chapark.ivi.JourneyFlowTest.$r8$lambda$OgoeAg2Ef3LSkySoAHG9cWMNYGk(Unknown Source:0)
+	at com.chapark.ivi.JourneyFlowTest$$ExternalSyntheticLambda0.invoke(D8$$SyntheticClass:0)
+	at androidx.compose.ui.test.AndroidComposeUiTestEnvironment$AndroidComposeUiTestImpl.waitUntil(ComposeUiTest.android.kt:434)
+	at androidx.compose.ui.test.junit4.AndroidComposeTestRule.waitUntil(AndroidComposeTestRule.android.kt:306)
+	at com.chapark.ivi.JourneyFlowTest.waitText(JourneyFlowTest.kt:14)
+	at com.chapark.ivi.JourneyFlowTest.completeProductJourneyWithAutomaticPreparationAndManualParking(JourneyFlowTest.kt:39)
+
+FAILURES!!!
+Tests run: 2,  Failures: 1
+
+
+

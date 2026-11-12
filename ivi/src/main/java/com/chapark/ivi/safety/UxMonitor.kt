@@ -11,11 +11,10 @@ interface UxMonitor : AutoCloseable {
 }
 
 fun createUxMonitor(context: Context): UxMonitor {
-    // Pleos Connect 2.1.0 image does not advertise the AAOS android.car library.
-    // Never instantiate AAOS classes on a platform that cannot load them.
-    if (context.packageManager.systemSharedLibraryNames?.contains("android.car") != true)
-        return UnavailableUxMonitor()
-    return try { CarUxMonitor(context) } catch (_: LinkageError) { UnavailableUxMonitor() }
+    // The Pleos shared library can expose android.car even without that library name.
+    return try { Class.forName("android.car.Car");CarUxMonitor(context) }
+    catch (_: LinkageError) { UnavailableUxMonitor() }
+    catch (_: ClassNotFoundException) { UnavailableUxMonitor() }
 }
 
 private class UnavailableUxMonitor : UxMonitor {

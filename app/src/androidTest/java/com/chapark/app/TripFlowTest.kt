@@ -11,13 +11,18 @@ class TripFlowTest {
     private fun next(){ui.onNodeWithTag("journey-next").performClick();ui.waitForIdle()}
     private fun clean(){listOf("시연","데모","가상","재현","SDK","미연동").forEach{ui.onAllNodes(hasText(it,substring=true)).assertCountEquals(0)}}
     @Test fun fullJourneyWithParkingAndChecklists(){
-        clean();next();clean();next();clean();next();clean()
-        next();tap("이동 계획 보기");next()
+        clean();next();tap("오늘 날짜로 계획");clean();next();clean();next();clean()
+        ui.onNodeWithTag("journey-next").assertIsNotEnabled()
+        com.chapark.prototype.Journey().departureItems.forEach{item->
+            ui.onNodeWithText(item.title).performScrollTo()
+            ui.onNodeWithTag("check-${item.title}").performClick()
+        }
+        next();next()
         ui.waitUntil(10_000){ui.onAllNodesWithText("도착했어요").fetchSemanticsNodes().isNotEmpty()}
         clean();next();ui.onNodeWithText("주차했어요").assertExists()
         ui.onNodeWithText("수면 준비로").assertDoesNotExist()
         next();next();clean();ui.onNodeWithTag("journey-next").assertIsNotEnabled()
-        listOf("주차 위치와 현장 숙박 조건 확인","환기 방법과 비상 이동 동선 확인","차량 기본 설정에서 공조 직접 확인","차량 기본 설정에서 조명 직접 확인").forEach { title ->
+        listOf("현장 운영 안내 확인","주차 위치와 현장 숙박 조건 확인","환기 방법과 비상 이동 동선 확인","차량 기본 설정에서 공조 직접 확인","차량 기본 설정에서 조명 직접 확인").forEach { title ->
             ui.onNodeWithText(title).performScrollTo()
             ui.onNodeWithTag("check-$title").performClick()
         }

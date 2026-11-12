@@ -1,0 +1,17 @@
+
+com.chapark.ivi.EvPropertyProbeTest:EV_PROPERTY: permission=pleos.car.permission.CAR_ENERGY result=0 (0=granted,-1=denied)
+EV_PROPERTY: permission=android.car.permission.CAR_ENERGY result=-1 (0=granted,-1=denied)
+EV_PROPERTY: android.car.Car load=android.car.Car
+EV_PROPERTY: AAOS config id=0x11600309 null (not proof of unsupported)
+EV_PROPERTY: AAOS read id=0x11600309 java.lang.SecurityException: requires android.car.permission.CAR_ENERGY
+EV_PROPERTY: AAOS config id=0x1160030c null (not proof of unsupported)
+EV_PROPERTY: AAOS read id=0x1160030c java.lang.SecurityException: requires android.car.permission.CAR_ENERGY
+EV_PROPERTY: SDK getEvBatteryLevel value=77400.0 type=Float; raw value, unit interpretation requires contract
+.
+
+Time: 0.575
+
+OK (1 test)
+
+
+

@@ -35,8 +35,8 @@ private val asta = FontFamily(Font(R.font.asta_sans, FontWeight.Normal, variatio
     val p = if (dark) PleosPalette(Color(0xFF1D1E21), Color(0xFF313236), Color.White, Color(0xFFE0E1E6), Color(0xFFC7C9CE), Color(0xFF131417), Color(0xFF00E074), Color(0x33FFFFFF), Color(0x1AFFFFFF), Color(0xFFA4A8AE)) else LocalPleos.current
     fun style(size: Int, line: Int, weight: FontWeight = FontWeight.Normal) = TextStyle(fontFamily = asta, fontSize = size.sp, lineHeight = line.sp, fontWeight = weight)
     val type = Typography(displayLarge=style(40,52,FontWeight.ExtraBold), headlineLarge=style(30,40,FontWeight.ExtraBold), headlineMedium=style(28,36,FontWeight.Bold), headlineSmall=style(24,32,FontWeight.Bold), titleLarge=style(22,28,FontWeight.Bold), titleMedium=style(18,24,FontWeight.Bold), titleSmall=style(16,22,FontWeight.Bold), bodyLarge=style(16,24), bodyMedium=style(15,22), bodySmall=style(13,18), labelLarge=style(16,22,FontWeight.Bold), labelMedium=style(13,18), labelSmall=style(12,16))
-    CompositionLocalProvider(LocalPleos provides p) {
-        MaterialTheme(colorScheme=lightColorScheme(background=p.background, surface=p.surface, onSurface=p.ink, onBackground=p.ink, primary=p.filled, onPrimary=p.onFilled, surfaceContainer=p.subtle, onSurfaceVariant=p.secondary, outlineVariant=p.divider, error=if(dark) Color(0xFFFF4C28) else Color(0xFFFE3D16)), typography=type, content=content)
+    CompositionLocalProvider(LocalPleos provides p, LocalContentColor provides p.ink) {
+        MaterialTheme(colorScheme=(if(dark) darkColorScheme() else lightColorScheme()).copy(background=p.background, surface=p.surface, onSurface=p.ink, onBackground=p.ink, primary=p.filled, onPrimary=p.onFilled, surfaceContainer=p.subtle, onSurfaceVariant=p.secondary, outlineVariant=p.divider, error=if(dark) Color(0xFFFF4C28) else Color(0xFFFE3D16)), typography=type, content=content)
     }
 }
 @Composable fun PleosButton(text: String, modifier: Modifier = Modifier, filled: Boolean = true, enabled: Boolean = true, onClick: () -> Unit) {

@@ -15,6 +15,14 @@ android {
         versionName = "0.3.0-prototype"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
+    buildTypes {
+        getByName("debug") {
+            val tokenFile=rootProject.file(".local-server/token.txt")
+            val token=if(tokenFile.exists())tokenFile.readText().trim() else ""
+            buildConfigField("String","LOCAL_API_TOKEN","\"$token\"")
+        }
+        getByName("release") { buildConfigField("String","LOCAL_API_TOKEN","\"\"") }
+    }
     buildFeatures { compose = true; buildConfig = true }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
