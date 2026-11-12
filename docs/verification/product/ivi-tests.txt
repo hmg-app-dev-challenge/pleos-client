@@ -1,0 +1,16 @@
+
+com.chapark.ivi.ButtonCatalogTest:.
+com.chapark.ivi.JourneyEntryTest:.
+com.chapark.ivi.JourneyFlowTest:.
+com.chapark.ivi.JourneyLayoutTest:.
+com.chapark.ivi.JourneyStoreTest:STORE_BEFORE: step=6, completed=true, uid=1010176
+.
+com.chapark.ivi.PleosRuntimeTest:SDK_PROBE: SdkSnapshot(vehicle=READY, navigation=READY, rawSoc=100, receivedAtElapsedMs=2526241, capability=READ, detail=SDK 응답 수신 · 단위 검증 전이므로 준비 판단에는 사용하지 않습니다.)
+..
+
+Time: 9.596
+
+OK (7 tests)
+
+
+

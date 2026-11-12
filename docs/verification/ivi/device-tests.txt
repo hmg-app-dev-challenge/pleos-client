@@ -1,0 +1,11 @@
+
+com.chapark.ivi.ButtonCatalogTest:.
+com.chapark.ivi.PleosRuntimeTest:SDK_PROBE: SdkSnapshot(vehicle=READY, navigation=READY, rawSoc=100, receivedAtElapsedMs=84309, capability=READ, detail=SDK 응답 수신 · 단위 검증 전이므로 준비 판단에는 사용하지 않습니다.)
+..
+
+Time: 7.752
+
+OK (3 tests)
+
+
+

@@ -1,0 +1,10 @@
+
+com.chapark.app.PhoneLayoutTest:.
+com.chapark.app.TripFlowTest:..
+
+Time: 9.357
+
+OK (3 tests)
+
+
+
