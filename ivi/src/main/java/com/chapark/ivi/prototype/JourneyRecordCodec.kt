@@ -11,7 +11,7 @@ internal object JourneyRecordCodec {
             put("kind",r.kind);put("time",r.observedAtMillis);put("origin",r.origin)
             put("subject",r.subject);put("label",r.label);put("confirmed",r.confirmed)
             put("place",r.placeId);put("soc",r.soc);put("source",r.socSource.name)
-            put("received",r.socReceivedAtMillis)
+            put("received",r.socReceivedAtMillis);put("eventAt",r.eventAtMillis)
         }) }
     }.toString()
     fun decode(raw:String):List<JourneyRecord> {
@@ -24,7 +24,7 @@ internal object JourneyRecordCodec {
                 if(o.has("label"))o.getString("label") else null,
                 if(o.has("confirmed"))o.getBoolean("confirmed") else null,
                 o.getString("place"),if(o.has("soc"))o.getInt("soc") else null,
-                Source.valueOf(o.getString("source")),if(o.has("received"))o.getLong("received") else null)
+                Source.valueOf(o.getString("source")),if(o.has("received"))o.getLong("received") else null,if(o.has("eventAt"))o.getLong("eventAt") else null)
         }
     }
 }

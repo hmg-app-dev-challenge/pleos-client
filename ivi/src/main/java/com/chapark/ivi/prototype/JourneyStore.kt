@@ -41,7 +41,7 @@ class JourneyStore(context:Context) {
                 int("threshold",35).coerceIn(0,100),int("endHour",10).coerceIn(0,23),
                 p[stringPreferencesKey("tripDate")]?.let{date->TripSchedule(date,p[stringPreferencesKey("tripZone")] ?: "")} ),
             tripId=p[stringPreferencesKey("tripId")],chargerId=p[stringPreferencesKey("chargerId")]?.takeIf{com.chapark.app.data.ChargingPlaces.find(it)!=null},restMode=p[stringPreferencesKey("restMode")] ?: "REST",
-            forgotten=checks("forgotten"),reminders=checks("reminders"),
+            forgotten=checks("forgotten"),reminders=checks("reminders"),followUps=checks("followUps"),
             records=JourneyRecordCodec.decode(p[stringPreferencesKey("records")] ?: "[]"),
             placeId=p[stringPreferencesKey("place")]?.takeIf{ id->PlaceCatalog.all.any{it.id==id} } ?: "demo-b",
             soc=if(bool("socMissing"))null else int("soc",20).takeIf{it in 0..100},
@@ -93,6 +93,7 @@ class JourneyStore(context:Context) {
         p[stringSetPreferencesKey("deletedArchives")]=deleted
         p[intPreferencesKey("schema")]=6
         p[stringPreferencesKey("restMode")]=s.restMode
+        p[stringSetPreferencesKey("followUps")]=s.followUps
         p[stringSetPreferencesKey("forgotten")]=s.forgotten;p[stringSetPreferencesKey("reminders")]=s.reminders
         p[stringPreferencesKey("records")]=JourneyRecordCodec.encode(s.records)
         s.tripId?.let{p[stringPreferencesKey("tripId")]=it}

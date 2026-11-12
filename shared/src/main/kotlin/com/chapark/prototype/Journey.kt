@@ -14,13 +14,13 @@ data class Journey(
     val restricted:Boolean=false, val dark:Boolean=false,
     val tripId:String?=null, val chargerId:String?=null, val restMode:String="REST",
     val records:List<JourneyRecord> = emptyList(),
-    val forgotten:Set<String> = emptySet(), val reminders:Set<String> = emptySet(),
+    val forgotten:Set<String> = emptySet(), val reminders:Set<String> = emptySet(), val followUps:Set<String> = emptySet(),
     val batteryStatus:ReadingStatus=ReadingStatus.AVAILABLE,
     val socSource:Source=Source.DEMO, val socReceivedAtMillis:Long?=null,
 ) {
     val batteryVisible get()=batteryStatus!=ReadingStatus.UNSUPPORTED
     val place get()=PlaceCatalog.find(placeId) ?: DemoPlaces.all.first()
-    val decisions get()=reminders.sorted().map{DecisionItem("reminder-$it",Group.GEAR,"다시 챙기기 · $it","지난 여행에서 빠뜨렸다고 기록한 준비물이에요.")} + PlanningRules.evaluate(place,input,SocReading(soc?.toDouble(),
+    val decisions get()=followUps.sorted().map{DecisionItem("followup-$it",Group.BEFORE,"다시 확인 · $it","지난 여행에서 확인하지 못한 정보예요. 이번 장소의 조건도 확인해 주세요.")} + reminders.sorted().map{DecisionItem("reminder-$it",Group.GEAR,"다시 챙기기 · $it","지난 여행에서 빠뜨렸다고 기록한 준비물이에요.")} + PlanningRules.evaluate(place,input,SocReading(soc?.toDouble(),
         if(soc==null && batteryStatus==ReadingStatus.AVAILABLE)ReadingStatus.UNKNOWN else batteryStatus,socSource))
     val checkedCount get()=decisions.count { it.id in checked }
     val departureItems get()=decisions.filter{it.group!=Group.SITE}
@@ -82,7 +82,9 @@ object JourneyReducer {
             return if(old.step<=3)next.copy(checked=retainedChecks(old.decisions,next.decisions,old.checked)) else next
         }
         if(old.restricted) return old
-        if(event==JourneyEvent.NewTrip) return Journey(input=old.input.copy(schedule=null),dark=old.dark,reminders=old.forgotten+old.reminders.filterNot{"reminder-$it" in old.checked})
+        if(event==JourneyEvent.NewTrip) return Journey(input=old.input.copy(schedule=null),dark=old.dark,reminders=old.forgotten+old.reminders.filterNot{"reminder-$it" in old.checked},
+            followUps=old.records.filter{it.kind=="PLACE_INFO" && it.confirmed==false && it.label?.substringBefore(" · ") in setOf("차내 숙박","야간 화장실","운영 조건")}
+                .map{"${old.place.name} · ${it.label!!.substringBefore(" · ")}"}.toSet()+old.followUps.filterNot{"followup-$it" in old.checked})
         if(old.completed) return old
         fun update(next:Journey):Journey {
             if(old.step>3) return old

@@ -115,13 +115,19 @@ private fun condition(value:Condition)=when(value){Condition.ALLOWED->"허용";C
                 ui.history.forEach { trip->
                     Text("${trip.date} · ${trip.placeName}",style=IviType.smallTitle)
                     Text("확인 기록 ${trip.records.size}개 · 시간대 ${trip.zone}",style=IviType.label)
-                    trip.records.filter{it.subject==null}.forEach{record->
-                        val time=java.time.Instant.ofEpochMilli(record.observedAtMillis).atZone(runCatching{java.time.ZoneId.of(trip.zone)}.getOrDefault(java.time.ZoneOffset.UTC)).toLocalTime().withNano(0)
-                        val label=when(record.kind){"PREPARATION_COMPLETED"->"출발 준비 확인";"ROUTE_REQUESTED"->"길 안내 요청";"GUIDANCE_OBSERVED"->"길 안내 확인";"ARRIVAL"->"도착 확인";"PARKING_CONFIRMED"->"주차 확인";"TRIP_COMPLETED"->"철수 완료";else->"상태 확인"}
+                    trip.records.filter{it.subject==null}.sortedBy{it.eventAtMillis ?: it.observedAtMillis}.forEach{record->
+                        val time=java.time.Instant.ofEpochMilli(record.eventAtMillis ?: record.observedAtMillis).atZone(runCatching{java.time.ZoneId.of(trip.zone)}.getOrDefault(java.time.ZoneOffset.UTC)).toLocalTime().withNano(0)
+                        val label=when(record.kind){"PLACE_INFO"->"장소 자료 · 당시 확인 정보";"SUNSET"->"일몰 · 계산";"SUNRISE"->"일출 · 계산";"PLACE_SELECTED"->"장소 선택";"CHARGING_PLAN"->"충전 경유 계획";"PREPARATION_COMPLETED"->"출발 준비 확인";"ROUTE_REQUESTED"->"길 안내 요청";"GUIDANCE_OBSERVED"->"길 안내 확인";"ARRIVAL"->"도착 확인";"PARKING_CONFIRMED"->"주차 확인";"TRIP_COMPLETED"->"철수 완료";else->"상태 확인"}
                         Text("$time · $label",style=IviType.smallBody)
+                    record.label?.let{Text(it,style=IviType.label)}
                     }
                     if(trip.forgotten.isNotEmpty())Text("다음에 챙길 것 · ${trip.forgotten.joinToString()}",style=IviType.smallBody)
                     IviButton("이 기록 삭제",size=IviButtonSize.MEDIUM){deleteId=trip.id}
+                    var details by androidx.compose.runtime.saveable.rememberSaveable(trip.id){mutableStateOf(false)}
+                    IviButton(if(details)"확인 항목 접기" else "확인 항목 펼치기",size=IviButtonSize.MEDIUM){details=!details}
+                    if(details)trip.records.filter{it.subject!=null}.forEach{record->
+                        Text("${if(record.confirmed==true)"확인" else "확인 해제"} · ${record.label ?: record.subject}",style=IviType.smallBody)
+                    }
                     HorizontalDivider()
                 }
                 IviButton("기록 닫기"){history=false}
@@ -198,6 +204,7 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
             Heading("오늘 밤,\n내 차로 떠나는 쉼.","어디서 어떻게 쉴지, 오늘 밤의 작은 여행을 준비해요.")
             Panel {
                 Text("오늘의 여행",style=IviType.title)
+                if(s.followUps.isNotEmpty())Text("지난 여행의 미확인 정보 · ${s.followUps.joinToString()}",style=IviType.smallBody)
                 Text("내 차와 함께하는 하룻밤",style=IviType.body)
                 if(s.batteryVisible) Text("배터리 ${s.soc?.let{"$it%"} ?: "미확인"} · ${sourceLabel(s.socSource)}",style=IviType.smallTitle)
                 Text("${s.input.people}인 · ${if(s.input.cooking)"간단 조리 예정" else "준비한 식사"} · ${if(s.input.sleepingBag)"침낭 보유" else "침낭 미보유"}",style=IviType.body)
@@ -326,14 +333,15 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
                 Text("직접 확인한 준비 항목 ${s.checkedCount}/${s.decisions.size}",style=IviType.body)
                 Text("내 차와 보낸 하룻밤 기억",style=IviType.smallTitle)
                 val zone=runCatching{java.time.ZoneId.of(s.input.schedule?.zoneId ?: "UTC")}.getOrDefault(java.time.ZoneOffset.UTC)
-                s.records.filter{it.subject==null}.forEach { record->
-                    val label=when(record.kind){
+                s.records.filter{it.subject==null}.sortedBy{it.eventAtMillis ?: it.observedAtMillis}.forEach { record->
+                    val label=when(record.kind){"PLACE_INFO"->"장소 자료 · 당시 확인 정보";"SUNSET"->"일몰 · 계산";"SUNRISE"->"일출 · 계산";"PLACE_SELECTED"->"장소 선택";"CHARGING_PLAN"->"충전 경유 계획";
                         "PREPARATION_COMPLETED"->"출발 준비 확인";"ROUTE_REQUESTED"->"길 안내 요청"
                         "GUIDANCE_OBSERVED"->"길 안내 확인";"ARRIVAL"->if(record.origin=="SDK")"도착 알림 수신" else "도착 직접 확인"
                         "PARKING_CONFIRMED"->"주차 직접 확인";"TRIP_COMPLETED"->"철수 확인 완료";else->"여행 상태 확인"
                     }
-                    val time=java.time.Instant.ofEpochMilli(record.observedAtMillis).atZone(zone).format(java.time.format.DateTimeFormatter.ofPattern("MM-dd HH:mm"))
+                    val time=java.time.Instant.ofEpochMilli(record.eventAtMillis ?: record.observedAtMillis).atZone(zone).format(java.time.format.DateTimeFormatter.ofPattern("MM-dd HH:mm"))
                     Text("$time · $label",style=IviType.smallBody)
+                    record.label?.let{Text(it,style=IviType.label)}
                     if(record.kind in setOf("PREPARATION_COMPLETED","TRIP_COMPLETED") && (s.batteryVisible || record.soc!=null))
                         Text("배터리 ${record.soc?.let{"$it%"} ?: "미확인"} · ${sourceLabel(record.socSource)}",style=IviType.label)
                 }
@@ -439,6 +447,7 @@ private fun sourceLabel(source:Source)=when(source){Source.SDK->"차량";Source.
     val today=runCatching{SolarTimes.calculate(date,zone,place.latitude,place.longitude)}.getOrNull() ?: return
     val tomorrow=runCatching{SolarTimes.calculate(date.plusDays(1),zone,place.latitude,place.longitude)}.getOrNull() ?: return
     fun describe(event:SolarEvent?)=event?.let{"${it.instant.atZone(zone).format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"))} · 방위 ${it.azimuthDegrees.toInt()}°"} ?: "해당 날짜에 없음"
+    SolarSky(date,zone,today)
     Panel {
         Text("해의 시간",style=IviType.smallTitle)
         Text("일몰 약 ${describe(today.sunset)}",style=IviType.body)

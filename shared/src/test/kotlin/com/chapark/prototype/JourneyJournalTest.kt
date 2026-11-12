@@ -33,4 +33,17 @@ class JourneyJournalTest {
         assertEquals(1000L,done.records.single().observedAtMillis)
         assertEquals(done,JourneyJournal.apply(done,JourneyEvent.Finish,2000))
     }
+    @Test fun solarEventsKeepCalculatedTimeSeparateFromObservationAndAreNotDuplicated(){
+        val base=Journey(step=3,placeId="camp-nanji",input=TripInput(schedule=TripSchedule("2026-11-13","Asia/Seoul")))
+        val ready=base.copy(checked=base.departureItems.map{it.id}.toSet())
+        val departed=JourneyJournal.apply(ready,JourneyEvent.Next,1000)
+        val calculated=departed.records.filter{it.origin=="CALCULATED"}
+        assertEquals(setOf("SUNSET","SUNRISE"),calculated.map{it.kind}.toSet())
+        assertTrue(calculated.all{it.observedAtMillis==1000L && it.eventAtMillis!!>1000L})
+        val back=JourneyJournal.apply(departed,JourneyEvent.Back,2000)
+        val repeated=JourneyJournal.apply(back,JourneyEvent.Next,3000)
+        assertEquals(2,repeated.records.count{it.origin=="CALCULATED"})
+        assertEquals(2,repeated.records.count{it.kind=="PREPARATION_COMPLETED"})
+    }
+
 }
