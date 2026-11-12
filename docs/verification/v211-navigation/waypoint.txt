@@ -1,0 +1,27 @@
+
+com.chapark.ivi.NaviRouteProbeTest:WAYPOINT_GUIDANCE: NavigationSnapshot(phase=FAILED, message=내비게이션 응답이 늦어지고 있어요. 다시 시도해 주세요. 목적지: 서울 마포구 한강난지로 28 · 경유지: 서울 마포구 백범로 212, destinationName=null, routeConfirmed=false)
+
+Error in chargingWaypointAndDestinationAreBothConfirmed(com.chapark.ivi.NaviRouteProbeTest):
+java.lang.AssertionError: expected:<GUIDING> but was:<FAILED>
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.failNotEquals(Assert.java:835)
+	at org.junit.Assert.assertEquals(Assert.java:120)
+	at org.junit.Assert.assertEquals(Assert.java:146)
+	at com.chapark.ivi.NaviRouteProbeTest.chargingWaypointAndDestinationAreBothConfirmed(NaviRouteProbeTest.kt:42)
+
+
+Time: 30.077
+There was 1 failure:
+1) chargingWaypointAndDestinationAreBothConfirmed(com.chapark.ivi.NaviRouteProbeTest)
+java.lang.AssertionError: expected:<GUIDING> but was:<FAILED>
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.failNotEquals(Assert.java:835)
+	at org.junit.Assert.assertEquals(Assert.java:120)
+	at org.junit.Assert.assertEquals(Assert.java:146)
+	at com.chapark.ivi.NaviRouteProbeTest.chargingWaypointAndDestinationAreBothConfirmed(NaviRouteProbeTest.kt:42)
+
+FAILURES!!!
+Tests run: 1,  Failures: 1
+
+
+

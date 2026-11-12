@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 data class JourneyUi(val journey:Journey=Journey(),val loaded:Boolean=false,val saving:Boolean=false,
-    val error:String?=null,val notice:String?=null,val navigationMessage:String?=null,val navigationReady:Boolean=false,val history:List<ArchivedTrip> = emptyList(),val syncStatus:String="기기에 저장됨")
+    val error:String?=null,val notice:String?=null,val navigationMessage:String?=null,val navigationReady:Boolean=false,val waypointNeedsConfirmation:Boolean=false,val history:List<ArchivedTrip> = emptyList(),val syncStatus:String="기기에 저장됨")
 class JourneyViewModel(app:Application):AndroidViewModel(app) {
     private val store=JourneyStore(app)
     private val sync=RecordSync(store)
@@ -43,7 +43,7 @@ class JourneyViewModel(app:Application):AndroidViewModel(app) {
                 mutable.value=JourneyUi(if(reconnect)restored.copy(route=RoutePhase.REQUESTED)else restored,loaded=true,notice=notice,history=store.history())
                 if(reconnect){
                     val place=NavigationPlaces.find(restored.placeId)
-                    if(place!=null)navigation.connect(place,requestRoute=false)
+                    if(place!=null)navigation.connect(place,requestRoute=false,charger=com.chapark.app.data.ChargingPlaces.find(restored.chargerId))
                     else {
                         mutable.value=mutable.value.copy(navigationMessage="이 장소의 위치를 확인하지 못했어요. 이전 단계에서 장소를 다시 선택해 주세요.")
                         persist(restored.copy(route=RoutePhase.FAILED))
@@ -59,7 +59,7 @@ class JourneyViewModel(app:Application):AndroidViewModel(app) {
                 }
                 if(command is Command.Navigation){
                     val n=command.value
-                    mutable.value=mutable.value.copy(navigationMessage=n.message,navigationReady=n.routeConfirmed)
+                    mutable.value=mutable.value.copy(navigationMessage=n.message,navigationReady=n.routeConfirmed,waypointNeedsConfirmation=n.phase==NavigationPhase.VERIFY_WAYPOINT)
                     val event=when(n.phase){
                         NavigationPhase.GUIDING->JourneyEvent.RouteResponse(true)
                         NavigationPhase.ARRIVED->JourneyEvent.Arrive
@@ -67,7 +67,7 @@ class JourneyViewModel(app:Application):AndroidViewModel(app) {
                         else->null
                     }
                     if(event!=null && mutable.value.journey.step==4){
-                        val next=JourneyJournal.apply(mutable.value.journey.copy(restricted=false),event,System.currentTimeMillis(),"SDK").copy(restricted=mutable.value.journey.restricted)
+                        val next=JourneyJournal.apply(mutable.value.journey.copy(restricted=false),event,System.currentTimeMillis(),n.confirmationSource).copy(restricted=mutable.value.journey.restricted)
                         if(next!=mutable.value.journey)persist(next)
                     }
                     continue
@@ -88,7 +88,7 @@ class JourneyViewModel(app:Application):AndroidViewModel(app) {
                 persist(next)
                 if(event==JourneyEvent.RequestRoute && next.route==RoutePhase.REQUESTED && mutable.value.error==null){
                     val place=NavigationPlaces.find(next.placeId)
-                    if(place!=null)navigation.connect(place,requestRoute=true)
+                    if(place!=null)navigation.connect(place,requestRoute=true,charger=com.chapark.app.data.ChargingPlaces.find(next.chargerId))
                     else {
                         mutable.value=mutable.value.copy(navigationMessage="이 장소의 위치를 확인하지 못했어요. 이전 단계에서 장소를 다시 선택해 주세요.")
                         persist(next.copy(route=RoutePhase.FAILED))
@@ -104,6 +104,7 @@ class JourneyViewModel(app:Application):AndroidViewModel(app) {
     }
     fun send(event:JourneyEvent){if(mutable.value.loaded)commands.trySend(Command.Event(event))}
     fun deleteHistory(id:String){commands.trySend(Command.DeleteHistory(id))}
+    fun confirmWaypoint(){if(!mutable.value.journey.restricted)navigation.confirmWaypointByUser()}
     fun openNavigation(){navigation.openScreen()}
     override fun onCleared(){battery.close();navigation.close();super.onCleared()}
 }

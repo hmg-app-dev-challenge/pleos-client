@@ -26,12 +26,12 @@ class JourneyStore(context:Context) {
         val p=store.data.first()
         val decoded=decode(p)
         val result=decoded.first.let{if(it.tripId==null)it.copy(tripId=UUID.randomUUID().toString()) else it} to decoded.second
-        if((p[intPreferencesKey("schema")] ?: 1)<5 || decoded.first.tripId==null)save(result.first)
+        if((p[intPreferencesKey("schema")] ?: 1)<6 || decoded.first.tripId==null)save(result.first)
         return result
     }
     internal fun decode(p:Preferences):Pair<Journey,String?> {
         val version=p[intPreferencesKey("schema")] ?: 1
-        require(version in 1..5) { "저장 형식을 읽을 수 없습니다. 초기화 후 시작해 주세요." }
+        require(version in 1..6) { "저장 형식을 읽을 수 없습니다. 초기화 후 시작해 주세요." }
         fun bool(k:String,default:Boolean=false)=p[booleanPreferencesKey(k)] ?: default
         fun int(k:String,default:Int)=p[intPreferencesKey(k)] ?: default
         fun checks(k:String)=p[stringSetPreferencesKey(k)] ?: emptySet()
@@ -40,7 +40,7 @@ class JourneyStore(context:Context) {
             input=TripInput(int("people",1).coerceAtLeast(1),bool("cooking",true),bool("pets"),bool("bag",true),
                 int("threshold",35).coerceIn(0,100),int("endHour",10).coerceIn(0,23),
                 p[stringPreferencesKey("tripDate")]?.let{date->TripSchedule(date,p[stringPreferencesKey("tripZone")] ?: "")} ),
-            tripId=p[stringPreferencesKey("tripId")],restMode=p[stringPreferencesKey("restMode")] ?: "REST",
+            tripId=p[stringPreferencesKey("tripId")],chargerId=p[stringPreferencesKey("chargerId")]?.takeIf{com.chapark.app.data.ChargingPlaces.find(it)!=null},restMode=p[stringPreferencesKey("restMode")] ?: "REST",
             forgotten=checks("forgotten"),reminders=checks("reminders"),
             records=JourneyRecordCodec.decode(p[stringPreferencesKey("records")] ?: "[]"),
             placeId=p[stringPreferencesKey("place")]?.takeIf{ id->PlaceCatalog.all.any{it.id==id} } ?: "demo-b",
@@ -82,7 +82,7 @@ class JourneyStore(context:Context) {
         val archive=JSONObject(p[stringPreferencesKey("archive")] ?: "{}")
         val deleted=p[stringSetPreferencesKey("deletedArchives")] ?: emptySet()
         if(s.completed && s.tripId!=null && s.tripId !in deleted)archive.put(s.tripId,JSONObject().apply {
-            put("placeId",s.placeId);put("placeName",s.place.name)
+            put("chargerId",s.chargerId);put("placeId",s.placeId);put("placeName",s.place.name)
             put("date",s.input.schedule?.date);put("zone",s.input.schedule?.zoneId)
             put("forgotten",JSONArray(s.forgotten.toList()));
             put("people",s.input.people);put("threshold",s.input.batteryThreshold)
@@ -91,11 +91,12 @@ class JourneyStore(context:Context) {
         p.clear()
         p[stringPreferencesKey("archive")]=archive.toString()
         p[stringSetPreferencesKey("deletedArchives")]=deleted
-        p[intPreferencesKey("schema")]=5
+        p[intPreferencesKey("schema")]=6
         p[stringPreferencesKey("restMode")]=s.restMode
         p[stringSetPreferencesKey("forgotten")]=s.forgotten;p[stringSetPreferencesKey("reminders")]=s.reminders
         p[stringPreferencesKey("records")]=JourneyRecordCodec.encode(s.records)
         s.tripId?.let{p[stringPreferencesKey("tripId")]=it}
+        s.chargerId?.let{p[stringPreferencesKey("chargerId")]=it}
         s.input.schedule?.let{p[stringPreferencesKey("tripDate")]=it.date;p[stringPreferencesKey("tripZone")]=it.zoneId}
         p[intPreferencesKey("threshold")]=s.input.batteryThreshold
         p[intPreferencesKey("endHour")]=s.input.endHour

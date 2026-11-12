@@ -12,7 +12,7 @@ data class Journey(
     val sleepChecks:Set<String> = emptySet(), val exitChecks:Set<String> = emptySet(),
     val sleepReady:Boolean=false, val completed:Boolean=false,
     val restricted:Boolean=false, val dark:Boolean=false,
-    val tripId:String?=null, val restMode:String="REST",
+    val tripId:String?=null, val chargerId:String?=null, val restMode:String="REST",
     val records:List<JourneyRecord> = emptyList(),
     val forgotten:Set<String> = emptySet(), val reminders:Set<String> = emptySet(),
     val batteryStatus:ReadingStatus=ReadingStatus.AVAILABLE,
@@ -47,6 +47,7 @@ sealed interface JourneyEvent {
     data object Back:JourneyEvent
     data class Conditions(val value:TripInput):JourneyEvent
     data class Place(val id:String):JourneyEvent
+    data class Charger(val id:String?):JourneyEvent
     data class Battery(val value:Int?,val status:ReadingStatus,val source:Source,val receivedAt:Long?):JourneyEvent
     data class Soc(val value:Int?,val receivedAt:Long?=null):JourneyEvent
     data class Check(val id:String):JourneyEvent
@@ -103,6 +104,7 @@ object JourneyReducer {
                 else -> old
             }
             is JourneyEvent.Conditions -> if(event.value.valid) update(old.copy(input=event.value)) else old
+            is JourneyEvent.Charger -> if(event.id==null || com.chapark.app.data.ChargingPlaces.find(event.id)!=null)update(old.copy(chargerId=event.id,checked=old.checked-"charge-review")) else old
             is JourneyEvent.Place -> if(PlaceCatalog.all.any{it.id==event.id}) update(old.copy(placeId=event.id)) else old
             is JourneyEvent.Soc -> if(old.batteryVisible && (event.value==null || event.value in 0..100))
                 update(old.copy(soc=event.value,socSource=Source.MANUAL,socReceivedAtMillis=event.receivedAt,

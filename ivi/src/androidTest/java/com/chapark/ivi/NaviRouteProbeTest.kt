@@ -30,4 +30,25 @@ class NaviRouteProbeTest {
             Thread.sleep(1500)
         } finally {i.runOnMainSync{session.close()}}
     }
+    @Test fun chargingWaypointAndDestinationAreBothConfirmed(){
+        val i=InstrumentationRegistry.getInstrumentation()
+        lateinit var session:NavigationSession
+        val charger=com.chapark.app.data.ChargingPlaces.all.first()
+        i.runOnMainSync{session=NavigationSession(i.targetContext);session.connect(NavigationPlaces.find("camp-nanji")!!,true,charger)}
+        try{
+            val until=System.currentTimeMillis()+35_000
+            while(System.currentTimeMillis()<until && session.state.value.phase !in setOf(NavigationPhase.GUIDING,NavigationPhase.VERIFY_WAYPOINT,NavigationPhase.FAILED))Thread.sleep(100)
+            i.sendStatus(0,Bundle().apply{putString("stream","WAYPOINT_GUIDANCE: ${session.state.value}\n")})
+            if(session.state.value.phase==NavigationPhase.VERIFY_WAYPOINT){
+                assertFalse(session.state.value.routeConfirmed)
+                i.runOnMainSync{session.confirmWaypointByUser()}
+                assertEquals("USER",session.state.value.confirmationSource)
+                i.sendStatus(0,Bundle().apply{putString("stream","EXPLICIT_USER_CONFIRMATION: ${session.state.value}\n")})
+            }
+            assertEquals(NavigationPhase.GUIDING,session.state.value.phase)
+            assertTrue(session.state.value.routeConfirmed)
+            assertTrue(session.state.value.message!!.contains(charger.name))
+        }finally{i.runOnMainSync{session.close()}}
+    }
+
 }

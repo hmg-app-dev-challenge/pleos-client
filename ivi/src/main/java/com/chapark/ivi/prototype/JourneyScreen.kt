@@ -23,7 +23,7 @@ private val sleepItems=linkedMapOf("parking" to "주차 위치와 현장 숙박 
 private val exitItems=linkedMapOf("settings" to "직접 변경한 차량 설정 확인", "gear" to "침구와 개인 장비 모두 챙기기", "waste" to "쓰레기 수거와 주변 정리", "surroundings" to "출발 전 차량 주변 확인")
 private fun condition(value:Condition)=when(value){Condition.ALLOWED->"허용";Condition.RESTRICTED->"제한";Condition.UNKNOWN->"미확인"}
 
-@Composable fun JourneyScreen(ui:JourneyUi,send:(JourneyEvent)->Unit,onNavigation:()->Unit={},onDeleteHistory:(String)->Unit={}) {
+@Composable fun JourneyScreen(ui:JourneyUi,send:(JourneyEvent)->Unit,onNavigation:()->Unit={},onDeleteHistory:(String)->Unit={},onConfirmWaypoint:()->Unit={}) {
     val s=ui.journey
     var scenery by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf<String?>(null) }
     var confirmedOnly by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
@@ -73,6 +73,12 @@ private fun condition(value:Condition)=when(value){Condition.ALLOWED->"허용";C
                                     if(s.batteryStatus!=ReadingStatus.AVAILABLE)Text(when(s.batteryStatus){ReadingStatus.UNSUPPORTED->"이 차량은 배터리 조회를 지원하지 않아요.";ReadingStatus.PERMISSION_DENIED->"배터리 조회 권한이 필요해요.";ReadingStatus.STALE->"배터리 정보를 다시 확인하고 있어요.";ReadingStatus.DRIVING_RESTRICTED->"정차 후 배터리를 다시 확인해 주세요.";ReadingStatus.INVALID->"배터리 값을 확인하지 못했어요.";else->"배터리 연결 상태를 확인해 주세요."},style=IviType.label)
                                     ui.notice?.let{Text(it,style=IviType.label,color=p.tertiary)}
                                     ui.navigationMessage?.let{Text(it,style=IviType.body,color=p.secondary)}
+                                    if(s.step==4 && ui.waypointNeedsConfirmation) Panel {
+                                        Text("충전 경유지 위치 확인",style=IviType.smallTitle)
+                                        Text("내비게이션에서 선택한 충전시설이 경유지로 표시되는지 확인해 주세요.",style=IviType.body)
+                                        IviButton("경유지 확인을 위해 내비 열기",onClick=onNavigation)
+                                        IviButton("경유지 위치를 확인했어요",filled=true,onClick=onConfirmWaypoint)
+                                    }
                                     JourneyContent(s,send,candidates,scenery,confirmedOnly,{scenery=it},{confirmedOnly=it})
                                     if(s.step>0 && !s.completed) IviButton("이전 단계",size=IviButtonSize.MEDIUM,enabled=!ui.saving){send(JourneyEvent.Back)}
                                     Spacer(Modifier.height(24.dp))
@@ -266,6 +272,19 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
                 }
                 Text("다른 날짜는 조건 확인 단계에서 변경할 수 있어요.",style=IviType.label)
             }
+            Panel {
+                Text("충전 경유 계획",style=IviType.smallTitle)
+                Text("선택한 충전시설을 거쳐 목적지로 안내해요. 충전 속도와 이용 조건을 먼저 확인해 주세요.",style=IviType.smallBody)
+                IviButton("경유 없이 이동",size=IviButtonSize.MEDIUM,filled=s.chargerId==null){send(JourneyEvent.Charger(null))}
+                val uri=androidx.compose.ui.platform.LocalUriHandler.current
+                com.chapark.app.data.ChargingPlaces.all.forEach{charger->
+                    Text(charger.name,style=IviType.smallTitle)
+                    Text(charger.details,style=IviType.smallBody)
+                    Text("${charger.address} · 자료 확인 ${charger.checkedOn}",style=IviType.label)
+                    IviButton("충전시설 운영 정보",size=IviButtonSize.MEDIUM){runCatching{uri.openUri(charger.source)}}
+                    IviButton(if(s.chargerId==charger.id)"경유지 선택됨" else "충전 경유지로 선택",filled=s.chargerId==charger.id,size=IviButtonSize.MEDIUM){send(JourneyEvent.Charger(charger.id))}
+                }
+            }
             Text("현장 운영 안내는 도착 후 확인해요. 체크는 이용 허가를 뜻하지 않아요.",style=IviType.smallBody)
             Group.entries.filter{it!=Group.SITE}.forEach { group ->
                 val items=s.decisions.filter{it.group==group}.sortedBy { when(it.id){"charge-review"->0;"meal-ready"->1;else->2} }
@@ -277,6 +296,8 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
         }
         4 -> {
             Heading("${names[s.placeId]}까지","차량 내비게이션에서 길 안내를 이어가세요.")
+            Text(NavigationPlaces.find(s.placeId)?.address ?: "주소 확인 필요",style=IviType.smallBody)
+            com.chapark.app.data.ChargingPlaces.find(s.chargerId)?.let{Text("경유 · ${it.name} · ${it.address}",style=IviType.smallBody)}
             Panel {
                 Text(when(s.route){RoutePhase.NONE->"이동 준비";RoutePhase.REQUESTED->"경로를 탐색하고 있어요";RoutePhase.GUIDING->"길 안내 중";RoutePhase.FAILED->"이동 정보를 불러오지 못했어요";RoutePhase.ARRIVED->if(s.parked)"도착 · 주차 완료" else "목적지 도착 · 주차 확인 필요"},style=IviType.title)
                 Text(if(s.decisions.any{it.id=="charge-review"})"배터리가 부족할 수 있어요. 출발 전 충전 계획을 확인해 주세요." else "목적지와 경로를 확인하고, 현장 운영 안내를 따라주세요.",style=IviType.body)
