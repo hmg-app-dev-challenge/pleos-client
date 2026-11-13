@@ -17,7 +17,8 @@ import com.chapark.app.domain.*
 import com.chapark.ivi.design.*
 import com.chapark.prototype.*
 
-private val steps=listOf("시작","조건 확인","장소 비교","준비 계획","이동","수면 준비","철수")
+private val steps=listOf("차박 계획","출발 준비","이동","차박","철수와 기록")
+private fun stageLabel(s:Journey)=s.stage?.let{"${it.ordinal+1} / 5 · ${steps[it.ordinal]}"} ?: "오늘의 차박"
 private val names get()=com.chapark.app.data.PlaceCatalog.all.associate { it.id to it.name }
 private val sleepItems=linkedMapOf("parking" to "주차 위치와 현장 숙박 조건 확인", "ventilation" to "환기 방법과 비상 이동 동선 확인", "climate" to "차량 기본 설정에서 공조 직접 확인", "lights" to "차량 기본 설정에서 조명 직접 확인")
 private val exitItems=linkedMapOf("settings" to "직접 변경한 차량 설정 확인", "gear" to "침구와 개인 장비 모두 챙기기", "waste" to "쓰레기 수거와 주변 정리", "surroundings" to "출발 전 차량 주변 확인")
@@ -64,7 +65,7 @@ private fun condition(value:Condition)=when(value){Condition.ALLOWED->"허용";C
                     Column(Modifier.weight(1f).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(32.dp)) {
                         Text("정차 후 이어서\n확인할 수 있어요",style=IviType.headline)
                         Text("작성한 계획은 저장되어 있어요. 안전한 곳에 정차한 뒤 확인해 주세요.",style=IviType.body)
-                        Text("${s.step+1} / 7 · ${steps[s.step]}",style=IviType.title)
+                        Text(stageLabel(s),style=IviType.title)
                         if(s.batteryVisible) Text("배터리 ${s.soc?.let{"$it%"} ?: "확인 필요"} · ${sourceLabel(s.socSource)}",style=IviType.title)
                         Text(if(s.route==RoutePhase.GUIDING)"길 안내 중" else "길 안내 상태 확인 필요",style=IviType.title)
                     }
@@ -85,12 +86,16 @@ private fun condition(value:Condition)=when(value){Condition.ALLOWED->"허용";C
                                         IviButton("경유지 확인을 위해 내비 열기",onClick=onNavigation)
                                         IviButton("경유지 위치를 확인했어요",filled=true,onClick=onConfirmWaypoint)
                                     }
+                                    if(s.step in 1..2) {
+                                        Text("차박 계획",style=IviType.title)
+                                        IviSegments(listOf("여행 조건","장소 비교"),s.step-1){send(JourneyEvent.PlanningTab(it))}
+                                    }
                                     JourneyContent(s,send,candidates,scenery,confirmedOnly,{scenery=it},{confirmedOnly=it})
-                                    if(s.step>0 && !s.completed) IviButton("이전 단계",size=IviButtonSize.MEDIUM,enabled=!ui.saving){send(JourneyEvent.Back)}
+                                    if(s.step>0 && s.step!=2 && !s.completed) IviButton("이전 단계",size=IviButtonSize.MEDIUM,enabled=!ui.saving){send(JourneyEvent.Back)}
                                     Spacer(Modifier.height(24.dp))
                                 }
                             }
-                            if(wide) JourneySummary(s,Modifier.width(340.dp).fillMaxHeight())
+                            if(wide && s.step !in 1..2) JourneySummary(s,Modifier.width(340.dp).fillMaxHeight())
                         }
                     }
                     Spacer(Modifier.height(20.dp))
@@ -158,16 +163,17 @@ private fun condition(value:Condition)=when(value){Condition.ALLOWED->"허용";C
     }
 }
 @Composable private fun JourneyProgress(s:Journey) {
+    val stage=s.stage?.ordinal ?: return
     val p=LocalIviColors.current
     BoxWithConstraints {
         val compact=maxWidth<1000.dp
         Column(verticalArrangement=Arrangement.spacedBy(12.dp)) {
-            if(compact) Text("${s.step+1} / 7 · ${steps[s.step]}",style=IviType.label)
+            if(compact) Text(stageLabel(s),style=IviType.label)
             Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(8.dp)) {
                 steps.forEachIndexed{i,label->
                     Column(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(12.dp)) {
-                        if(!compact) Text("${i+1} $label",style=IviType.label,color=if(i==s.step)p.ink else p.tertiary,maxLines=1)
-                        Box(Modifier.fillMaxWidth().height(4.dp).background(if(i<=s.step)p.green else p.divider))
+                        if(!compact) Text("${i+1} $label",style=IviType.label,color=if(i==stage)p.ink else p.tertiary,maxLines=1)
+                        Box(Modifier.fillMaxWidth().height(4.dp).background(if(i<=stage)p.green else p.divider))
                     }
                 }
             }
@@ -180,10 +186,10 @@ private fun condition(value:Condition)=when(value){Condition.ALLOWED->"허용";C
     BoxWithConstraints(Modifier.fillMaxWidth().padding(top=20.dp)) {
         val action=primary(s)
         if(maxWidth<900.dp) Column(verticalArrangement=Arrangement.spacedBy(12.dp)) {
-            Text("${s.step+1} / 7 · ${steps[s.step]}",style=IviType.label,color=p.tertiary)
+            Text(stageLabel(s),style=IviType.label,color=p.tertiary)
             IviButton(action.first,Modifier.fillMaxWidth().testTag("journey-next"),filled=true,enabled=action.second && !saving,onClick=onNext)
         } else Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(24.dp),verticalAlignment=Alignment.CenterVertically) {
-            Text("${s.step+1} / 7 · ${steps[s.step]}",Modifier.weight(1f),style=IviType.label,color=p.tertiary)
+            Text(stageLabel(s),Modifier.weight(1f),style=IviType.label,color=p.tertiary)
             IviButton(action.first,Modifier.widthIn(max=620.dp).testTag("journey-next"),filled=true,enabled=action.second && !saving,onClick=onNext)
         }
     }
@@ -191,9 +197,9 @@ private fun condition(value:Condition)=when(value){Condition.ALLOWED->"허용";C
 private fun primary(s:Journey):Pair<String,Boolean> = when {
     s.completed -> "새 여행 준비" to true
     s.step==0 -> "오늘 밤 차박 시작" to true
-    s.step==1 -> "장소 후보 비교" to true
-    s.step==2 -> "선택한 장소로 계획" to true
-    s.step==3 -> "준비 계획 확인 · 이동" to s.canDepart
+    s.step==1 -> "장소 후보 비교" to (s.input.valid && s.input.schedule?.departureEnd(s.input.endHour)!=null && !s.input.cookingNeedsReview)
+    s.step==2 -> "이 장소 선택" to (s.input.valid && s.input.schedule?.departureEnd(s.input.endHour)!=null && !s.input.cookingNeedsReview)
+    s.step==3 -> "준비 완료" to s.canDepart
     s.step==4 -> when(s.route) {
         RoutePhase.NONE -> "길 안내 시작" to true
         RoutePhase.REQUESTED -> "경로를 찾고 있어요" to false
@@ -201,8 +207,8 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
         RoutePhase.FAILED -> "다시 시도" to true
         RoutePhase.ARRIVED -> (if(s.parked)"수면 준비로" else "주차했어요") to true
     }
-    s.step==5 -> "수면 준비 확인 · 다음 날" to (s.canSleep && s.siteReady && s.sleepChecks.containsAll(Journey.SLEEP_IDS))
-    else -> "차박 종료" to s.canFinish
+    s.step==5 -> "철수 시작" to (s.canSleep && s.siteReady && s.sleepChecks.containsAll(Journey.SLEEP_IDS))
+    else -> "철수 완료" to s.canFinish
 }
 @Composable private fun Panel(modifier:Modifier=Modifier,content:@Composable ColumnScope.()->Unit) {
     Column(modifier.fillMaxWidth().background(LocalIviColors.current.surface,RoundedCornerShape(32.dp)).padding(28.dp),verticalArrangement=Arrangement.spacedBy(20.dp),content=content)
@@ -284,7 +290,22 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
                 }
                 IviButton("전체 장소 보기",size=IviButtonSize.MEDIUM){onScenery(null);onConfirmed(false)}
             }
-            candidates.forEachIndexed { index,place->PlaceCard(s,place.place,index,Modifier,send) }
+            BoxWithConstraints(Modifier.fillMaxWidth()) {
+                if(maxWidth>=1200.dp) Column(verticalArrangement=Arrangement.spacedBy(20.dp)) {
+                    candidates.chunked(3).forEach { row->
+                        Row(horizontalArrangement=Arrangement.spacedBy(20.dp)) {
+                            row.forEach{place->PlaceOverview(s,place,Modifier.weight(1f),send)}
+                            repeat(3-row.size){Spacer(Modifier.weight(1f))}
+                        }
+                    }
+                } else Row(Modifier.horizontalScroll(rememberScrollState()),horizontalArrangement=Arrangement.spacedBy(20.dp)) {
+                    candidates.forEach{place->PlaceOverview(s,place,Modifier.width(420.dp),send)}
+                }
+            }
+            candidates.find{it.place.id==s.placeId}?.let { selected->
+                Text("선택한 장소의 상세 정보",style=IviType.title)
+                PlaceCard(s,selected.place,candidates.indexOf(selected),Modifier,send)
+            }
             if(candidates.none{it.place.id==s.placeId} && candidates.isNotEmpty())Text("목록에서 이번 여행의 장소를 선택해 주세요.",style=IviType.label)
         }
 
@@ -395,6 +416,23 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
         }
     }
 }
+@Composable private fun PlaceOverview(s:Journey,entry:com.chapark.app.data.NavigationPlace,modifier:Modifier,send:(JourneyEvent)->Unit) {
+    val place=entry.place
+    val evidence=PlaceEvidenceCatalog.find(place.id)
+    val p=LocalIviColors.current
+    Panel(modifier.testTag("place-overview-${place.id}").then(if(s.placeId==place.id)Modifier.border(2.dp,p.green,RoundedCornerShape(32.dp)) else Modifier)) {
+        Text(place.name,style=IviType.smallTitle)
+        Text(entry.address,style=IviType.label,color=p.secondary)
+        Text("주차 · ${condition(evidence.parking)}\n차내 숙박 · ${condition(place.overnight)}\n야간 화장실 · ${condition(place.nightToilet)}\n취사 · ${condition(place.cooking)}",style=IviType.label)
+        Text("${evidence.scenery.label} · 조망 확인 필요",style=IviType.label)
+        Text("충전시설 · 연결 후보 확인 필요",style=IviType.label,color=p.secondary)
+        val dates=evidence.facts.mapNotNull{it.checkedOn}.distinct()
+        Text("자료 확인 · ${dates.joinToString().ifBlank{"미확인"}}${if(evidence.facts.any{it.checkedOn==null})" · 일부 미확인" else ""}",style=IviType.label)
+        Text("출처 · ${runCatching{java.net.URI(entry.source).host}.getOrNull() ?: "확인 필요"}",style=IviType.label,color=p.secondary)
+        IviButton(if(s.placeId==place.id)"상세 확인 중" else "상세 비교",size=IviButtonSize.MEDIUM,filled=s.placeId==place.id){send(JourneyEvent.Place(place.id))}
+    }
+}
+
 @Composable private fun PlaceCard(s:Journey,place:Place,index:Int,modifier:Modifier,send:(JourneyEvent)->Unit) {
     val p=LocalIviColors.current
     Panel(modifier.then(if(s.placeId==place.id)Modifier.border(2.dp,p.green,RoundedCornerShape(32.dp))else Modifier)) {

@@ -110,7 +110,12 @@ class JourneyViewModel(app:Application):AndroidViewModel(app) {
                     catch(e:Exception){mutable.value=mutable.value.copy(notice="새 장소 자료를 적용하지 못했어요. 저장된 자료를 사용합니다.")}
                 }
                 val old=mutable.value.journey
-                var reduced=realPlace(JourneyJournal.apply(old,event,System.currentTimeMillis(),if(event is JourneyEvent.Battery)"SDK" else "USER"))
+                // A new trip gets today's date once; reopening an existing plan never rewrites it.
+                val current=if(event==JourneyEvent.Next && old.step==0 && old.input.schedule==null){
+                    val zone=java.time.ZoneId.systemDefault()
+                    old.copy(input=old.input.copy(schedule=com.chapark.app.domain.TripSchedule(java.time.LocalDate.now(zone).toString(),zone.id)))
+                }else old
+                var reduced=realPlace(JourneyJournal.apply(current,event,System.currentTimeMillis(),if(event is JourneyEvent.Battery)"SDK" else "USER"))
                 if(event==JourneyEvent.NewTrip || event==JourneyEvent.ResetScenario){
                     val b=battery.state.value
                     reduced=JourneyReducer.apply(reduced,JourneyEvent.Battery(b.value,b.status,b.source,b.receivedAt))

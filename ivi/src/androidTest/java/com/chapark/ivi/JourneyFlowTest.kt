@@ -11,10 +11,22 @@ import org.junit.Test
 import java.io.File
 
 class JourneyFlowTest {
+    private var original:com.chapark.prototype.Journey?=null
+    @org.junit.Before fun preserveActiveJourney(){kotlinx.coroutines.runBlocking {
+        original=com.chapark.ivi.prototype.JourneyStore(InstrumentationRegistry.getInstrumentation().targetContext).load().first
+    }}
+    @org.junit.After fun restoreActiveJourney(){kotlinx.coroutines.runBlocking {
+        val store=com.chapark.ivi.prototype.JourneyStore(InstrumentationRegistry.getInstrumentation().targetContext)
+        original?.let{saved->
+            store.load().first.tripId?.takeIf{it!=saved.tripId}?.let{store.deleteHistory(it)}
+            store.save(saved)
+        }
+    }}
     @get:Rule val compose=createAndroidComposeRule<IviActivity>()
     private fun waitText(text:String) { compose.waitUntil(40_000){runCatching{compose.onAllNodesWithText(text).fetchSemanticsNodes().isNotEmpty()}.getOrDefault(false)} }
     private fun saved() { waitText("기기에 저장됨"); compose.waitForIdle() }
     private fun click(text:String) { compose.onNodeWithText(text).performScrollTo().performClick(); compose.waitForIdle() }
+    private fun toggleTheme() { compose.onNodeWithText("어두운 화면").performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.OnClick); compose.waitForIdle() }
     private fun next() { saved(); compose.onNodeWithTag("journey-next").performClick(); compose.waitForIdle() }
     private fun screenshot(name:String) {
         saved()
@@ -28,16 +40,16 @@ class JourneyFlowTest {
         waitText("설정")
         compose.onNodeWithText("설정").performClick()
         val initiallyDark=kotlinx.coroutines.runBlocking { com.chapark.ivi.prototype.JourneyStore(InstrumentationRegistry.getInstrumentation().targetContext).load().first.dark }
-        if(initiallyDark)click("어두운 화면")
+        if(initiallyDark)toggleTheme()
         click("새 여행 계획");waitText("여행 계획을 새로 만들까요?");compose.onNodeWithText("처음부터").performClick()
         waitText("오늘 밤 차박 시작");screenshot("s1-start.png")
-        next();waitText("장소 후보 비교")
+        next();waitText("차박 계획")
         click("오늘 날짜로 계획");saved()
         click("인원 늘리기");click("인원 늘리기")
         click("배터리 확인 기준 늘리기");click("철수 예정 줄이기")
         compose.activityRule.scenario.recreate();waitText("인원 · 3명")
         screenshot("s2-conditions.png")
-        next();waitText("선택한 장소로 계획");screenshot("s3-places.png")
+        next();waitText("이 장소 선택");screenshot("s3-places.png")
         next();waitText("오늘의 준비 계획")
         compose.onNodeWithText("충전 경유 검토").assertExists()
         compose.onNodeWithText("취사 허용 여부 확인").assertExists()
@@ -72,7 +84,7 @@ class JourneyFlowTest {
         }
         // Activity recreation must restore the persisted terminal state, not restart the trip.
         compose.activityRule.scenario.recreate();waitText("오늘의 차박을 마쳤어요")
-        compose.onNodeWithText("설정").performClick();click("어두운 화면");click("설정 닫기")
+        compose.onNodeWithText("설정").performClick();toggleTheme();click("설정 닫기")
         screenshot("s7-completed-dark.png")
     }
 }

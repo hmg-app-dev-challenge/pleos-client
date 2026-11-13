@@ -56,6 +56,7 @@ data class Journey(
 sealed interface JourneyEvent {
     data object Next:JourneyEvent
     data object Back:JourneyEvent
+    data class PlanningTab(val index:Int):JourneyEvent
     data class Conditions(val value:TripInput):JourneyEvent
     data class Place(val id:String):JourneyEvent
     data class Charger(val id:String?):JourneyEvent
@@ -112,6 +113,7 @@ object JourneyReducer {
                 5 -> if(old.canSleep && old.siteReady && old.sleepChecks.containsAll(Journey.SLEEP_IDS)) old.copy(step=6,sleepReady=true) else old
                 else -> old
             }
+            is JourneyEvent.PlanningTab -> if(old.step in 1..2 && event.index in 0..1)old.copy(step=event.index+1) else old
             JourneyEvent.Back -> when {
                 old.step==4 -> old.copy(step=3,route=RoutePhase.NONE,parked=false,sleepChecks=emptySet(),exitChecks=emptySet(),sleepReady=false)
                 old.step>0 -> old.copy(step=old.step-1)

@@ -6,6 +6,14 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class MvpContractTest {
+    @Test fun planningTabsPreserveDraftAndCannotChangeOtherStagesOrDrivingState(){
+        val draft=Journey(step=1,checked=setOf("water"),input=TripInput(people=3))
+        val places=JourneyReducer.apply(draft,JourneyEvent.PlanningTab(1))
+        assertEquals(draft.copy(step=2),places)
+        assertEquals(draft,JourneyReducer.apply(places,JourneyEvent.PlanningTab(0)))
+        assertEquals(draft,JourneyReducer.apply(draft,JourneyEvent.PlanningTab(2)))
+        for(s in listOf(draft.copy(restricted=true),draft.copy(step=3),draft.copy(step=4)))assertEquals(s,JourneyReducer.apply(s,JourneyEvent.PlanningTab(1)))
+    }
     @Test fun cookingModesDoNotConflateSimpleMealsWithCookingPermission() {
         val restricted=DemoPlaces.all[1]
         fun rules(mode:CookingPlan)=PlanningRules.evaluate(restricted,TripInput(cookingPlan=mode),SocReading(80.0,ReadingStatus.AVAILABLE,Source.EMULATOR))
