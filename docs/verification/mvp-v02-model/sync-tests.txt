@@ -1,0 +1,9 @@
+
+com.chapark.ivi.RecordSyncTest:..
+
+Time: 10.183
+
+OK (2 tests)
+
+
+

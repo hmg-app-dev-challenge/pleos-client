@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
+import com.chapark.app.domain.CookingPlan
 import com.chapark.app.domain.TripInput
 import com.chapark.app.domain.Source
 import com.chapark.app.domain.ReadingStatus
@@ -26,33 +27,38 @@ class JourneyStore(context:Context) {
         val p=store.data.first()
         val decoded=decode(p)
         val result=decoded.first.let{if(it.tripId==null)it.copy(tripId=UUID.randomUUID().toString()) else it} to decoded.second
-        if((p[intPreferencesKey("schema")] ?: 1)<6 || decoded.first.tripId==null)save(result.first)
+        if((p[intPreferencesKey("schema")] ?: 1)<7 || decoded.first.tripId==null)save(result.first)
         return result
     }
     internal fun decode(p:Preferences):Pair<Journey,String?> {
         val version=p[intPreferencesKey("schema")] ?: 1
-        require(version in 1..6) { "저장 형식을 읽을 수 없습니다. 초기화 후 시작해 주세요." }
+        require(version in 1..7) { "저장 형식을 읽을 수 없습니다. 초기화 후 시작해 주세요." }
         fun bool(k:String,default:Boolean=false)=p[booleanPreferencesKey(k)] ?: default
         fun int(k:String,default:Int)=p[intPreferencesKey(k)] ?: default
         fun checks(k:String)=p[stringSetPreferencesKey(k)] ?: emptySet()
         val route=runCatching { RoutePhase.valueOf(p[stringPreferencesKey("route")] ?: "NONE") }.getOrDefault(RoutePhase.NONE)
+        val storedCooking=p[stringPreferencesKey("cookingPlan")]
+        val parsedCooking=storedCooking?.let{runCatching{CookingPlan.valueOf(it)}.getOrNull()}
+        val cooking=parsedCooking ?: if(version<7)CookingPlan.fromLegacy(bool("cooking",true)) else CookingPlan.NONE
+        val review=if(version<7)p[booleanPreferencesKey("cooking")]==true else parsedCooking==null || bool("cookingNeedsReview")
         var state=Journey(step=int("step",0).coerceIn(0,6),
-            input=TripInput(int("people",1).coerceAtLeast(1),bool("cooking",true),bool("pets"),bool("bag",true),
+            input=TripInput(int("people",1).coerceAtLeast(1),cooking,bool("pets"),bool("bag",true),
                 int("threshold",35).coerceIn(0,100),int("endHour",10).coerceIn(0,23),
-                p[stringPreferencesKey("tripDate")]?.let{date->TripSchedule(date,p[stringPreferencesKey("tripZone")] ?: "")} ),
+                p[stringPreferencesKey("tripDate")]?.let{date->TripSchedule(date,p[stringPreferencesKey("tripZone")] ?: "")},cookingNeedsReview=review ),
             tripId=p[stringPreferencesKey("tripId")],chargerId=p[stringPreferencesKey("chargerId")]?.takeIf{com.chapark.app.data.ChargingPlaces.find(it)!=null},restMode=p[stringPreferencesKey("restMode")] ?: "REST",
             forgotten=checks("forgotten"),reminders=checks("reminders"),followUps=checks("followUps"),
             records=JourneyRecordCodec.decode(p[stringPreferencesKey("records")] ?: "[]"),
             placeId=p[stringPreferencesKey("place")]?.takeIf{it.isNotBlank() && it.length<=100} ?: "demo-b",
             soc=if(bool("socMissing"))null else int("soc",20).takeIf{it in 0..100},
-            checked=checks("checked"),route=if(route==RoutePhase.REQUESTED)RoutePhase.FAILED else route,
+            checked=checks("checked"),omitted=checks("omitted"),route=if(route==RoutePhase.REQUESTED)RoutePhase.FAILED else route,
             parked=bool("parked") && route==RoutePhase.ARRIVED,
             sleepChecks=checks("sleep").intersect(Journey.SLEEP_IDS),exitChecks=checks("exit").intersect(Journey.EXIT_IDS),
             sleepReady=bool("sleepReady"),completed=bool("completed"),restricted=bool("restricted"),dark=bool("dark"),
             batteryStatus=runCatching{ReadingStatus.valueOf(p[stringPreferencesKey("batteryStatus")] ?: "UNKNOWN")}.getOrDefault(ReadingStatus.UNKNOWN),
             socSource=if(version==1)Source.DEMO else runCatching { Source.valueOf(p[stringPreferencesKey("socSource")] ?: "UNKNOWN") }.getOrDefault(Source.UNKNOWN),
             socReceivedAtMillis=p[longPreferencesKey("socReceivedAt")])
-        state=state.copy(checked=state.checked.intersect(state.decisions.map{it.id}.toSet()))
+        val itemIds=state.decisions.map{it.id}.toSet()
+        state=state.copy(checked=state.checked.intersect(itemIds)-state.omitted,omitted=state.omitted.intersect(itemIds))
         if(state.step>=5 && !state.canSleep) state=state.copy(step=4,sleepReady=false,completed=false)
         if(!state.sleepChecks.containsAll(Journey.SLEEP_IDS)) state=state.copy(sleepReady=false)
         if(state.step==6 && !state.sleepReady) state=state.copy(step=5,completed=false)
@@ -69,12 +75,12 @@ class JourneyStore(context:Context) {
         if(id in (p[stringSetPreferencesKey("deletedArchives")] ?: emptySet()))return null
         val revision=JSONObject(p[stringPreferencesKey("syncRevisions")] ?: "{}").optLong(id,0)
         val data=JSONObject().apply{
-            put("schemaVersion",1);put("placeId",s.placeId);put("chargerId",s.chargerId)
-            put("people",s.input.people);put("cooking",s.input.cooking);put("pets",s.input.pets);put("sleepingBag",s.input.sleepingBag)
+            put("schemaVersion",2);put("ruleVersion",com.chapark.app.domain.TripPolicy.RULE_VERSION);put("placeId",s.placeId);put("chargerId",s.chargerId)
+            put("people",s.input.people);put("cookingPlan",s.input.cookingPlan.name);put("cookingNeedsReview",s.input.cookingNeedsReview);put("pets",s.input.pets);put("sleepingBag",s.input.sleepingBag)
             put("threshold",s.input.batteryThreshold);put("endHour",s.input.endHour)
             put("date",s.input.schedule?.date);put("zone",s.input.schedule?.zoneId)
             put("step",s.step);put("completed",s.completed)
-            put("checked",JSONArray(s.checked.sorted()));put("sleepChecks",JSONArray(s.sleepChecks.sorted()));put("exitChecks",JSONArray(s.exitChecks.sorted()))
+            put("checked",JSONArray(s.checked.sorted()));put("omitted",JSONArray(s.omitted.sorted()));put("sleepChecks",JSONArray(s.sleepChecks.sorted()));put("exitChecks",JSONArray(s.exitChecks.sorted()))
             put("forgotten",JSONArray(s.forgotten.sorted()));put("records",JSONArray(JourneyRecordCodec.encode(s.records)))
         }
         return Triple(id,revision,data.toString())
@@ -140,7 +146,8 @@ class JourneyStore(context:Context) {
         if(s.completed && s.tripId!=null && s.tripId !in deleted && !archive.has(s.tripId))archive.put(s.tripId,JSONObject().apply {
             put("chargerId",s.chargerId);put("placeId",s.placeId);put("placeName",s.place.name)
             put("date",s.input.schedule?.date);put("zone",s.input.schedule?.zoneId)
-            put("forgotten",JSONArray(s.forgotten.toList()));
+            put("forgotten",JSONArray((s.forgotten+s.decisions.filter{it.id in s.omitted}.map{it.title}).sorted()));
+            put("cookingPlan",s.input.cookingPlan.name);put("omitted",JSONArray(s.omitted.sorted()));
             put("people",s.input.people);put("threshold",s.input.batteryThreshold)
             put("records",JSONArray(JourneyRecordCodec.encode(s.records)))
         })
@@ -148,7 +155,7 @@ class JourneyStore(context:Context) {
         p[stringPreferencesKey("syncRevisions")]=syncRevisions
         p[stringPreferencesKey("archive")]=archive.toString()
         p[stringSetPreferencesKey("deletedArchives")]=deleted
-        p[intPreferencesKey("schema")]=6
+        p[intPreferencesKey("schema")]=7
         p[stringPreferencesKey("restMode")]=s.restMode
         p[stringSetPreferencesKey("followUps")]=s.followUps
         p[stringSetPreferencesKey("forgotten")]=s.forgotten;p[stringSetPreferencesKey("reminders")]=s.reminders
@@ -162,10 +169,10 @@ class JourneyStore(context:Context) {
         p[stringPreferencesKey("socSource")]=s.socSource.name
         s.socReceivedAtMillis?.let{p[longPreferencesKey("socReceivedAt")]=it}
         p[intPreferencesKey("step")]=s.step; p[intPreferencesKey("people")]=s.input.people
-        p[booleanPreferencesKey("cooking")]=s.input.cooking; p[booleanPreferencesKey("pets")]=s.input.pets
+        p[stringPreferencesKey("cookingPlan")]=s.input.cookingPlan.name; p[booleanPreferencesKey("cookingNeedsReview")]=s.input.cookingNeedsReview; p[booleanPreferencesKey("pets")]=s.input.pets
         p[booleanPreferencesKey("bag")]=s.input.sleepingBag; p[stringPreferencesKey("place")]=s.placeId
         p[booleanPreferencesKey("socMissing")]=s.soc==null; p[intPreferencesKey("soc")]=s.soc ?: 0
-        p[stringSetPreferencesKey("checked")]=s.checked; p[stringPreferencesKey("route")]=s.route.name
+        p[stringSetPreferencesKey("checked")]=s.checked;p[stringSetPreferencesKey("omitted")]=s.omitted; p[stringPreferencesKey("route")]=s.route.name
         p[booleanPreferencesKey("parked")]=s.parked; p[stringSetPreferencesKey("sleep")]=s.sleepChecks
         p[stringSetPreferencesKey("exit")]=s.exitChecks; p[booleanPreferencesKey("sleepReady")]=s.sleepReady
         p[booleanPreferencesKey("completed")]=s.completed; p[booleanPreferencesKey("restricted")]=s.restricted

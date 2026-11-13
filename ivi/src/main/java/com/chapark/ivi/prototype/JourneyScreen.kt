@@ -211,6 +211,16 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
     Text(title,style=IviType.headline)
     Text(subtitle,style=IviType.body,color=LocalIviColors.current.secondary)
 }
+@Composable private fun CookingSelection(s:Journey,send:(JourneyEvent)->Unit){
+    Text("취사 계획",style=IviType.smallTitle)
+    if(s.input.cookingNeedsReview)Text("이전 여행의 취사 계획을 다시 선택해 주세요.",style=IviType.label)
+    CookingPlan.entries.forEach { plan->
+        IviButton(plan.label,size=IviButtonSize.MEDIUM,filled=s.input.cookingPlan==plan) {
+            send(JourneyEvent.Conditions(s.input.copy(cookingPlan=plan,cookingNeedsReview=false)))
+        }
+    }
+}
+
 @Composable private fun JourneyContent(s:Journey,send:(JourneyEvent)->Unit,
     candidates:List<com.chapark.app.data.NavigationPlace>,scenery:String?,confirmedOnly:Boolean,
     onScenery:(String?)->Unit,onConfirmed:(Boolean)->Unit) {
@@ -223,7 +233,7 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
                 if(s.followUps.isNotEmpty())Text("지난 여행의 미확인 정보 · ${s.followUps.joinToString()}",style=IviType.smallBody)
                 Text("내 차와 함께하는 하룻밤",style=IviType.body)
                 if(s.batteryVisible) Text("배터리 ${s.soc?.let{"$it%"} ?: "미확인"} · ${sourceLabel(s.socSource)}",style=IviType.smallTitle)
-                Text("${s.input.people}인 · ${if(s.input.cooking)"간단 조리 예정" else "준비한 식사"} · ${if(s.input.sleepingBag)"침낭 보유" else "침낭 미보유"}",style=IviType.body)
+                Text("${s.input.people}인 · ${s.input.cookingPlan.label} · ${if(s.input.sleepingBag)"침낭 보유" else "침낭 미보유"}",style=IviType.body)
             }
             Text("출발 전 충전 계획과 현장 운영 시간을 확인해 주세요.",style=IviType.label,color=p.tertiary)
         }
@@ -245,7 +255,7 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
                         ?: "철수 시각을 확인해 주세요. 시간대 변경으로 존재하지 않거나 겹치는 시각일 수 있어요.",style=IviType.smallBody)
                 }
                 Text("함께하는 인원",style=IviType.smallTitle)
-                AdjustValue("인원", "${s.input.people}명",s.input.people>1,s.input.people<Int.MAX_VALUE,
+                AdjustValue("인원", "${s.input.people}명",s.input.people>1,s.input.people<TripPolicy.MAX_PEOPLE,
                     {send(JourneyEvent.Conditions(s.input.copy(people=s.input.people-1)))},
                     {send(JourneyEvent.Conditions(s.input.copy(people=s.input.people+1)))})
                 if(s.batteryVisible) AdjustValue("배터리 확인 기준", "${s.input.batteryThreshold}%",s.input.batteryThreshold>0,s.input.batteryThreshold<100,
@@ -254,7 +264,7 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
                 AdjustValue("철수 예정", "다음 날 ${s.input.endHour}시",true,true,
                     {send(JourneyEvent.Conditions(s.input.copy(endHour=(s.input.endHour+23)%24)))},
                     {send(JourneyEvent.Conditions(s.input.copy(endHour=(s.input.endHour+1)%24)))})
-                IviToggleRow("현장에서 간단히 조리할 예정",s.input.cooking) {send(JourneyEvent.Conditions(s.input.copy(cooking=it)))}
+                CookingSelection(s,send)
                 IviToggleRow("반려동물과 함께",s.input.pets) {send(JourneyEvent.Conditions(s.input.copy(pets=it)))}
                 IviToggleRow("침낭을 보유하고 있어요",s.input.sleepingBag) {send(JourneyEvent.Conditions(s.input.copy(sleepingBag=it)))}
             }
@@ -283,7 +293,7 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
             Heading("오늘의 준비 계획","${names[s.placeId] ?: s.place.name} · 조건을 바꾸면 필요한 행동도 달라져요.")
             Panel {
                 if(s.batteryVisible) BatteryReading(s,send)
-                Text("출발 전 ${s.departureCheckedCount} / ${s.departureItems.size}개 확인 · 날짜와 준비 항목 확인 후 이동할 수 있어요",style=IviType.label,color=p.tertiary)
+                Text("출발 전 ${s.departureCheckedCount} / ${s.departureProgress.total}개 확인 · 날짜와 준비 항목 확인 후 이동할 수 있어요",style=IviType.label,color=p.tertiary)
             }
             if(s.input.schedule?.departureEnd(s.input.endHour)==null) Panel {
                 Text(s.departureBlockReason ?: "여행 일정을 확인해 주세요.",style=IviType.smallTitle)
@@ -295,6 +305,7 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
                 }
                 Text("다른 날짜는 조건 확인 단계에서 변경할 수 있어요.",style=IviType.label)
             }
+            if(s.input.cookingNeedsReview) Panel { CookingSelection(s,send) }
             Panel {
                 Text("충전 경유 계획",style=IviType.smallTitle)
                 Text("선택한 충전시설을 거쳐 목적지로 안내해요. 충전 속도와 이용 조건을 먼저 확인해 주세요.",style=IviType.smallBody)
@@ -424,7 +435,7 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
             Text(s.soc?.let{"$it%"} ?: "미확인",style=IviType.headline)
             Text("배터리 · ${sourceLabel(s.socSource)}",style=IviType.label,color=p.tertiary)
         }
-        Text("${s.input.people}인\n${if(s.input.cooking)"간단 조리 예정" else "준비한 식사"}\n${if(s.input.sleepingBag)"침낭 보유" else "침낭 미보유"}",style=IviType.body)
+        Text("${s.input.people}인\n${s.input.cookingPlan.label}\n${if(s.input.sleepingBag)"침낭 보유" else "침낭 미보유"}",style=IviType.body)
         HorizontalDivider(color=p.divider)
         Text("${s.checkedCount}/${s.decisions.size}개 준비 확인",style=IviType.smallTitle)
         Text("준비 항목을 확인하고\n편안하게 출발하세요.",style=IviType.label,color=p.tertiary)

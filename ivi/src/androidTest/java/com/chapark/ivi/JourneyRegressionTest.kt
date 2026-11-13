@@ -29,6 +29,17 @@ class JourneyRegressionTest {
             File(dir,"regression-$name.png").outputStream().use{bitmap.compress(Bitmap.CompressFormat.PNG,100,it)}
         }
     }
+    @Test fun migratedCookingCanBeConfirmedInPreparationWithoutLosingChecks() {
+        val base=Journey(step=3,placeId="camp-nanji",input=com.chapark.app.domain.TripInput(
+            cookingPlan=com.chapark.app.domain.CookingPlan.COOKING,cookingNeedsReview=true,
+            schedule=com.chapark.app.domain.TripSchedule("2026-11-14","Asia/Seoul")))
+        var state by mutableStateOf(base.copy(checked=base.departureItems.map{it.id}.toSet()))
+        compose.setContent{JourneyScreen(JourneyUi(state,loaded=true),{state=JourneyReducer.apply(state,it)})}
+        compose.onNodeWithTag("journey-next").assertIsNotEnabled()
+        compose.onNodeWithText("취사 예정").performScrollTo().performClick()
+        compose.onNodeWithTag("journey-next").assertIsEnabled()
+        compose.runOnIdle{assertFalse(state.input.cookingNeedsReview);assertEquals(base.departureItems.map{it.id}.toSet(),state.checked)}
+    }
     @Test fun checkedPreparationWithoutDateCanSetDateAndProceedWithoutLosingChecks() {
         val base=Journey(step=3,placeId="camp-nanji")
         var state by mutableStateOf(base.copy(checked=base.departureItems.map{it.id}.toSet()))

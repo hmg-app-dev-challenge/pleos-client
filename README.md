@@ -6,7 +6,7 @@
 
 ## 최신 개발 기준
 
-2026-11-14 첨부 MVP PRD v0.2를 [개발 계획](docs/IVI_WORK_PLAN.md)에 반영했다. [기능별 차이·결정 대장](docs/MVP_PRD_V0_2_REVIEW.md)과 [목표 5단계 흐름](docs/PRODUCT_FLOW_PLAN.md)을 따른다. 디자인은 기존 현대차 Pleos 시스템을 유지한다. 아래 0.4.0 구현·산출물은 아직 새 PRD 인수 완료본이 아니다.
+2026-11-14 첨부 MVP PRD v0.2를 [개발 계획](docs/IVI_WORK_PLAN.md)에 반영했다. [기능별 차이·결정 대장](docs/MVP_PRD_V0_2_REVIEW.md)과 [목표 5단계 흐름](docs/PRODUCT_FLOW_PLAN.md)을 따른다. 디자인은 기존 현대차 Pleos 시스템을 유지한다. 아래 0.4.0 구현·산출물은 아직 새 PRD 인수 완료본이 아니다. 모델·저장 기반의 개발 착수 내역은 [MVP 실행 기록](docs/MVP_V0_2_EXECUTION.md)에 남긴다.
 
 ## 현재 구현된 사용 흐름
 

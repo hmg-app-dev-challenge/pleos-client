@@ -4,10 +4,12 @@ import com.chapark.app.data.DemoPlaces
 import com.chapark.app.data.PlaceCatalog
 import com.chapark.app.domain.*
 
+enum class JourneyStage { PLANNING, PREPARING, MOVING, STAYING, COMPLETED }
+
 enum class RoutePhase { NONE, REQUESTED, GUIDING, FAILED, ARRIVED }
 data class Journey(
-    val step:Int=0, val input:TripInput=TripInput(cooking=true), val placeId:String="demo-b",
-    val soc:Int?=20, val checked:Set<String> = emptySet(),
+    val step:Int=0, val input:TripInput=TripInput(cookingPlan=com.chapark.app.domain.CookingPlan.COOKING), val placeId:String="demo-b",
+    val soc:Int?=20, val checked:Set<String> = emptySet(), val omitted:Set<String> = emptySet(),
     val route:RoutePhase=RoutePhase.NONE, val parked:Boolean=false,
     val sleepChecks:Set<String> = emptySet(), val exitChecks:Set<String> = emptySet(),
     val sleepReady:Boolean=false, val completed:Boolean=false,
@@ -18,6 +20,13 @@ data class Journey(
     val batteryStatus:ReadingStatus=ReadingStatus.AVAILABLE,
     val socSource:Source=Source.DEMO, val socReceivedAtMillis:Long?=null,
 ) {
+    /** Display stage only: COMPLETED includes checkout UI; completed is the actual persisted fact. */
+    val stage:JourneyStage? get()=when(step){
+        0->null;1,2->JourneyStage.PLANNING;3->JourneyStage.PREPARING
+        4->if(route==RoutePhase.ARRIVED)JourneyStage.STAYING else JourneyStage.MOVING
+        5->JourneyStage.STAYING;else->JourneyStage.COMPLETED
+    }
+    fun preparationStatus(id:String)=when {id in omitted->PreparationStatus.OMITTED;id in checked->PreparationStatus.COMPLETED;else->PreparationStatus.PENDING}
     val batteryVisible get()=batteryStatus!=ReadingStatus.UNSUPPORTED
     val place get()=PlaceCatalog.find(placeId) ?: Place(placeId,"장소 정보 확인 필요","저장된 장소 자료를 확인해 주세요.",Condition.UNKNOWN,Condition.UNKNOWN,Condition.UNKNOWN,Condition.UNKNOWN,Condition.UNKNOWN,12)
     val decisions get()=followUps.sorted().map{DecisionItem("followup-$it",Group.BEFORE,"다시 확인 · $it","지난 여행에서 확인하지 못한 정보예요. 이번 장소의 조건도 확인해 주세요.")} + reminders.sorted().map{DecisionItem("reminder-$it",Group.GEAR,"다시 챙기기 · $it","지난 여행에서 빠뜨렸다고 기록한 준비물이에요.")} + PlanningRules.evaluate(place,input,SocReading(soc?.toDouble(),
@@ -25,16 +34,18 @@ data class Journey(
     val checkedCount get()=decisions.count { it.id in checked }
     val departureItems get()=decisions.filter{it.group!=Group.SITE}
     val siteItems get()=decisions.filter{it.group==Group.SITE}
-    val departureCheckedCount get()=departureItems.count{it.id in checked}
+    val departureProgress get()=preparationProgress(departureItems,checked,omitted)
+    val departureCheckedCount get()=departureProgress.completed
     val departureBlockReason:String? get()=when {
         input.schedule==null -> "여행 날짜를 설정해 주세요."
         input.schedule.departureEnd(input.endHour)==null -> "여행 날짜·시간대와 철수 시각을 확인해 주세요."
+        input.cookingNeedsReview -> "취사 계획을 다시 선택해 주세요."
         !input.valid -> "여행 조건을 확인해 주세요."
-        departureCheckedCount<departureItems.size -> "출발 전 항목 ${departureItems.size-departureCheckedCount}개를 더 확인해 주세요."
+        departureCheckedCount<departureProgress.total -> "출발 전 항목 ${departureProgress.total-departureCheckedCount}개를 더 확인해 주세요."
         else -> null
     }
-    val canDepart get()=input.valid && (input.schedule?.departureEnd(input.endHour)!=null) && departureItems.all{it.id in checked}
-    val siteReady get()=siteItems.all{it.id in checked}
+    val canDepart get()=input.valid && (input.schedule?.departureEnd(input.endHour)!=null) && !input.cookingNeedsReview && departureProgress.ready
+    val siteReady get()=preparationProgress(siteItems,checked,omitted).ready
     val canSleep get()=parked && route==RoutePhase.ARRIVED
     val canFinish get()=canSleep && sleepReady && exitChecks.containsAll(EXIT_IDS)
     companion object {
@@ -51,6 +62,7 @@ sealed interface JourneyEvent {
     data class Battery(val value:Int?,val status:ReadingStatus,val source:Source,val receivedAt:Long?):JourneyEvent
     data class Soc(val value:Int?,val receivedAt:Long?=null):JourneyEvent
     data class Check(val id:String):JourneyEvent
+    data class Omit(val id:String):JourneyEvent
     data object RequestRoute:JourneyEvent
     data class RouteResponse(val success:Boolean):JourneyEvent
     data object NavigationLost:JourneyEvent
@@ -79,16 +91,16 @@ object JourneyReducer {
             // A valid vehicle value, unsupported capability, or new trip replaces it.
             if(old.socSource==Source.MANUAL && event.status !in setOf(ReadingStatus.AVAILABLE,ReadingStatus.UNSUPPORTED))return old
             val next=old.copy(soc=event.value?.takeIf{it in 0..100 && event.status==ReadingStatus.AVAILABLE},batteryStatus=event.status,socSource=event.source,socReceivedAtMillis=event.receivedAt)
-            return if(old.step<=3)next.copy(checked=retainedChecks(old.decisions,next.decisions,old.checked)) else next
+            return if(old.step<=3)next.copy(omitted=retainedChecks(old.decisions,next.decisions,old.omitted),checked=retainedChecks(old.decisions,next.decisions,old.checked)) else next
         }
         if(old.restricted) return old
-        if(event==JourneyEvent.NewTrip) return Journey(input=old.input.copy(schedule=null),dark=old.dark,reminders=old.forgotten+old.reminders.filterNot{"reminder-$it" in old.checked},
+        if(event==JourneyEvent.NewTrip) return Journey(input=old.input.copy(schedule=null),dark=old.dark,reminders=old.forgotten+old.decisions.filter{it.id in old.omitted}.map{it.title}+old.reminders.filterNot{"reminder-$it" in old.checked},
             followUps=old.records.filter{it.kind=="PLACE_INFO" && it.confirmed==false && it.label?.substringBefore(" · ") in setOf("차내 숙박","야간 화장실","운영 조건")}
                 .map{"${old.place.name} · ${it.label!!.substringBefore(" · ")}"}.toSet()+old.followUps.filterNot{"followup-$it" in old.checked})
         if(old.completed) return old
         fun update(next:Journey):Journey {
             if(old.step>3) return old
-            return next.copy(checked=retainedChecks(old.decisions,next.decisions,old.checked),
+            return next.copy(omitted=retainedChecks(old.decisions,next.decisions,old.omitted),checked=retainedChecks(old.decisions,next.decisions,old.checked),
                 route=RoutePhase.NONE,parked=false,sleepChecks=emptySet(),exitChecks=emptySet(),sleepReady=false)
         }
         fun toggle(set:Set<String>,id:String)=if(id in set)set-id else set+id
@@ -111,7 +123,9 @@ object JourneyReducer {
             is JourneyEvent.Soc -> if(old.batteryVisible && (event.value==null || event.value in 0..100))
                 update(old.copy(soc=event.value,socSource=Source.MANUAL,socReceivedAtMillis=event.receivedAt,
                     batteryStatus=if(event.value==null)ReadingStatus.UNKNOWN else ReadingStatus.AVAILABLE)) else old
-            is JourneyEvent.Check -> if((old.step==3 && old.departureItems.any{it.id==event.id} || old.step==5 && old.canSleep && old.siteItems.any{it.id==event.id})) old.copy(checked=toggle(old.checked,event.id)) else old
+            is JourneyEvent.Check -> if((old.step==3 && old.departureItems.any{it.id==event.id} || old.step==5 && old.canSleep && old.siteItems.any{it.id==event.id})) old.copy(checked=toggle(old.checked,event.id),omitted=old.omitted-event.id) else old
+            is JourneyEvent.Omit -> if((old.step==3 && old.departureItems.any{it.id==event.id}) || (old.step==5 && old.canSleep && old.siteItems.any{it.id==event.id}))
+                old.copy(omitted=toggle(old.omitted,event.id),checked=old.checked-event.id) else old
             JourneyEvent.RequestRoute -> if(old.step==4 && old.route in setOf(RoutePhase.NONE,RoutePhase.FAILED)) old.copy(route=RoutePhase.REQUESTED) else old
             is JourneyEvent.RouteResponse -> if(old.step==4 && old.route==RoutePhase.REQUESTED) old.copy(route=if(event.success)RoutePhase.GUIDING else RoutePhase.FAILED) else old
             JourneyEvent.NavigationLost -> if(old.step==4 && old.route in setOf(RoutePhase.REQUESTED,RoutePhase.GUIDING)) old.copy(route=RoutePhase.FAILED,parked=false) else old

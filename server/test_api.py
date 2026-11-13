@@ -72,6 +72,15 @@ class ApiTest(unittest.TestCase):
         self.assertEqual(410,self.request('GET',path)[0])
         self.assertEqual(410,self.request('PUT',path,second)[0])
 
+    def test_plan_v2_keeps_three_cooking_modes_and_rejects_unknown(self):
+        for mode in ('NONE','SIMPLE','COOKING'):
+            body={'baseRevision':0,'data':{'schemaVersion':2,'placeId':'camp-nanji','cookingPlan':mode}}
+            path='/v1/plans/v2-'+mode
+            self.assertEqual(200,self.request('PUT',path,body)[0])
+            self.assertEqual(mode,self.request('GET',path)[1]['data']['cookingPlan'])
+        invalid={'baseRevision':0,'data':{'schemaVersion':2,'placeId':'camp-nanji','cookingPlan':'BOGUS'}}
+        self.assertEqual(400,self.request('PUT','/v1/plans/v2-invalid',invalid)[0])
+
     def test_catalog_and_rule_contracts_are_versioned_and_authenticated(self):
         self.assertEqual(401,self.request('GET','/v1/catalog',token=False)[0])
         catalog=self.request('GET','/v1/catalog')[1]

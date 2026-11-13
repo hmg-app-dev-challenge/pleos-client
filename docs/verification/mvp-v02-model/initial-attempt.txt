@@ -1,0 +1,1 @@
+Initial combined device run: incomplete. Project ADB helper raised TcpTimeoutException after 60 seconds without transport output. No pass claimed. System DrivingView restarts and a paused test Activity were observed. Retried storage and UI separately; see storage-tests.txt and ui-tests.txt.

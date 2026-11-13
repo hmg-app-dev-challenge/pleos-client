@@ -29,7 +29,7 @@ internal class CatalogCache(context:Context){
         if(!BuildConfig.DEBUG || BuildConfig.LOCAL_API_TOKEN.isBlank())return@withContext ""
         try{
             val rules=JSONObject(get("rules"))
-            require(rules.getString("version")=="v211-1")
+            require(rules.getString("version")==TripPolicy.RULE_VERSION)
             val raw=get("catalog");val value=parse(raw)
             if(value.version==(AcceptedCatalog.snapshot?.version ?: PlaceEvidenceCatalog.VERSION))"장소 자료 확인됨"
             else {write(pending,raw);"새 장소 자료 · 다음 여행부터 적용"}
@@ -56,7 +56,7 @@ internal class CatalogCache(context:Context){
     }
     companion object {
         internal fun parse(raw:String):CatalogSnapshot {
-            val root=JSONObject(raw);require(root.getInt("schemaVersion")==1 && root.getString("ruleVersion")=="v211-1")
+            val root=JSONObject(raw);require(root.getInt("schemaVersion")==1 && root.getString("ruleVersion")==TripPolicy.RULE_VERSION)
             val version=root.getString("version");require(version.length in 1..64)
             val list=root.getJSONArray("places");require(list.length() in 1..100)
             val evidence=mutableMapOf<String,PlaceEvidence>();val ids=mutableSetOf<String>()

@@ -36,14 +36,16 @@ internal object PlanImport {
         val rows=root.getJSONArray("plans");require(rows.length()<=10000)
         return (0 until rows.length()).mapNotNull{i->runCatching{
             val row=rows.getJSONObject(i);val data=row.getJSONObject("data")
-            require(data.getInt("schemaVersion")==1 && !data.optBoolean("completed"))
+            require(data.getInt("schemaVersion") in 1..2 && !data.optBoolean("completed"))
             val id=row.getString("id");require(id.matches(Regex("[A-Za-z0-9_-]{1,100}")))
             val place=NavigationPlaces.find(data.getString("placeId")) ?: error("unknown place")
             val schedule=if(data.isNull("date"))null else TripSchedule(data.getString("date"),data.getString("zone"))
             schedule?.let{java.time.LocalDate.parse(it.date);java.time.ZoneId.of(it.zoneId)}
             val people=data.getInt("people");val threshold=data.getInt("threshold");val hour=data.getInt("endHour")
-            require(people in 1..20 && threshold in 0..100 && hour in 0..23)
-            val input=TripInput(people,data.getBoolean("cooking"),data.getBoolean("pets"),data.getBoolean("sleepingBag"),threshold,hour,schedule)
+            require(people in 1..TripPolicy.MAX_PEOPLE && threshold in 0..100 && hour in 0..23)
+            val legacy=data.getInt("schemaVersion")==1
+            val cooking=if(legacy)CookingPlan.fromLegacy(data.getBoolean("cooking")) else CookingPlan.valueOf(data.getString("cookingPlan"))
+            val input=TripInput(people,cooking,data.getBoolean("pets"),data.getBoolean("sleepingBag"),threshold,hour,schedule,cookingNeedsReview=if(legacy)cooking==CookingPlan.COOKING else data.optBoolean("cookingNeedsReview"))
             val revision=row.getLong("revision");require(revision>0)
             SavedPlan(id,revision,place.place.name,input,place.place.id,data.optString("chargerId").takeIf{ChargingPlaces.find(it)!=null})
         }.getOrNull()}.sortedByDescending{it.input.schedule?.date ?: ""}

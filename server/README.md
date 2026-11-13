@@ -50,7 +50,7 @@ python3 -m unittest discover -s server -v
 | 메서드·경로 | 동작 |
 | --- | --- |
 | GET `/v1/catalog` | schema 1, 자료 version, ruleVersion, 장소별 좌표·풍경·조건·출처·확인일 |
-| GET `/v1/rules` | `v211-1`과 번들 규칙의 호환 계약. 외부 실행 코드를 받지 않음 |
+| GET `/v1/rules` | `mvp-v02-model-1`과 번들 규칙의 호환 계약. 외부 실행 코드를 받지 않음 |
 | GET `/v1/plans` | 삭제되지 않은 계획 목록. 앱은 미완료·호환 가능한 조건만 표시 |
 | GET `/v1/plans/{id}` | 활성 계획의 revision과 data, 없음 404·삭제 410 |
 | PUT `/v1/plans/{id}` | `{baseRevision,data}`. 같은 내용 재시도는 revision 유지, 변경은 +1, 불일치 409 |
@@ -60,3 +60,7 @@ python3 -m unittest discover -s server -v
 앱은 활성 계획도 업로드하고 완료 기록은 추가 병합한다. 같은 ID의 다른 기록은 자동 덮어쓰지 않는다. 계획 충돌에서는 사용자가 확인해 기기 계획을 새 ID로 보관할 수 있고 서버 원본은 유지한다. 완료 기록 충돌은 표시만 하고 원본을 보존한다. 시작 화면에서 서버 계획 조건을 선택해 새 여행으로 가져올 수 있다. 원본은 유지하고 새 ID를 발급하며 완료 체크·도착·주차·차량 값은 가져오지 않는다. 이전 진행 상태의 자동 재개와 계정 간 병합은 제공하지 않는다.
 
 자료는 AtomicFile로 검증 후 캐시하며 새 여행 경계에서만 적용한다. 호환 규칙 버전, 중복 ID, 좌표 범위, HTTPS 출처를 검사하고 오래된/근거 없는 허용 조건은 UNKNOWN으로 낮춘다. 조회 실패는 번들/마지막 정상 자료로 이어간다. 실시간 충전기 가용성·현장 조망 데이터는 없다. release는 로컬 토큰과 네트워크 동기화를 제외한다.
+
+## MVP PRD v0.2 모델 전환 (2026-11-14)
+
+계획 data schema 2는 `cookingPlan`(NONE/SIMPLE/COOKING), `cookingNeedsReview`, `omitted`, `ruleVersion`을 보존한다. 기존 data schema 1도 읽고 쓸 수 있다. 앱에서 이전 Boolean 취사 true를 가져오면 사용자 재확인이 필요하다. 기록/목록 envelope schema는 1을 유지한다. 카탈로그의 ruleVersion은 `mvp-v02-model-1`이고 장소 사실의 checkedOn은 재조회 없이 갱신하지 않았다.

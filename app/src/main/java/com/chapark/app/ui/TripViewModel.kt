@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.chapark.prototype.*
+import com.chapark.app.domain.CookingPlan
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -18,15 +19,19 @@ class TripViewModel(private val saved:SavedStateHandle):ViewModel() {
     private fun restore():Journey {
         val base=Journey()
         val route=runCatching { RoutePhase.valueOf(saved["journey.route"] ?: "NONE") }.getOrDefault(RoutePhase.NONE)
+        val cookingName=saved.get<String>("journey.cookingPlan")
+        val parsedCooking=cookingName?.let{runCatching{CookingPlan.valueOf(it)}.getOrNull()}
+        val cooking=parsedCooking ?: if(cookingName==null)CookingPlan.fromLegacy(saved["journey.cooking"] ?: true) else CookingPlan.NONE
         return base.copy(
             step=(saved.get<Int>("journey.step") ?: 0).coerceIn(0,6),
-            input=base.input.copy(people=saved["journey.people"] ?: 1,cooking=saved["journey.cooking"] ?: true,
+            input=base.input.copy(people=saved["journey.people"] ?: 1,cookingPlan=cooking,cookingNeedsReview=(cookingName!=null && parsedCooking==null) || (saved["journey.cookingNeedsReview"] ?: (cookingName==null && saved.get<Boolean>("journey.cooking")==true)),
                 pets=saved["journey.pets"] ?: false,sleepingBag=saved["journey.bag"] ?: true,
                 batteryThreshold=saved["journey.threshold"] ?: 35,endHour=saved["journey.endHour"] ?: 10,
                 schedule=saved.get<String>("journey.date")?.let{com.chapark.app.domain.TripSchedule(it,saved["journey.zone"] ?: "")}),
             placeId=saved["journey.place"] ?: base.placeId,
             route=if(route==RoutePhase.REQUESTED)RoutePhase.FAILED else route,
             parked=saved["journey.parked"] ?: false,
+            omitted=saved.get<ArrayList<String>>("journey.omitted")?.toSet() ?: emptySet(),
             checked=saved.get<ArrayList<String>>("journey.checked")?.toSet() ?: emptySet(),
             sleepChecks=saved.get<ArrayList<String>>("journey.sleep")?.toSet() ?: emptySet(),
             exitChecks=saved.get<ArrayList<String>>("journey.exit")?.toSet() ?: emptySet(),
@@ -40,9 +45,9 @@ class TripViewModel(private val saved:SavedStateHandle):ViewModel() {
         saved["journey.date"]=next.input.schedule?.date;saved["journey.zone"]=next.input.schedule?.zoneId
         saved["journey.threshold"]=next.input.batteryThreshold;saved["journey.endHour"]=next.input.endHour
         saved["journey.step"]=next.step;saved["journey.people"]=next.input.people
-        saved["journey.cooking"]=next.input.cooking;saved["journey.pets"]=next.input.pets;saved["journey.bag"]=next.input.sleepingBag
+        saved["journey.cookingPlan"]=next.input.cookingPlan.name;saved["journey.cookingNeedsReview"]=next.input.cookingNeedsReview;saved["journey.pets"]=next.input.pets;saved["journey.bag"]=next.input.sleepingBag
         saved["journey.place"]=next.placeId;saved["journey.route"]=next.route.name;saved["journey.parked"]=next.parked
-        saved["journey.checked"]=ArrayList(next.checked);saved["journey.sleep"]=ArrayList(next.sleepChecks);saved["journey.exit"]=ArrayList(next.exitChecks)
+        saved["journey.checked"]=ArrayList(next.checked);saved["journey.omitted"]=ArrayList(next.omitted);saved["journey.sleep"]=ArrayList(next.sleepChecks);saved["journey.exit"]=ArrayList(next.exitChecks)
         saved["journey.sleepReady"]=next.sleepReady;saved["journey.completed"]=next.completed;saved["journey.dark"]=next.dark
         if(event==JourneyEvent.RequestRoute && next.route==RoutePhase.REQUESTED) {
             routeJob?.cancel()

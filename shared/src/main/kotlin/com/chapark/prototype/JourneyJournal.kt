@@ -18,6 +18,7 @@ object JourneyJournal {
             event is JourneyEvent.Place->"PLACE_SELECTED"
             event is JourneyEvent.Charger->"CHARGING_PLAN"
             event is JourneyEvent.Check->"PREPARATION_CHECK"
+            event is JourneyEvent.Omit->"PREPARATION_OMITTED"
             event is JourneyEvent.SleepCheck->"SLEEP_CHECK"
             event is JourneyEvent.ExitCheck->"EXIT_CHECK"
             old.step==3 && next.step==4->"PREPARATION_COMPLETED"
@@ -28,9 +29,10 @@ object JourneyJournal {
             !old.completed && next.completed->"TRIP_COMPLETED"
             else->return next
         }
-        val id=when(event){is JourneyEvent.Check->event.id;is JourneyEvent.SleepCheck->event.id;is JourneyEvent.ExitCheck->event.id;else->null}
-        val checked=when(event){is JourneyEvent.Check->event.id in next.checked;is JourneyEvent.SleepCheck->event.id in next.sleepChecks;is JourneyEvent.ExitCheck->event.id in next.exitChecks;else->null}
+        val id=when(event){is JourneyEvent.Check->event.id;is JourneyEvent.Omit->event.id;is JourneyEvent.SleepCheck->event.id;is JourneyEvent.ExitCheck->event.id;else->null}
+        val checked=when(event){is JourneyEvent.Check->event.id in next.checked;is JourneyEvent.Omit->event.id in next.omitted;is JourneyEvent.SleepCheck->event.id in next.sleepChecks;is JourneyEvent.ExitCheck->event.id in next.exitChecks;else->null}
         val label=when(event){
+            is JourneyEvent.Omit->next.decisions.firstOrNull{it.id==id}?.title
             is JourneyEvent.Check->next.decisions.firstOrNull{it.id==id}?.let{"${it.title} · ${it.reason}"}
             is JourneyEvent.Place->next.place.name
             is JourneyEvent.Charger->com.chapark.app.data.ChargingPlaces.find(event.id)?.name ?: "충전 경유 없음"

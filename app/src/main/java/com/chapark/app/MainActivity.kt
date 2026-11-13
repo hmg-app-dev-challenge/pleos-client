@@ -120,7 +120,7 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
                 Text("오늘의 여행",style=MaterialTheme.typography.titleMedium)
                 Text("내 차와 함께하는 하룻밤")
                 Text("배터리 ${s.soc}% · 예시",style=MaterialTheme.typography.titleLarge)
-                Text("${s.input.people}인 · ${if(s.input.cooking)"간단 조리 예정" else "준비한 식사"} · ${if(s.input.sleepingBag)"침낭 보유" else "침낭 미보유"}")
+                Text("${s.input.people}인 · ${s.input.cookingPlan.label} · ${if(s.input.sleepingBag)"침낭 보유" else "침낭 미보유"}")
             }
         }
         1->{
@@ -135,7 +135,10 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
                 Text("함께하는 인원");Text("${s.input.people}명")
                 PleosButton("인원 줄이기",enabled=s.input.people>1){send(JourneyEvent.Conditions(s.input.copy(people=s.input.people-1)))}
                 PleosButton("인원 늘리기",enabled=s.input.people<Int.MAX_VALUE){send(JourneyEvent.Conditions(s.input.copy(people=s.input.people+1)))}}
-            Choice("현장에서 조리할 예정",s.input.cooking){send(JourneyEvent.Conditions(s.input.copy(cooking=it)))}
+            if(s.input.cookingNeedsReview)Text("이전 여행의 취사 계획을 다시 선택해 주세요.")
+            CookingPlan.entries.forEach { plan->
+                Choice(plan.label,s.input.cookingPlan==plan){send(JourneyEvent.Conditions(s.input.copy(cookingPlan=plan,cookingNeedsReview=false)))}
+            }
             Choice("반려동물과 함께",s.input.pets){send(JourneyEvent.Conditions(s.input.copy(pets=it)))}
             Choice("침낭을 보유하고 있어요",s.input.sleepingBag){send(JourneyEvent.Conditions(s.input.copy(sleepingBag=it)))}
         }
@@ -151,8 +154,11 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
         }
         3->{
             Heading("오늘의 준비 계획",s.place.name)
-            Text("현재 배터리 ${s.soc?.let{"$it%"} ?: "확인 필요"} · 예시 · 출발 전 ${s.departureCheckedCount}/${s.departureItems.size}개 확인")
+            Text("현재 배터리 ${s.soc?.let{"$it%"} ?: "확인 필요"} · 예시 · 출발 전 ${s.departureCheckedCount}/${s.departureProgress.total}개 확인")
             s.departureBlockReason?.let { Text(it) }
+            if(s.input.cookingNeedsReview) CookingPlan.entries.forEach { plan->
+                PleosButton(plan.label,filled=s.input.cookingPlan==plan){send(JourneyEvent.Conditions(s.input.copy(cookingPlan=plan,cookingNeedsReview=false)))}
+            }
             if(s.input.schedule?.departureEnd(s.input.endHour)==null) PleosButton("오늘 날짜로 계획") {
                 val zone=java.time.ZoneId.systemDefault()
                 send(JourneyEvent.Conditions(s.input.copy(schedule=com.chapark.app.domain.TripSchedule(java.time.LocalDate.now(zone).toString(),zone.id))))

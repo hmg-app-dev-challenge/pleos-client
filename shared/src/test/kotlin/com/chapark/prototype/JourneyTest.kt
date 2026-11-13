@@ -7,12 +7,12 @@ import org.junit.Test
 class JourneyTest {
     private fun apply(s:Journey,e:JourneyEvent)=JourneyReducer.apply(s,e)
     @Test fun resetKeepsThemeWhileNewTripAlsoKeepsProfile() {
-        val changed=Journey(input=TripInput(2,false,true,false),dark=true)
+        val changed=Journey(input=TripInput(2,com.chapark.app.domain.CookingPlan.NONE,true,false),dark=true)
         assertEquals(Journey(dark=true),apply(changed,JourneyEvent.ResetScenario))
         assertEquals(changed.input,apply(changed,JourneyEvent.NewTrip).input)
     }
     @Test fun endToEndRequiresArrivalParkingAndManualChecks() {
-        var s=Journey(input=TripInput(cooking=true,schedule=com.chapark.app.domain.TripSchedule("2026-11-12","Asia/Seoul")))
+        var s=Journey(input=TripInput(cookingPlan=com.chapark.app.domain.CookingPlan.COOKING,schedule=com.chapark.app.domain.TripSchedule("2026-11-12","Asia/Seoul")))
         repeat(3){s=apply(s,JourneyEvent.Next)}
         assertEquals(s,apply(s,JourneyEvent.Next))
         s.departureItems.forEach{s=apply(s,JourneyEvent.Check(it.id))}
@@ -86,7 +86,7 @@ class JourneyTest {
         assertTrue(apply(s,JourneyEvent.Soc(19)).decisions.any{it.id=="charge-review"})
     }
     @Test fun departureExcludesSiteChecksAndInvalidConditionsAreRejected() {
-        var s=Journey(step=3,input=TripInput(cooking=true,schedule=com.chapark.app.domain.TripSchedule("2026-11-12","Asia/Seoul")))
+        var s=Journey(step=3,input=TripInput(cookingPlan=com.chapark.app.domain.CookingPlan.COOKING,schedule=com.chapark.app.domain.TripSchedule("2026-11-12","Asia/Seoul")))
         assertEquals(s,apply(s,JourneyEvent.Check("site-rules")))
         assertEquals(s,apply(s,JourneyEvent.Conditions(s.input.copy(people=0))))
         assertEquals(s,apply(s,JourneyEvent.Conditions(s.input.copy(batteryThreshold=101))))

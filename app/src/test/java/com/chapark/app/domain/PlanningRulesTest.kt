@@ -19,7 +19,7 @@ class PlanningRulesTest {
         }
     }
     @Test fun restrictedCookingRemovesGearAndAddsMeal() {
-        val result = rules(DemoPlaces.all[1], TripInput(cooking = true))
+        val result = rules(DemoPlaces.all[1], TripInput(cookingPlan=com.chapark.app.domain.CookingPlan.COOKING))
         assertTrue(result.any { it.id == "meal-ready" })
         assertFalse(result.any { it.id == "cooking-gear" })
         assertTrue(result.any { it.id == "toilet-UNKNOWN" })
@@ -28,7 +28,7 @@ class PlanningRulesTest {
         assertFalse(rules(DemoPlaces.all[1]).any { it.id == "meal-ready" })
     }
     @Test fun fireRestrictionDoesNotAssumeElectricCookingAllowed() {
-        val result = rules(DemoPlaces.all[2], TripInput(cooking = true))
+        val result = rules(DemoPlaces.all[2], TripInput(cookingPlan=com.chapark.app.domain.CookingPlan.COOKING))
         assertTrue(result.any { it.id == "fire-check-RESTRICTED" })
         assertFalse(result.any { it.id == "cooking-gear" })
     }
@@ -40,8 +40,8 @@ class PlanningRulesTest {
         assertEquals(result.size, result.map { it.id }.distinct().size)
     }
     @Test fun checksOnlySurviveUnchangedMeaning() {
-        val old = rules(input = TripInput(cooking = true))
-        val next = rules(DemoPlaces.all[1], TripInput(cooking = true))
+        val old = rules(input = TripInput(cookingPlan=com.chapark.app.domain.CookingPlan.COOKING))
+        val next = rules(DemoPlaces.all[1], TripInput(cookingPlan=com.chapark.app.domain.CookingPlan.COOKING))
         assertEquals(setOf("water"), retainedChecks(old, next, setOf("water", "cooking-gear")))
         val changed = old.map { if (it.id == "water") it.copy(reason = "changed") else it }
         assertTrue(retainedChecks(old, changed, setOf("water")).isEmpty())

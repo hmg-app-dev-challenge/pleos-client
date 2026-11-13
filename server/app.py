@@ -34,7 +34,7 @@ class Handler(BaseHTTPRequestHandler):
         if self.path=='/v1/catalog':
             return self.reply(200,json.loads((ROOT/'server/catalog.json').read_text()))
         if self.path=='/v1/rules':
-            return self.reply(200,{'schemaVersion':1,'version':'v211-1','engine':'bundled-shared',
+            return self.reply(200,{'schemaVersion':1,'version':'mvp-v02-model-1','engine':'bundled-shared',
                 'departureRequires':['validSchedule','allDepartureChecks'],'siteChecksAfterArrival':True,
                 'batteryThreshold':'user','unsupportedBattery':'hidden'})
         if self.path=='/v1/plans':
@@ -101,8 +101,10 @@ class Handler(BaseHTTPRequestHandler):
             envelope=json.loads(self.rfile.read(length))
             if not isinstance(envelope,dict): return self.reply(400, {'error':'invalid_plan'})
             base=envelope.get('baseRevision'); data=envelope.get('data')
-            if type(base) is not int or base<0 or not isinstance(data,dict) or data.get('schemaVersion')!=1 or not isinstance(data.get('placeId'),str):
+            if type(base) is not int or base<0 or not isinstance(data,dict) or data.get('schemaVersion') not in (1,2) or not isinstance(data.get('placeId'),str):
                 return self.reply(400, {'error':'invalid_plan'})
+            if data.get('schemaVersion')==2 and data.get('cookingPlan') not in ('NONE','SIMPLE','COOKING'):
+                return self.reply(400, {'error':'invalid_cooking_plan'})
             payload=json.dumps(data,sort_keys=True,separators=(',',':'),ensure_ascii=False)
         except (ValueError,UnicodeError): return self.reply(400, {'error':'invalid_json'})
         digest=hashlib.sha256(payload.encode()).hexdigest()

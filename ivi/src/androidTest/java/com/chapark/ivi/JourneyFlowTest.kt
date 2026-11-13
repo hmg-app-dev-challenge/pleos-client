@@ -43,7 +43,7 @@ class JourneyFlowTest {
         compose.onNodeWithText("취사 허용 여부 확인").assertExists()
         screenshot("s4-plan.png")
         compose.onNodeWithTag("journey-next").assertIsNotEnabled()
-        val planned=com.chapark.prototype.Journey(placeId="camp-nanji",input=com.chapark.app.domain.TripInput(3,true,false,true,40,9))
+        val planned=com.chapark.prototype.Journey(placeId="camp-nanji",input=com.chapark.app.domain.TripInput(3,com.chapark.app.domain.CookingPlan.COOKING,false,true,40,9))
         planned.departureItems.forEach{click(it.title);saved()}
         compose.onNodeWithTag("journey-next").assertIsEnabled()
         next()

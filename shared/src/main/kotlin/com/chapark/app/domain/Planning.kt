@@ -15,13 +15,34 @@ data class Place(
     val cooking: Condition, val fire: Condition, val pets: Condition,
     val demoTemperatureC: Int,
 )
-data class TripInput(val people: Int = 1, val cooking: Boolean = false,
+enum class CookingPlan(val label:String) { NONE("취사 안 함"), SIMPLE("간편식"), COOKING("취사 예정");
+    companion object { fun fromLegacy(value:Boolean)=if(value)COOKING else NONE }
+}
+/** Compatibility defaults, not vehicle capacity or a safety threshold. Final MVP policies remain configurable. */
+object TripPolicy {
+    const val RULE_VERSION="mvp-v02-model-1"
+    const val MAX_PEOPLE=Int.MAX_VALUE
+    const val DEFAULT_SOC_THRESHOLD=35
+    const val DEFAULT_END_HOUR=10
+}
+data class TripInput(val people: Int = 1, val cookingPlan: CookingPlan = CookingPlan.NONE,
     val pets: Boolean = false, val sleepingBag: Boolean = true,
-    val batteryThreshold: Int = 35, val endHour: Int = 10, val schedule:TripSchedule?=null) {
-    val valid get() = people > 0 && batteryThreshold in 0..100 && endHour in 0..23 && (schedule==null || schedule.valid)
+    val batteryThreshold: Int = TripPolicy.DEFAULT_SOC_THRESHOLD, val endHour: Int = TripPolicy.DEFAULT_END_HOUR, val schedule:TripSchedule?=null,
+    val cookingNeedsReview:Boolean=false) {
+    val valid get() = people in 1..TripPolicy.MAX_PEOPLE && batteryThreshold in 0..100 && endHour in 0..23 && (schedule==null || schedule.valid)
 }
 enum class Group(val label: String) { BEFORE("출발 전 행동"), SITE("현장 확인"), GEAR("준비물") }
-data class DecisionItem(val id: String, val group: Group, val title: String, val reason: String)
+enum class PreparationCategory { PACK, BEFORE_DEPARTURE, ON_SITE, CHECKOUT }
+enum class PreparationStatus { PENDING, COMPLETED, OMITTED }
+data class DecisionItem(val id: String, val group: Group, val title: String, val reason: String,
+    val quantity:Int?=null,val required:Boolean=true,
+    val category:PreparationCategory=when(group){Group.GEAR->PreparationCategory.PACK;Group.BEFORE->PreparationCategory.BEFORE_DEPARTURE;Group.SITE->PreparationCategory.ON_SITE}) {
+    init { require(quantity==null || quantity>0) }
+}
+data class PreparationProgress(val completed:Int,val total:Int) { val ready get()=completed==total }
+fun preparationProgress(items:List<DecisionItem>,checked:Set<String>,omitted:Set<String>)=items.filter{it.required}.let { required->
+    PreparationProgress(required.count{it.id in checked && it.id !in omitted},required.size)
+}
 
 object PlanningRules {
     const val DEMO_SOC_THRESHOLD = 35.0
@@ -38,7 +59,8 @@ object PlanningRules {
         if (place.nightToilet != Condition.ALLOWED)
             add(DecisionItem("toilet-${place.nightToilet}", Group.BEFORE, "야간 화장실 확인 또는 다른 장소 비교",
                 if (place.nightToilet == Condition.UNKNOWN) "야간 운영이 확인되지 않았어요." else "야간에는 이용할 수 없어요."))
-        if (input.cooking) when (place.cooking) {
+        if(input.cookingPlan==CookingPlan.SIMPLE) add(DecisionItem("simple-meal",Group.GEAR,"간편식 챙김 확인","현장 취사 없이 먹을 수 있는 식사를 준비하세요."))
+        if (input.cookingPlan==CookingPlan.COOKING) when (place.cooking) {
             Condition.RESTRICTED -> add(DecisionItem("meal-ready", Group.BEFORE, "조리된 식사 준비", "이 장소는 현장 취사가 제한돼요."))
             Condition.UNKNOWN -> add(DecisionItem("cooking-check", Group.BEFORE, "취사 허용 여부 확인", "조리 도구를 정하기 전에 운영 안내를 확인하세요."))
             Condition.ALLOWED -> {
@@ -54,7 +76,7 @@ object PlanningRules {
         }
         if (place.demoTemperatureC < 10 && !input.sleepingBag)
             add(DecisionItem("warmth", Group.GEAR, "보온 침구 추가 또는 장소 재검토", "예상 기온 ${place.demoTemperatureC}°C · 침낭 미보유"))
-        add(DecisionItem("bedding-count", Group.GEAR, "${input.people}명분 침구·매트 확인", "인원에 맞는 수량과 실제 잠자리를 확인하세요."))
+        add(DecisionItem("bedding-count", Group.GEAR, "${input.people}명분 침구·매트 확인", "인원에 맞는 수량과 실제 잠자리를 확인하세요.",quantity=input.people))
         if (input.people >= 3) add(DecisionItem("extra-sleeping-space", Group.BEFORE, "추가 잠자리 검토", "${input.people}명이 차에서 잘 수 있다는 뜻은 아니에요. 공간과 텐트 등 추가 잠자리를 확인하세요."))
         if (input.sleepingBag) add(DecisionItem("sleeping-bag", Group.GEAR, "침낭 챙김 확인", "보유와 실제 챙김은 별개예요."))
         add(DecisionItem("water", Group.GEAR, "생수·쓰레기 봉투", "기본 준비물"))

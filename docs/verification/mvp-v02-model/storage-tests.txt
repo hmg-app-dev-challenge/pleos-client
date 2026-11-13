@@ -1,0 +1,12 @@
+
+com.chapark.ivi.MvpMigrationTest:...
+com.chapark.ivi.JourneyStoreTest:STORE_BEFORE: step=6, completed=false, uid=1010176
+..
+com.chapark.ivi.CatalogCacheTest:..
+
+Time: 2.844
+
+OK (7 tests)
+
+
+

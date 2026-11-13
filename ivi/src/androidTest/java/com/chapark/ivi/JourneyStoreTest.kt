@@ -34,7 +34,7 @@ class JourneyStoreTest {
             putString("stream","STORE_BEFORE: step=${original.step}, completed=${original.completed}, uid=${android.os.Process.myUid()}\n")
         })
         try {
-            val sample=Journey(records=listOf(JourneyRecord("PREPARATION_CHECK",100L,"USER","water","생수 · 확인",false,"camp-nanji")),tripId="test-trip",input=TripInput(3,true,false,true,45,8,TripSchedule("2026-12-31","Asia/Seoul")),socSource=Source.MANUAL,socReceivedAtMillis=1234L,step=4,soc=null,route=RoutePhase.REQUESTED,restricted=true,dark=true,checked=setOf("water"))
+            val sample=Journey(records=listOf(JourneyRecord("PREPARATION_CHECK",100L,"USER","water","생수 · 확인",false,"camp-nanji")),tripId="test-trip",input=TripInput(3,com.chapark.app.domain.CookingPlan.COOKING,false,true,45,8,TripSchedule("2026-12-31","Asia/Seoul")),socSource=Source.MANUAL,socReceivedAtMillis=1234L,step=4,soc=null,route=RoutePhase.REQUESTED,restricted=true,dark=true,checked=setOf("water"))
             if(original.completed)store.save(original)
             store.save(sample)
             if(original.completed && original.tripId!=null)assertNotNull(store.archivedRecord(original.tripId!!))
