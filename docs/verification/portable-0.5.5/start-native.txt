@@ -1,0 +1,8 @@
+ChaPark-IVI-0.5.5-release.apk: OK
+기존 Pleos를 재사용합니다.
+Android 부팅과 ADB 연결을 기다립니다.
+차Park 0.5.5를 설치합니다. 기존 여행 데이터는 유지합니다.
+Success
+Starting: Intent { cmp=com.chapark.ivi/.IviActivity }
+차Park 실행 완료. 편집/휴식 중에는 일시정지.command, 사용을 마치면 종료.command를 실행하세요.
+AVD: ~/Downloads/cha-park/.local-avd/ChaPark_Release.avd

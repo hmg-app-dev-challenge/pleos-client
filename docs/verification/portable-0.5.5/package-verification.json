@@ -1,0 +1,66 @@
+{
+  "archive": "ChaPark-IVI-0.5.5-macOS-AppleSilicon.zip",
+  "bytes": 11324839,
+  "sha256": "ab73e1aac3443e15406c0b9bde967ef4b2cd60cbf7f92364a4da42bd34a822ff",
+  "checks": [
+    "ZIP CRC passed",
+    "APK SHA-256 passed",
+    "Five shell files syntax and executable permissions passed",
+    "No private keys or keystores bundled",
+    "portable-adb: invalid arguments rejected, signature valid",
+    "portable-run: invalid arguments rejected, signature valid",
+    "Missing ADB action rejected without crash"
+  ],
+  "entries": [
+    {
+      "path": "ChaPark-IVI-0.5.5/ChaPark-IVI-0.5.5-release.apk",
+      "bytes": 26372290,
+      "mode": "0o100644"
+    },
+    {
+      "path": "ChaPark-IVI-0.5.5/SHA256SUMS.txt",
+      "bytes": 96,
+      "mode": "0o100644"
+    },
+    {
+      "path": "ChaPark-IVI-0.5.5/support/launcher.zsh",
+      "bytes": 12907,
+      "mode": "0o100755"
+    },
+    {
+      "path": "ChaPark-IVI-0.5.5/support/portable-adb",
+      "bytes": 133792,
+      "mode": "0o100755"
+    },
+    {
+      "path": "ChaPark-IVI-0.5.5/support/portable-run",
+      "bytes": 33952,
+      "mode": "0o100755"
+    },
+    {
+      "path": "ChaPark-IVI-0.5.5/사용안내.txt",
+      "bytes": 4082,
+      "mode": "0o100644"
+    },
+    {
+      "path": "ChaPark-IVI-0.5.5/시작.command",
+      "bytes": 300,
+      "mode": "0o100755"
+    },
+    {
+      "path": "ChaPark-IVI-0.5.5/일시정지.command",
+      "bytes": 300,
+      "mode": "0o100755"
+    },
+    {
+      "path": "ChaPark-IVI-0.5.5/재개.command",
+      "bytes": 301,
+      "mode": "0o100755"
+    },
+    {
+      "path": "ChaPark-IVI-0.5.5/종료.command",
+      "bytes": 299,
+      "mode": "0o100755"
+    }
+  ]
+}

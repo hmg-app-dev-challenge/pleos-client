@@ -1,0 +1,4 @@
+    topResumedActivity=ActivityRecord{cc2bc44 u10 com.chapark.ivi/.IviActivity t1000183}
+    topResumedActivity=ActivityRecord{17c865e u10 ai.umos.drivingview/.DrivingViewActivity t1000181}
+      topResumedActivity=ActivityRecord{b922966 u10 ai.umos.homescreen/.HomeActivity t1000179}
+    versionName=0.5.5

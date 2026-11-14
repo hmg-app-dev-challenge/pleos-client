@@ -32,6 +32,8 @@ IVI 목적지는 공식 지도 좌표가 있는 중랑캠핑숲·난지캠핑장
 
 ## 실행
 
+프로젝트 없이 실행하려면 데스크톱의 `ChaPark-IVI-0.5.5-macOS-AppleSilicon.zip` 전체를 풀고 `시작.command`를 실행한다. 종료 후에도 같은 파일로 다시 실행할 수 있다. APK·시작·종료·일시정지·재개 커맨드가 포함되며, 설치된 Pleos API 34 ARM64 SDK 환경이 필요하다. [실행 패키지 안내·검증](docs/PORTABLE_IVI_PACKAGE.md)을 참고한다.
+
 Android Studio에서 이 폴더를 열고 폰은 `app`, Pleos는 `ivi`를 선택한다. SDK 경로는 `local.properties`, JDK는 Android Studio 내장 JBR을 사용한다.
 
 ```sh
