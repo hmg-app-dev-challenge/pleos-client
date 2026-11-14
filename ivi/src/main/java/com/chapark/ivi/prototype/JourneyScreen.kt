@@ -156,31 +156,21 @@ private fun condition(value:Condition)=when(value){Condition.ALLOWED->"허용";C
             }
         }
         if(history && !s.restricted) androidx.compose.ui.window.Dialog(onDismissRequest={history=false},properties=androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth=false)) {
-            Panel(Modifier.widthIn(max=1100.dp).fillMaxHeight(.85f).verticalScroll(rememberScrollState())) {
-                Text("지난 여행 기록",style=IviType.title)
-                if(ui.history.isEmpty())Text("아직 저장된 여행 기록이 없어요.",style=IviType.body)
-                ui.history.forEach { trip->
-                    Text("${trip.date} · ${trip.placeName}",style=IviType.smallTitle)
-                    Text("확인 기록 ${trip.records.size}개 · 시간대 ${trip.zone}",style=IviType.label)
-                    JourneyMemorySummary(trip.records,trip.memory)
-                    trip.records.filter{it.subject==null}.sortedBy{it.eventAtMillis ?: it.observedAtMillis}.forEach{record->
-                        val time=java.time.Instant.ofEpochMilli(record.eventAtMillis ?: record.observedAtMillis).atZone(runCatching{java.time.ZoneId.of(trip.zone)}.getOrDefault(java.time.ZoneOffset.UTC)).toLocalTime().withNano(0)
-                        val label=when(record.kind){"PLACE_CONTEXT"->"장소·풍경 기록";"PLACE_INFO"->"장소 자료 · 당시 확인 정보";"SUNSET"->"일몰 · 계산";"SUNRISE"->"일출 · 계산";"PLACE_SELECTED"->"장소 선택";"CHARGING_PLAN"->"충전 경유 계획";"PREPARATION_COMPLETED"->"출발 준비 확인";"ROUTE_REQUESTED"->"길 안내 요청";"ROUTE_CALL_RETURNED"->"내비 요청 호출 완료";"ROUTE_CALL_FAILED"->"내비 요청 호출 실패";"ROUTE_FAILED"->"길 안내 확인 실패";"GUIDANCE_OBSERVED"->"길 안내 확인";"ARRIVAL"->"도착 확인";"PARKING_CONFIRMED"->"주차 확인";"TRIP_COMPLETED"->"철수 완료";else->"상태 확인"}
-                        Text("$time · $label",style=IviType.smallBody)
-                    record.label?.let{Text(it,style=IviType.label)}
-                    }
-                    if(trip.forgotten.isNotEmpty())Text("다음에 챙길 것 · ${trip.forgotten.joinToString()}",style=IviType.smallBody)
-                    IviButton("이 기록 삭제",size=IviButtonSize.MEDIUM){deleteId=trip.id}
-                    var details by androidx.compose.runtime.saveable.rememberSaveable(trip.id){mutableStateOf(false)}
-                    IviButton(if(details)"확인 항목 접기" else "확인 항목 펼치기",size=IviButtonSize.MEDIUM){details=!details}
-                    if(details)trip.records.filter{it.subject!=null}.forEach{record->
-                        Text("${if(record.kind=="PREPARATION_OMITTED") { if(record.confirmed==true)"누락" else "누락 취소" } else if(record.confirmed==true)"확인" else "확인 해제"} · ${record.label ?: record.subject}",style=IviType.smallBody)
-                    }
-                    HorizontalDivider()
+            Panel(Modifier.widthIn(max=1400.dp).fillMaxWidth(.94f).fillMaxHeight(.85f)) {
+                Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically) {
+                    Text("지난 여행 기록",Modifier.weight(1f),style=IviType.title)
+                    IviButton("기록 닫기",size=IviButtonSize.MEDIUM){history=false}
                 }
-                IviButton("기록 닫기"){history=false}
+                androidx.compose.foundation.lazy.LazyColumn(Modifier.weight(1f).testTag("memory-list"),verticalArrangement=Arrangement.spacedBy(IviSpacing.related)) {
+                    if(ui.history.isEmpty())item{Text("아직 저장된 여행 기록이 없어요.",style=IviType.body)}
+                    items(ui.history.size,key={ui.history[it].id}){index->
+                        val trip=ui.history[index]
+                        TripMemoryCard(trip,onDelete={deleteId=trip.id})
+                    }
+                }
             }
         }
+
         if(ui.savedPlans.isNotEmpty() && importId==null && !s.restricted && s.step==0) androidx.compose.ui.window.Dialog(onDismissRequest={importId="dismissed"}) {
             Panel(Modifier.heightIn(max=800.dp).verticalScroll(rememberScrollState())){
                 Text("계획 조건 가져오기",style=IviType.title)
@@ -458,30 +448,12 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
         }
         6 -> if(s.completed) {
             Heading("오늘의 차박을 마쳤어요","내 차와 보낸 하룻밤의 기억을 저장했어요.")
-            Panel {
-                Text(completedArchive?.placeName ?: s.records.lastOrNull{it.kind=="PLACE_CONTEXT"}?.label ?: s.place.name,style=IviType.title)
-                Text("수면 준비 ${s.sleepChecks.intersect(s.requiredSleepIds).size}/${s.requiredSleepIds.size} · 철수 확인 ${s.exitChecks.intersect(s.requiredExitIds).size}/${s.requiredExitIds.size}",style=IviType.body)
-                JourneyMemorySummary(completedArchive?.records ?: s.records,completedArchive?.memory,includeChecks=false)
-                val missingItems=s.forgotten+s.decisions.filter{it.id in s.omitted}.map{it.title}
-                if(missingItems.isNotEmpty())Text("다음에 챙길 것 · ${missingItems.sorted().joinToString()}",style=IviType.smallBody)
-                Text("내 차와 보낸 하룻밤 기억",style=IviType.smallTitle)
-                val zone=runCatching{java.time.ZoneId.of(s.input.schedule?.zoneId ?: "UTC")}.getOrDefault(java.time.ZoneOffset.UTC)
-                s.records.filter{it.subject==null}.sortedBy{it.eventAtMillis ?: it.observedAtMillis}.forEach { record->
-                    val label=when(record.kind){"PLACE_CONTEXT"->"장소·풍경 기록";"PLACE_INFO"->"장소 자료 · 당시 확인 정보";"SUNSET"->"일몰 · 계산";"SUNRISE"->"일출 · 계산";"PLACE_SELECTED"->"장소 선택";"CHARGING_PLAN"->"충전 경유 계획";
-                        "PREPARATION_COMPLETED"->"출발 준비 확인";"ROUTE_REQUESTED"->"길 안내 요청";"ROUTE_CALL_RETURNED"->"내비 요청 호출 완료";"ROUTE_CALL_FAILED"->"내비 요청 호출 실패";"ROUTE_FAILED"->"길 안내 확인 실패"
-                        "GUIDANCE_OBSERVED"->"길 안내 확인";"ARRIVAL"->if(record.origin=="SDK")"도착 알림 수신" else "도착 직접 확인"
-                        "PARKING_CONFIRMED"->"주차 직접 확인";"TRIP_COMPLETED"->"철수 확인 완료";else->"여행 상태 확인"
-                    }
-                    val time=java.time.Instant.ofEpochMilli(record.eventAtMillis ?: record.observedAtMillis).atZone(zone).format(java.time.format.DateTimeFormatter.ofPattern("MM-dd HH:mm"))
-                    Text("$time · $label",style=IviType.smallBody)
-                    record.label?.let{Text(it,style=IviType.label)}
-                    if(record.kind in setOf("PREPARATION_COMPLETED","TRIP_COMPLETED") && (s.batteryVisible || record.soc!=null))
-                        Text("배터리 ${record.soc?.let{"$it%"} ?: "미확인"} · ${sourceLabel(record.socSource)}",style=IviType.label)
-                }
-                if(s.records.isEmpty())Text("이전 여행의 상세 시각은 수집되지 않았어요.",style=IviType.label)
-                Text("기록 시간대 · ${zone.id} · 사용자가 확인한 기록이며 안전을 보장하지 않아요.",style=IviType.label)
-                Text("다음 여행도 차Park와 함께 준비해 보세요.",style=IviType.smallBody)
-            }
+            val memory=completedArchive ?: ArchivedTrip(s.tripId ?: "completed-memory",
+                s.records.lastOrNull{it.kind=="PLACE_CONTEXT"}?.label ?: s.place.name,
+                s.input.schedule?.date ?: "날짜 미수집",s.input.schedule?.zoneId ?: "UTC",s.records,
+                (s.forgotten+s.decisions.filter{it.id in s.omitted}.map{it.title}).sorted(),MemoryDetails.capture(s))
+            TripMemoryCard(memory)
+
         } else {
             Heading("떠나기 전, 한 번 더.","직접 바꾼 설정과 가져온 물건을 확인하고 마무리해요.")
             var missing by remember { mutableStateOf("") }

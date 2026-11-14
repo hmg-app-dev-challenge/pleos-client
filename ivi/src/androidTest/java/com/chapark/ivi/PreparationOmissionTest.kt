@@ -63,7 +63,7 @@ class PreparationOmissionTest {
         compose.onNodeWithText("지난번에 빠뜨린 준비물").assertExists()
         compose.onNodeWithText("다시 챙기기 · 생수").assertExists()
         compose.onNodeWithText("지난 기록").performClick()
-        compose.onNodeWithText("확인 항목 펼치기").performScrollTo().performClick()
+        compose.onNodeWithTag("memory-more-past").performScrollTo().performClick()
         compose.onNodeWithText("누락 · 생수").assertExists()
         compose.onNodeWithText("누락 취소 · 생수").assertExists()
     }

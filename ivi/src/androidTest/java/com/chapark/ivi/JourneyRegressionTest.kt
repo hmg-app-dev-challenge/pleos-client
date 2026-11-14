@@ -71,6 +71,7 @@ class JourneyRegressionTest {
             assertInk("지난 여행 기록",ink)
             assertInk("다음에 챙길 것 · 담요",ink)
             capture("$mode-history")
+            compose.onNodeWithText("더보기").performScrollTo().performClick()
             compose.onNodeWithText("이 기록 삭제").performScrollTo().performClick()
             assertInk("여행 기록을 삭제할까요?",ink)
             capture("$mode-confirm")
