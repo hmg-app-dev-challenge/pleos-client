@@ -157,7 +157,7 @@ private fun condition(value:Condition)=when(value){Condition.ALLOWED->"허용";C
                     var details by androidx.compose.runtime.saveable.rememberSaveable(trip.id){mutableStateOf(false)}
                     IviButton(if(details)"확인 항목 접기" else "확인 항목 펼치기",size=IviButtonSize.MEDIUM){details=!details}
                     if(details)trip.records.filter{it.subject!=null}.forEach{record->
-                        Text("${if(record.confirmed==true)"확인" else "확인 해제"} · ${record.label ?: record.subject}",style=IviType.smallBody)
+                        Text("${if(record.kind=="PREPARATION_OMITTED") { if(record.confirmed==true)"누락" else "누락 취소" } else if(record.confirmed==true)"확인" else "확인 해제"} · ${record.label ?: record.subject}",style=IviType.smallBody)
                     }
                     HorizontalDivider()
                 }
@@ -335,7 +335,7 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
             Heading("오늘의 준비 계획","${names[s.placeId] ?: s.place.name} · 조건을 바꾸면 필요한 행동도 달라져요.")
             Panel {
                 if(s.batteryVisible) BatteryReading(s,send)
-                Text("출발 전 ${s.departureCheckedCount} / ${s.departureProgress.total}개 확인 · 날짜와 준비 항목 확인 후 이동할 수 있어요",style=IviType.label,color=p.tertiary)
+                Text("출발 전 필수 ${s.departureCheckedCount} / ${s.departureProgress.total}개 확인 · 날짜와 준비 항목 확인 후 이동할 수 있어요",style=IviType.label,color=p.tertiary)
             }
             if(s.input.schedule?.departureEnd(s.input.endHour)==null) Panel {
                 Text(s.departureBlockReason ?: "여행 일정을 확인해 주세요.",style=IviType.smallTitle)
@@ -362,11 +362,16 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
                 }
             }
             Text("현장 운영 안내는 도착 후 확인해요. 체크는 이용 허가를 뜻하지 않아요.",style=IviType.smallBody)
+            val reminders=s.departureItems.filter{it.id.startsWith("reminder-")}
+            if(reminders.isNotEmpty()) Panel {
+                Text("지난번에 빠뜨린 준비물",style=IviType.title)
+                reminders.forEach{PreparationItem(s,it,send)}
+            }
             Group.entries.filter{it!=Group.SITE}.forEach { group ->
-                val items=s.decisions.filter{it.group==group}.sortedBy { when(it.id){"charge-review"->0;"meal-ready"->1;else->2} }
+                val items=s.decisions.filter{it.group==group && !it.id.startsWith("reminder-")}.sortedBy { when(it.id){"charge-review"->0;"meal-ready"->1;else->2} }
                 if(items.isNotEmpty()) Panel {
                     Text(group.label,style=IviType.title)
-                    items.forEach {item-> IviCheckRow(item.title,item.id in s.checked,item.reason){send(JourneyEvent.Check(item.id))} }
+                    items.forEach {item-> PreparationItem(s,item,send) }
                 }
             }
         }
@@ -383,7 +388,7 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
             }
         }
         5 -> {
-            Panel { s.siteItems.forEach {item->IviCheckRow(item.title,item.id in s.checked,item.reason){send(JourneyEvent.Check(item.id))}} }
+            Panel { s.siteItems.forEach {item->PreparationItem(s,item,send)} }
             IviSegments(listOf("휴식","수면","별 보기"),listOf("REST","SLEEP","STARS").indexOf(s.restMode).coerceAtLeast(0)){send(JourneyEvent.RestMode(listOf("REST","SLEEP","STARS")[it]))}
             SolarSummary(s)
             Heading("잠들기 전, 하나씩 확인해요","편안히 쉴 수 있도록 주변과 차량 설정을 확인해 주세요.")
@@ -400,6 +405,8 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
                 Text(names[s.placeId] ?: "오늘의 쉼터",style=IviType.title)
                 Text("수면 준비 ${s.sleepChecks.size}/4 · 철수 확인 ${s.exitChecks.size}/4",style=IviType.body)
                 Text("직접 확인한 준비 항목 ${s.checkedCount}/${s.decisions.size}",style=IviType.body)
+                val missingItems=s.forgotten+s.decisions.filter{it.id in s.omitted}.map{it.title}
+                if(missingItems.isNotEmpty())Text("다음에 챙길 것 · ${missingItems.sorted().joinToString()}",style=IviType.smallBody)
                 Text("내 차와 보낸 하룻밤 기억",style=IviType.smallTitle)
                 val zone=runCatching{java.time.ZoneId.of(s.input.schedule?.zoneId ?: "UTC")}.getOrDefault(java.time.ZoneOffset.UTC)
                 s.records.filter{it.subject==null}.sortedBy{it.eventAtMillis ?: it.observedAtMillis}.forEach { record->
@@ -437,6 +444,20 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
         }
     }
 }
+@Composable internal fun PreparationItem(s:Journey,item:DecisionItem,send:(JourneyEvent)->Unit) {
+    val omitted=item.id in s.omitted
+    Column(Modifier.fillMaxWidth().testTag("preparation-${item.id}"),verticalArrangement=Arrangement.spacedBy(12.dp)) {
+        Text("${if(item.required)"필수" else "선택 · 필수 진행률에서 제외"}${item.quantity?.let{" · 수량 $it"} ?: ""}",style=IviType.label,color=LocalIviColors.current.secondary)
+        IviCheckRow(item.title,item.id in s.checked && !omitted,item.reason){send(JourneyEvent.Check(item.id))}
+        if(omitted) {
+            Text(if(item.group==Group.GEAR)"이번에는 챙기지 못함" else "이번에는 확인하지 못함",Modifier.testTag("omitted-${item.id}"),style=IviType.smallBody)
+            if(item.required)Text("필수 항목은 누락 상태로 다음 단계에 갈 수 없어요. 항목을 확인하거나 여행 조건을 다시 검토해 주세요.",style=IviType.label)
+        }
+        IviButton(if(omitted)"누락 표시 취소" else if(item.group==Group.GEAR)"이번에는 챙기지 못함" else "이번에는 확인하지 못함",Modifier.testTag("omit-${item.id}"),size=IviButtonSize.MEDIUM){send(JourneyEvent.Omit(item.id))}
+        HorizontalDivider(color=LocalIviColors.current.divider)
+    }
+}
+
 @Composable private fun PlaceOverview(s:Journey,entry:com.chapark.app.data.NavigationPlace,modifier:Modifier,send:(JourneyEvent)->Unit) {
     val place=entry.place
     val evidence=PlaceEvidenceCatalog.find(place.id)
