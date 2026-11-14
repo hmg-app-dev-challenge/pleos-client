@@ -41,6 +41,8 @@ scripts/run-pleos-emulator.sh -port 5556
 
 최신 서명 release와 검증 범위는 [0.5.0 인수 기록](docs/MVP_V0_2_ACCEPTANCE.md), 단계별 커밋은 [MVP 실행 기록](docs/MVP_V0_2_EXECUTION.md)을 참고한다.
 
+데스크톱의 `Pleos 시작.command`는 기존 Release AVD 프로세스가 없으면 새로 시작하고, 실행 중이거나 일시정지된 프로세스가 있으면 재사용/재개한다. 터미널에서는 `python3 scripts/pleos-runtime.py start`를 사용한다. 포트는 console 5558 / ADB 5559이며 시작 로그는 `.local-avd/ChaPark_Release-startup.log`에 저장한다. 개발 중에는 `Pleos 일시정지.command`로 CPU 사용을 멈출 수 있다.
+
 실행 중인 AVD는 다시 실행하지 않는다. APK는 `app/build/outputs/apk/debug/app-debug.apk`, `ivi/build/outputs/apk/debug/ivi-debug.apk`다. 서명된 제출용 release가 아닌 개발용 APK다.
 
 M3 Pro에서는 실행 스크립트가 `-gpu host`를 명시한다. 창 없는 실행도 `scripts/run-pleos-emulator.sh -port 5556 -no-window -no-audio`로 실행한다. `-no-window`만으로 CPU 사용량이 줄어드는 것은 아니다. 2026-11-14 확인한 CPU 렌더링 전환 문제와 측정 결과, 일상 개발·SDK 검증 운영 방법은 [에뮬레이터 운영 안내](docs/IVI_DEMO_GUIDE.md#m3-pro--macos-에뮬레이터-운영)를 참고한다.
