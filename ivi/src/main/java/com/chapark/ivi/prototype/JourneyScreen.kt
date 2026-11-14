@@ -26,6 +26,8 @@ private fun condition(value:Condition)=when(value){Condition.ALLOWED->"허용";C
 
 @Composable fun JourneyScreen(ui:JourneyUi,send:(JourneyEvent)->Unit,onNavigation:()->Unit={},onDeleteHistory:(String)->Unit={},onConfirmWaypoint:()->Unit={},onForkPlan:()->Unit={},onLoadPlans:()->Unit={},onImportPlan:(String)->Unit={}) {
     val s=ui.journey
+    var showHome by androidx.compose.runtime.saveable.rememberSaveable(s.tripId) { mutableStateOf(false) }
+    val atHome=s.step==0 || showHome
     var scenery by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf<String?>(null) }
     var confirmedOnly by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
     val candidates=PlaceEvidenceCatalog.filter(scenery?.let{Scenery.valueOf(it)},confirmedOnly,java.time.LocalDate.now())
@@ -34,14 +36,15 @@ private fun condition(value:Condition)=when(value){Condition.ALLOWED->"허용";C
     var deleteId by remember { mutableStateOf<String?>(null) }
     var settings by remember { mutableStateOf(false) }
     var confirm by remember { mutableStateOf<String?>(null) }
-    BackHandler(s.step>0 && !s.completed && !s.restricted && !settings && !history && deleteId==null && confirm==null) { send(JourneyEvent.Back) }
-    IviTheme(s.dark,nightMode=s.step==5 && s.restMode!="REST" && !s.restricted) {
+    BackHandler(!atHome && !s.restricted && !settings && !history && deleteId==null && confirm==null) { showHome=true }
+    IviTheme(s.dark,nightMode=!atHome && s.step==5 && s.restMode!="REST" && !s.restricted) {
         val p=LocalIviColors.current
         Surface(Modifier.fillMaxSize(),color=p.background) {
             if(!ui.loaded) Box(Modifier.fillMaxSize(),contentAlignment=Alignment.Center) { Text("저장된 여행을 불러오고 있어요",style=IviType.title) }
             else Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing).padding(horizontal=40.dp,vertical=24.dp)) {
                 Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(20.dp)) {
                     Text("차Park",style=IviType.title,modifier=Modifier.weight(1f))
+                    if(!atHome) IviButton("홈",Modifier.testTag("journey-home"),size=IviButtonSize.MEDIUM,enabled=!s.restricted && !ui.saving){showHome=true}
                     IviButton("지난 기록",size=IviButtonSize.MEDIUM,enabled=!s.restricted,onClick={history=true})
                     IviButton("설정",size=IviButtonSize.MEDIUM,enabled=!s.restricted,onClick={settings=true})
                 }
@@ -69,6 +72,23 @@ private fun condition(value:Condition)=when(value){Condition.ALLOWED->"허용";C
                         if(s.batteryVisible) Text("배터리 ${s.soc?.let{"$it%"} ?: "확인 필요"} · ${sourceLabel(s.socSource)}",style=IviType.title)
                         Text(if(s.route==RoutePhase.GUIDING)"길 안내 중" else "길 안내 상태 확인 필요",style=IviType.title)
                     }
+                } else if(atHome && s.step>0) {
+                    Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).testTag("journey-home-content"),verticalArrangement=Arrangement.spacedBy(24.dp)) {
+                        Heading(if(s.completed)"다음 쉼을 준비해요" else "준비하던 여행을\n이어서 시작해요",if(s.completed)"지난 여행의 기억을 확인하고 새로운 계획을 세워보세요." else "선택한 장소와 확인한 항목을 저장해 두었어요.")
+                        Panel {
+                            Text(if(s.completed)"최근 완료한 여행" else "진행 중인 여행",style=IviType.smallTitle)
+                            Text(s.place.name,style=IviType.title)
+                            Text(s.input.schedule?.date ?: "여행 날짜 확인 필요",style=IviType.smallBody)
+                            Text(if(s.completed)"철수 완료" else steps[s.stage!!.ordinal],style=IviType.smallTitle)
+                            Text("${s.input.people}명 · ${s.input.cookingPlan.label}",style=IviType.smallBody)
+                            if(s.batteryVisible)Text("배터리 ${s.soc?.let{"$it%"} ?: "미확인"} · ${sourceLabel(s.socSource)}",style=IviType.smallBody)
+                            if(!s.completed)Text("출발 준비 ${s.departureCheckedCount} / ${s.departureProgress.total}",style=IviType.label)
+                            if(s.route==RoutePhase.GUIDING && !s.completed)Text("길 안내 중",style=IviType.smallBody)
+                        }
+                        IviButton("새 차박 시작",size=IviButtonSize.MEDIUM,enabled=!ui.saving){confirm="new-trip"}
+                    }
+                    HorizontalDivider(color=p.divider)
+                    IviButton(if(s.completed)"완료한 여행 보기" else "이어하기",Modifier.fillMaxWidth().padding(top=20.dp).testTag("journey-resume"),filled=true,enabled=!ui.saving){showHome=false}
                 } else {
                     JourneyProgress(s)
                     Spacer(Modifier.height(24.dp))
@@ -157,6 +177,7 @@ private fun condition(value:Condition)=when(value){Condition.ALLOWED->"허용";C
         deleteId?.takeIf{!s.restricted}?.let{id->IviConfirm("여행 기록을 삭제할까요?","이 기기에 보관한 해당 여행 기록을 삭제합니다.","삭제",{deleteId=null;onDeleteHistory(id)},{deleteId=null})}
         if(settings && !s.restricted) JourneySettings(s,send,onClose={settings=false},onReset={settings=false;confirm="reset"})
         when(if(s.restricted)null else confirm) {
+            "new-trip" -> IviConfirm("새 차박을 시작할까요?",if(s.completed)"완료한 기록은 보관하고 새 여행을 준비합니다." else "진행 중인 계획과 확인 항목을 새 여행으로 바꿉니다. 완료한 여행 기록은 유지합니다.","새로 시작",{confirm=null;showHome=false;send(JourneyEvent.NewTrip)},{confirm=null})
             "finish" -> IviConfirm("오늘의 차박을 마칠까요?","확인한 준비와 철수 항목을 여행 기록에 저장합니다.","종료",{confirm=null;send(JourneyEvent.Finish)},{confirm=null})
             "reset" -> IviConfirm("여행 계획을 새로 만들까요?","현재 여행의 준비·확인 기록을 지우고 새 계획을 시작합니다.","처음부터",{confirm=null;send(JourneyEvent.ResetScenario)},{confirm=null})
         }
