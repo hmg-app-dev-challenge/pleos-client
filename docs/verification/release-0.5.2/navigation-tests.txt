@@ -1,0 +1,9 @@
+
+com.chapark.ivi.NavigationPresentationTest:..
+
+Time: 11.053
+
+OK (2 tests)
+
+
+

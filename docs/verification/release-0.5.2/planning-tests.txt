@@ -1,0 +1,9 @@
+
+com.chapark.ivi.PlanningPresentationTest:.
+
+Time: 4.786
+
+OK (1 test)
+
+
+

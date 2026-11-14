@@ -40,7 +40,7 @@ class JourneyFlowTest {
     }
     private fun waitText(text:String) { compose.waitUntil(40_000){runCatching{compose.onAllNodesWithText(text).fetchSemanticsNodes().isNotEmpty()}.getOrDefault(false)} }
     private fun saved() { waitText("기기에 저장됨"); compose.waitForIdle() }
-    private fun click(text:String) { compose.onNodeWithText(text).performScrollTo().performClick(); compose.waitForIdle() }
+    private fun click(text:String) { compose.onNode(hasText(text) or hasContentDescription(text)).performScrollTo().performClick(); compose.waitForIdle() }
     private fun toggleTheme() { compose.onNodeWithText("어두운 화면").performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.OnClick); compose.waitForIdle() }
     private fun next() { saved(); compose.onNodeWithTag("journey-next").performClick(); compose.waitForIdle() }
     private fun screenshot(name:String) {
@@ -78,7 +78,7 @@ class JourneyFlowTest {
         compose.onNodeWithTag("journey-next").assertIsEnabled()
         next()
         waitText("길 안내 시작");next()
-        // Pleos itself foregrounds navigation after requestRoute. Return as a user would.
+        // ChaPark explicitly requests navigation foreground after delivering the route.
         Thread.sleep(5_000)
         val context=InstrumentationRegistry.getInstrumentation().targetContext
         context.startActivity(Intent(context,IviActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT))

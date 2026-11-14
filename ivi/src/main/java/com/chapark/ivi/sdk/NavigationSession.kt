@@ -144,6 +144,9 @@ class NavigationSession(context:Context):AutoCloseable {
                         deliveries.trySend(NavigationDelivery(attempt,System.currentTimeMillis(),false,e.javaClass.simpleName))
                         throw e
                     }
+                    // Route delivery and foreground presentation are separate SDK requests.
+                    // Only a user-initiated route request opens the screen; reconnects never do.
+                    openScreen()
                 }
                 fun poll(){
                     if(token!=generation || mutable.value.phase==NavigationPhase.ARRIVED)return
@@ -157,8 +160,27 @@ class NavigationSession(context:Context):AutoCloseable {
     }
     fun confirmWaypointByUser(){manualWaypointConfirmation?.invoke()}
     fun openScreen(){
-        if(ready)try {client?.requestNavigationScreen(NavigationScreenRequest.Foreground)}
-        catch(e:Exception){mutable.value=mutable.value.copy(message="내비게이션 화면을 열지 못했어요. 다시 시도해 주세요.")}
+        val n=client
+        var requested=false
+        if(ready && n!=null) {
+            requested=runCatching {
+                n.requestNavigationScreen(NavigationScreenRequest.Foreground)
+                Log.i("ChaParkNavi","foreground screen requested")
+            }.onFailure{Log.w("ChaParkNavi","SDK screen request failed",it)}.isSuccess
+        }
+        // The emulator service can accept Foreground without presenting an Activity.
+        // Use its public launcher too; never use private service APIs or shell privileges.
+        // On other Pleos navigation providers the SDK remains the screen-opening path.
+        runCatching {
+            context.packageManager.getLaunchIntentForPackage("ai.umos.maps.android.navigation.app")?.let { intent->
+                context.startActivity(intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK))
+                Log.i("ChaParkNavi","navigation launcher opened")
+                requested=true
+            }
+        }.onFailure{Log.w("ChaParkNavi","navigation launcher failed",it)}
+        if(!requested) {
+            mutable.value=mutable.value.copy(message="내비게이션 화면을 열지 못했어요. 차량의 내비게이션 앱을 직접 연 뒤 다시 시도해 주세요.")
+        }
     }
     override fun close(){
         generation++;handler.removeCallbacksAndMessages(null)

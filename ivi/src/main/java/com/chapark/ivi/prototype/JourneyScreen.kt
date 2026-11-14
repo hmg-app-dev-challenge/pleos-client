@@ -9,6 +9,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.chapark.app.data.NavigationPlaces
 import com.chapark.app.data.PlaceEvidenceCatalog
@@ -112,6 +114,9 @@ private fun condition(value:Condition)=when(value){Condition.ALLOWED->"허용";C
                                         Text("내비게이션에서 선택한 충전시설이 경유지로 표시되는지 확인해 주세요.",style=IviType.body)
                                         IviButton("경유지 확인을 위해 내비 열기",onClick=onNavigation)
                                         IviButton("경유지 위치를 확인했어요",filled=true,onClick=onConfirmWaypoint)
+                                    }
+                                    if(s.step==4 && s.route==RoutePhase.FAILED) {
+                                        IviButton("내비게이션 앱 열기",size=IviButtonSize.MEDIUM,onClick=onNavigation)
                                     }
                                     if(s.step in 1..2) {
                                         Text("차박 계획",style=IviType.title)
@@ -240,19 +245,23 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
     else -> "철수 완료" to s.canFinish
 }
 @Composable private fun Panel(modifier:Modifier=Modifier,content:@Composable ColumnScope.()->Unit) {
-    Column(modifier.fillMaxWidth().background(LocalIviColors.current.surface,RoundedCornerShape(32.dp)).padding(28.dp),verticalArrangement=Arrangement.spacedBy(20.dp),content=content)
+    Column(modifier.fillMaxWidth().background(LocalIviColors.current.surface,RoundedCornerShape(32.dp)).padding(IviSpacing.cardInset),verticalArrangement=Arrangement.spacedBy(IviSpacing.related),content=content)
 }
 @Composable private fun Heading(title:String,subtitle:String) {
-    Text(title,style=IviType.headline)
-    Text(subtitle,style=IviType.body,color=LocalIviColors.current.secondary)
+    Column(verticalArrangement=Arrangement.spacedBy(IviSpacing.related)) {
+        Text(title,style=IviType.headline)
+        Text(subtitle,style=IviType.body,color=LocalIviColors.current.secondary)
+    }
 }
 @Composable private fun CookingSelection(s:Journey,send:(JourneyEvent)->Unit){
+    Column(Modifier.fillMaxWidth(),verticalArrangement=Arrangement.spacedBy(IviSpacing.control)) {
     Text("취사 계획",style=IviType.smallTitle)
     if(s.input.cookingNeedsReview)Text("이전 여행의 취사 계획을 다시 선택해 주세요.",style=IviType.label)
     CookingPlan.entries.forEach { plan->
-        IviButton(plan.label,size=IviButtonSize.MEDIUM,filled=s.input.cookingPlan==plan) {
+        IviButton(plan.label,Modifier.fillMaxWidth(),size=IviButtonSize.MEDIUM,filled=s.input.cookingPlan==plan) {
             send(JourneyEvent.Conditions(s.input.copy(cookingPlan=plan,cookingNeedsReview=false)))
         }
+    }
     }
 }
 
@@ -274,34 +283,50 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
         }
         1 -> {
             Heading("누구와, 어떻게\n보낼 예정인가요?","저장된 기본 조건을 이번 여행에 맞게 바꿔주세요.")
-            Panel {
-                Text("여행 날짜 · ${s.input.schedule?.date ?: "선택 전"}",style=IviType.smallTitle)
-                Text("시간대 · ${s.input.schedule?.zoneId ?: "선택 전"}",style=IviType.label)
-                IviButton("오늘 날짜로 계획",size=IviButtonSize.MEDIUM){
-                    val zone=java.time.ZoneId.systemDefault()
-                    send(JourneyEvent.Conditions(s.input.copy(schedule=TripSchedule(java.time.LocalDate.now(zone).toString(),zone.id))))
-                }
+            Column(Modifier.fillMaxWidth(),verticalArrangement=Arrangement.spacedBy(IviSpacing.section)) {
+            Panel(Modifier.testTag("planning-schedule")) {
+                Text("여행 일정",style=IviType.title)
                 s.input.schedule?.let { schedule->
                     AdjustValue("여행 날짜",schedule.date,true,true,
                         {schedule.shiftDays(-1)?.let{send(JourneyEvent.Conditions(s.input.copy(schedule=it)))}},
                         {schedule.shiftDays(1)?.let{send(JourneyEvent.Conditions(s.input.copy(schedule=it)))}})
-                    IviButton("기기 시간대 적용",size=IviButtonSize.MEDIUM){send(JourneyEvent.Conditions(s.input.copy(schedule=schedule.copy(zoneId=java.time.ZoneId.systemDefault().id))))}
-                    Text(schedule.departureEnd(s.input.endHour)?.atZone(java.time.ZoneId.of(schedule.zoneId))?.let{"철수 예정 · ${it.toLocalDate()} ${it.hour}시"}
-                        ?: "철수 시각을 확인해 주세요. 시간대 변경으로 존재하지 않거나 겹치는 시각일 수 있어요.",style=IviType.smallBody)
                 }
-                Text("함께하는 인원",style=IviType.smallTitle)
-                AdjustValue("인원", "${s.input.people}명",s.input.people>1,s.input.people<TripPolicy.MAX_PEOPLE,
-                    {send(JourneyEvent.Conditions(s.input.copy(people=s.input.people-1)))},
-                    {send(JourneyEvent.Conditions(s.input.copy(people=s.input.people+1)))})
-                if(s.batteryVisible) AdjustValue("배터리 확인 기준", "${s.input.batteryThreshold}%",s.input.batteryThreshold>0,s.input.batteryThreshold<100,
-                    {send(JourneyEvent.Conditions(s.input.copy(batteryThreshold=(s.input.batteryThreshold-5).coerceAtLeast(0))))},
-                    {send(JourneyEvent.Conditions(s.input.copy(batteryThreshold=(s.input.batteryThreshold+5).coerceAtMost(100))))})
+                IviButton("오늘 날짜로 계획",size=IviButtonSize.MEDIUM){
+                    val zone=java.time.ZoneId.systemDefault()
+                    send(JourneyEvent.Conditions(s.input.copy(schedule=TripSchedule(java.time.LocalDate.now(zone).toString(),zone.id))))
+                }
+                HorizontalDivider(color=p.divider)
                 AdjustValue("철수 예정", "다음 날 ${s.input.endHour}시",true,true,
                     {send(JourneyEvent.Conditions(s.input.copy(endHour=(s.input.endHour+23)%24)))},
                     {send(JourneyEvent.Conditions(s.input.copy(endHour=(s.input.endHour+1)%24)))})
-                CookingSelection(s,send)
+                s.input.schedule?.let { schedule->
+                    Text(schedule.departureEnd(s.input.endHour)?.atZone(java.time.ZoneId.of(schedule.zoneId))?.let{"철수 예정 · ${it.toLocalDate()} ${it.hour}시"}
+                        ?: "철수 시각을 확인해 주세요. 시간대 변경으로 존재하지 않거나 겹치는 시각일 수 있어요.",style=IviType.smallBody)
+                    Text("시간대 · ${schedule.zoneId}",style=IviType.label,color=p.tertiary)
+                    IviButton("기기 시간대 적용",size=IviButtonSize.MEDIUM){send(JourneyEvent.Conditions(s.input.copy(schedule=schedule.copy(zoneId=java.time.ZoneId.systemDefault().id))))}
+                }
+            }
+            Panel(Modifier.testTag("planning-company")) {
+                Text("함께하는 여행",style=IviType.title)
+                AdjustValue("인원", "${s.input.people}명",s.input.people>1,s.input.people<TripPolicy.MAX_PEOPLE,
+                    {send(JourneyEvent.Conditions(s.input.copy(people=s.input.people-1)))},
+                    {send(JourneyEvent.Conditions(s.input.copy(people=s.input.people+1)))})
+                HorizontalDivider(color=p.divider)
                 IviToggleRow("반려동물과 함께",s.input.pets) {send(JourneyEvent.Conditions(s.input.copy(pets=it)))}
+            }
+            Panel(Modifier.testTag("planning-equipment")) {
+                Text("식사와 잠자리",style=IviType.title)
+                CookingSelection(s,send)
+                HorizontalDivider(color=p.divider)
                 IviToggleRow("침낭을 보유하고 있어요",s.input.sleepingBag) {send(JourneyEvent.Conditions(s.input.copy(sleepingBag=it)))}
+            }
+            if(s.batteryVisible) Panel(Modifier.testTag("planning-battery")) {
+                Text("배터리 확인",style=IviType.title)
+                AdjustValue("배터리 확인 기준", "${s.input.batteryThreshold}%",s.input.batteryThreshold>0,s.input.batteryThreshold<100,
+                    {send(JourneyEvent.Conditions(s.input.copy(batteryThreshold=(s.input.batteryThreshold-5).coerceAtLeast(0))))},
+                    {send(JourneyEvent.Conditions(s.input.copy(batteryThreshold=(s.input.batteryThreshold+5).coerceAtMost(100))))})
+                Text("잔량이 기준보다 낮으면 출발 준비에서 충전 계획을 확인해요.",style=IviType.smallBody,color=p.secondary)
+            }
             }
         }
         2 -> {
@@ -513,7 +538,7 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
 
 @Composable internal fun PreparationItem(s:Journey,item:DecisionItem,send:(JourneyEvent)->Unit) {
     val omitted=item.id in s.omitted
-    Column(Modifier.fillMaxWidth().testTag("preparation-${item.id}"),verticalArrangement=Arrangement.spacedBy(12.dp)) {
+    Column(Modifier.fillMaxWidth().testTag("preparation-${item.id}"),verticalArrangement=Arrangement.spacedBy(IviSpacing.control)) {
         Text("${if(item.required)"필수" else "선택 · 필수 진행률에서 제외"}${item.quantity?.let{" · 수량 $it"} ?: ""}",style=IviType.label,color=LocalIviColors.current.secondary)
         IviCheckRow(item.title,item.id in s.checked && !omitted,item.reason){send(JourneyEvent.Check(item.id))}
         if(omitted) {
@@ -521,7 +546,7 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
             if(item.required)Text("필수 항목은 누락 상태로 다음 단계에 갈 수 없어요. 항목을 확인하거나 여행 조건을 다시 검토해 주세요.",style=IviType.label)
         }
         IviButton(if(omitted)"누락 표시 취소" else if(item.group==Group.GEAR)"이번에는 챙기지 못함" else "이번에는 확인하지 못함",Modifier.testTag("omit-${item.id}"),size=IviButtonSize.MEDIUM){send(JourneyEvent.Omit(item.id))}
-        HorizontalDivider(color=LocalIviColors.current.divider)
+        HorizontalDivider(Modifier.padding(top=IviSpacing.control),color=LocalIviColors.current.divider)
     }
 }
 
@@ -607,11 +632,20 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
 
 private fun sourceLabel(source:Source)=when(source){Source.SDK->"차량";Source.MANUAL->"직접 입력";Source.EMULATOR->"차량 연결";Source.DEMO->"저장된 값";Source.UNKNOWN->"출처 미확인"}
 @Composable private fun AdjustValue(label:String,value:String,canDecrease:Boolean,canIncrease:Boolean,onDecrease:()->Unit,onIncrease:()->Unit){
-    Column(verticalArrangement=Arrangement.spacedBy(12.dp)){
-        Text("$label · $value",style=IviType.smallTitle)
-        Row(horizontalArrangement=Arrangement.spacedBy(16.dp)){
-            IviButton("$label 줄이기",size=IviButtonSize.MEDIUM,enabled=canDecrease,onClick=onDecrease)
-            IviButton("$label 늘리기",size=IviButtonSize.MEDIUM,enabled=canIncrease,onClick=onIncrease)
+    val controls:@Composable ()->Unit = {
+        Row(horizontalArrangement=Arrangement.spacedBy(IviSpacing.control)){
+            IviButton("−",Modifier.semantics{contentDescription="$label 줄이기"},size=IviButtonSize.MEDIUM,enabled=canDecrease,onClick=onDecrease)
+            IviButton("+",Modifier.semantics{contentDescription="$label 늘리기"},size=IviButtonSize.MEDIUM,enabled=canIncrease,onClick=onIncrease)
+        }
+    }
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
+        val fontScale=androidx.compose.ui.platform.LocalDensity.current.fontScale
+        if(maxWidth>=760.dp*fontScale) Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(IviSpacing.related),verticalAlignment=Alignment.CenterVertically) {
+            Text("$label · $value",Modifier.weight(1f),style=IviType.smallTitle)
+            controls()
+        } else Column(verticalArrangement=Arrangement.spacedBy(IviSpacing.control)) {
+            Text("$label · $value",style=IviType.smallTitle)
+            controls()
         }
     }
 }

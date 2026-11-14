@@ -155,6 +155,6 @@ class JourneyViewModel(app:Application):AndroidViewModel(app) {
     fun forkPlan(){commands.trySend(Command.ForkPlan)}
     fun deleteHistory(id:String){commands.trySend(Command.DeleteHistory(id))}
     fun confirmWaypoint(){if(!mutable.value.journey.restricted)navigation.confirmWaypointByUser()}
-    fun openNavigation(){navigation.openScreen()}
+    fun openNavigation(){if(!mutable.value.journey.restricted)navigation.openScreen()}
     override fun onCleared(){battery.close();navigation.close();super.onCleared()}
 }
