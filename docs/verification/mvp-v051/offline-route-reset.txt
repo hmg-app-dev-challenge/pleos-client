@@ -1,0 +1,7 @@
+
+com.chapark.ivi.NaviFixtureResetTest:TEST_ROUTE_RESET: SAFE_GUIDING
+.
+
+Time: 0.266
+
+OK (1 test)

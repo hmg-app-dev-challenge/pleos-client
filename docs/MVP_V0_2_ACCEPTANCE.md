@@ -2,6 +2,8 @@
 
 2026-11-14 · versionCode 3 · 기획 v2.1.1 + MVP PRD v0.2 · Pleos 디자인 시스템 유지. **앱 구현·로컬 실행 가능한 서명 APK를 제공한다. 대표 장소의 모든 운영 근거와 실차 검증까지 완료한 상태는 아니다.**
 
+> 후속 [0.5.1 변경·인수](RELEASE_0_5_1.md)에서 새 AVD와 실제 오프라인 실패 검증을 추가했다. 아래는 0.5.0 당시의 산출물과 검증 이력이다.
+
 ## 산출물
 
 - 서명 APK: `ivi/build/outputs/apk/release/ivi-release.apk` (26,339,482 bytes)

@@ -23,6 +23,21 @@ class JourneyFlowTest {
         }
     }}
     @get:Rule val compose=createAndroidComposeRule<IviActivity>()
+    private val offline get()=InstrumentationRegistry.getArguments().getString("networkOffline")=="true"
+    private fun hasDefaultNetwork():Boolean {
+        val fd=InstrumentationRegistry.getInstrumentation().uiAutomation.executeShellCommand("dumpsys connectivity")
+        val text=android.os.ParcelFileDescriptor.AutoCloseInputStream(fd).bufferedReader().use{it.readText()}
+        val line=text.lineSequence().firstOrNull{it.startsWith("Active default network:")}
+        org.junit.Assert.assertNotNull("Connectivity state must be observable",line)
+        return line!!.trim()!="Active default network: none"
+    }
+    private fun verifyOffline(){
+        if(offline)org.junit.Assert.assertFalse("Offline scenario requires no active default network",hasDefaultNetwork())
+    }
+    private fun reportNetworkOutcome(outcome:String){
+        verifyOffline()
+        if(offline)InstrumentationRegistry.getInstrumentation().sendStatus(0,android.os.Bundle().apply{putString("stream","OFFLINE_NAVIGATION: $outcome; active default network: none\n")})
+    }
     private fun waitText(text:String) { compose.waitUntil(40_000){runCatching{compose.onAllNodesWithText(text).fetchSemanticsNodes().isNotEmpty()}.getOrDefault(false)} }
     private fun saved() { waitText("기기에 저장됨"); compose.waitForIdle() }
     private fun click(text:String) { compose.onNodeWithText(text).performScrollTo().performClick(); compose.waitForIdle() }
@@ -39,6 +54,7 @@ class JourneyFlowTest {
         InstrumentationRegistry.getArguments().getString("captureDelayMs")?.toLongOrNull()?.coerceIn(0,3000)?.let{Thread.sleep(it)}
     }
     @Test fun completeProductJourneyWithAutomaticPreparationAndManualParking() {
+        verifyOffline()
         waitText("설정")
         compose.onNodeWithText("설정").performClick()
         val initiallyDark=kotlinx.coroutines.runBlocking { com.chapark.ivi.prototype.JourneyStore(InstrumentationRegistry.getInstrumentation().targetContext).load().first.dark }
@@ -66,6 +82,24 @@ class JourneyFlowTest {
         Thread.sleep(5_000)
         val context=InstrumentationRegistry.getInstrumentation().targetContext
         context.startActivity(Intent(context,IviActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT))
+        if(offline){
+            compose.waitUntil(40_000){runCatching{compose.onAllNodes(hasText("내비게이션 열기") or hasText("다시 시도")).fetchSemanticsNodes().isNotEmpty()}.getOrDefault(false)}
+            if(compose.onAllNodesWithText("다시 시도").fetchSemanticsNodes().isNotEmpty()){
+                saved();screenshot("offline-navigation-failed.png")
+                val failed=kotlinx.coroutines.runBlocking { com.chapark.ivi.prototype.JourneyStore(context).load().first }
+                org.junit.Assert.assertEquals(com.chapark.prototype.RoutePhase.FAILED,failed.route)
+                org.junit.Assert.assertEquals("camp-nanji",failed.placeId)
+                org.junit.Assert.assertEquals(3,failed.input.people)
+                org.junit.Assert.assertEquals(planned.departureItems.map{it.id}.toSet(),failed.checked)
+                org.junit.Assert.assertFalse(failed.completed)
+                org.junit.Assert.assertTrue(failed.records.any{it.kind=="ROUTE_FAILED"})
+                compose.activityRule.scenario.recreate();waitText("다시 시도")
+                compose.onNodeWithTag("journey-next").assertIsEnabled()
+                reportNetworkOutcome("FAILED; plan and checks preserved after recreation; retry enabled")
+                return
+            }
+            reportNetworkOutcome("GUIDING; SDK observed guidance without default network")
+        }
         waitText("내비게이션 열기");screenshot("s5-guiding.png")
         compose.activityRule.scenario.recreate();waitText("내비게이션 열기")
         click("도착했어요");waitText("주차했어요")
@@ -94,5 +128,6 @@ class JourneyFlowTest {
         compose.activityRule.scenario.recreate();waitText("오늘의 차박을 마쳤어요")
         compose.onNodeWithText("설정").performClick();toggleTheme();click("설정 닫기")
         screenshot("s7-completed-dark.png")
+        reportNetworkOutcome("COMPLETED; local record persisted")
     }
 }

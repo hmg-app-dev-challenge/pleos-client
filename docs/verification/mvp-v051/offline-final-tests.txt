@@ -1,0 +1,7 @@
+
+com.chapark.ivi.JourneyFlowTest:OFFLINE_NAVIGATION: FAILED; plan and checks preserved after recreation; retry enabled; active default network: none
+.
+
+Time: 23.394
+
+OK (1 test)

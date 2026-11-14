@@ -2,9 +2,11 @@
 
 처음 가는 차박 장소의 조건과 차량 배터리를 함께 확인하고, 준비·길 안내·철수를 ‘내 차와 보낸 하룻밤 기억’으로 연결하는 Pleos 차량 앱 프로토타입. 핵심 메시지는 **내 차로 오늘 밤**이다.
 
-기획 기준은 **v2.1.1**, IVI 앱 버전은 `0.5.0`이다. 문서 개정은 전체 기능 구현 완료를 의미하지 않는다. [2.1.1 상세 변경 검토](docs/V2_1_1_CHANGE_REVIEW.md)와 [구현 현황](docs/IMPLEMENTATION_STATUS.md)을 참고한다.
+기획 기준은 **v2.1.1**, IVI 앱 버전은 `0.5.1`이다. 문서 개정은 전체 기능 구현 완료를 의미하지 않는다. [2.1.1 상세 변경 검토](docs/V2_1_1_CHANGE_REVIEW.md)와 [구현 현황](docs/IMPLEMENTATION_STATUS.md)을 참고한다.
 
 ## 최신 개발 기준
+
+최신 APK는 `~/Desktop/ChaPark-IVI-0.5.1-release.apk`다. [0.5.1 변경·인수](docs/RELEASE_0_5_1.md)에 UX 응답 지연 복구, 새 Pleos AVD 전체 흐름, 실제 오프라인 실패와 남은 재연결 제한을 기록했다.
 
 2026-11-14 첨부 MVP PRD v0.2를 [개발 계획](docs/IVI_WORK_PLAN.md)에 반영했다. [기능별 차이·결정 대장](docs/MVP_PRD_V0_2_REVIEW.md)과 [목표 5단계 흐름](docs/PRODUCT_FLOW_PLAN.md)을 따른다. 디자인은 기존 현대차 Pleos 시스템을 유지한다. 서명된 0.5.0은 5단계·취사 3종·준비/누락·밤 전환·차량 경계·기록을 구현했다. [0.5.0 인수 범위](docs/MVP_V0_2_ACCEPTANCE.md)의 남은 자료·실차 조건을 포함한 PRD 전체 인수 완료로 보지는 않는다. 단계별 구현과 시험은 [MVP 실행 기록](docs/MVP_V0_2_EXECUTION.md)에 남긴다.
 
@@ -49,7 +51,7 @@ M3 Pro에서는 실행 스크립트가 `-gpu host`를 명시한다. 창 없는 �
 
 기록 저장 API와 IVI 동기화: [실행 방법·API 계약](server/README.md), [구현·검증 상태](docs/V21_LOCAL_SERVER.md). 서버 첫 실행 후 debug APK를 빌드한다. 전체 v2.1.1의 남은 항목은 개발 계획에서 관리한다.
 
-## 0.5.0 release
+## release 빌드와 0.5.0 기준 산출물
 
 `ivi/build/outputs/apk/release/ivi-release.apk`가 서명된 IVI APK다. 데스크톱 복사본은 `ChaPark-IVI-0.5.0-release.apk`와 `.sha256`, 실제 release 검증 영상은 `ChaPark-IVI-0.5.0-release-flow.mp4`다. release는 로컬 여행 저장으로 동작하며 개발 서버 토큰/동기화가 비활성화된다. SDK 내비 서비스와 차량 신호는 Pleos 환경이 필요하다.
 

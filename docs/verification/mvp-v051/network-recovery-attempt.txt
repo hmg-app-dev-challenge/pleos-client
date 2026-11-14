@@ -1,0 +1,23 @@
+AVD: ChaPark_Acceptance_050; initial settings: ['1', '1', 'disabled']; user: 10
+
+OFFLINE: active default network: none
+
+
+com.chapark.ivi.NaviFixtureResetTest:
+Error in cancelOnlyTheVerificationRouteAndObserveIdle(com.chapark.ivi.NaviFixtureResetTest):
+java.lang.AssertionError: Old route must be absent before offline request: null
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.assertTrue(Assert.java:42)
+	at com.chapark.ivi.NaviFixtureResetTest.cancelOnlyTheVerificationRouteAndObserveIdle(NaviFixtureResetTest.kt:34)
+
+
+Time: 10.085
+There was 1 failure:
+1) cancelOnlyTheVerificationRouteAndObserveIdle(com.chapark.ivi.NaviFixtureResetTest)
+java.lang.AssertionError: Old route must be absent before offline request: null
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.assertTrue(Assert.java:42)
+	at com.chapark.ivi.NaviFixtureResetTest.cancelOnlyTheVerificationRouteAndObserveIdle(NaviFixtureResetTest.kt:34)
+
+FAILURES!!!
+Tests run: 1,  Failures: 1

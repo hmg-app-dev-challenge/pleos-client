@@ -1,0 +1,7 @@
+1
+ChaPark_Acceptance_050
+Active default network: 100
+    State: RUNNING_UNLOCKED
+    State: RUNNING_UNLOCKED
+    versionCode=4 minSdk=28 targetSdk=34
+    versionName=0.5.1

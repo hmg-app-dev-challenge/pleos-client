@@ -1,0 +1,17 @@
+Verifies
+Verified using v1 scheme (JAR signing): false
+Verified using v2 scheme (APK Signature Scheme v2): true
+Verified using v3 scheme (APK Signature Scheme v3): false
+Verified using v3.1 scheme (APK Signature Scheme v3.1): false
+Verified using v4 scheme (APK Signature Scheme v4): false
+Verified for SourceStamp: false
+Number of signers: 1
+Signer #1 certificate DN: CN=ChaPark Local Release
+Signer #1 certificate SHA-256 digest: 82cb670f09da74d119056530179cf6c4b37388cfb785ec8d67101fcae18341bf
+Signer #1 certificate SHA-1 digest: 7869e60e081683c619697e8759e8905787243653
+Signer #1 certificate MD5 digest: ec2788a7682702137a700a011d6a9db2
+Signer #1 key algorithm: RSA
+Signer #1 key size (bits): 3072
+Signer #1 public key SHA-256 digest: 7d3b98ce826c02cd51e6faee04280f0265eb6912afae78ad1fd0a000f5cc3f10
+Signer #1 public key SHA-1 digest: 7a618df96322ab6ce687042787fb1b2dadba65d9
+Signer #1 public key MD5 digest: 59a328403bb98612a9beb7de120a47fa
