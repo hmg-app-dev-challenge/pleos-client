@@ -18,6 +18,12 @@ import com.chapark.ivi.design.*
 import com.chapark.prototype.*
 
 private val steps=listOf("차박 계획","출발 준비","이동","차박","철수와 기록")
+private fun departureSummary(s:Journey):String {
+    val record=s.records.lastOrNull{it.kind=="PREPARATION_COMPLETED"}
+    return if(s.step>=4) {
+        if(record?.preparationCompleted!=null && record.preparationRequired!=null)"출발 전 필수 ${record.preparationCompleted}/${record.preparationRequired}개 확인" else "출발 전 확인 수 · 미수집"
+    } else "출발 전 필수 ${s.departureCheckedCount}/${s.departureProgress.total}개 확인"
+}
 private fun stageLabel(s:Journey)=s.stage?.let{"${it.ordinal+1} / 5 · ${steps[it.ordinal]}"} ?: "오늘의 차박"
 private val names get()=com.chapark.app.data.PlaceCatalog.all.associate { it.id to it.name }
 private fun condition(value:Condition)=when(value){Condition.ALLOWED->"허용";Condition.RESTRICTED->"제한";Condition.UNKNOWN->"미확인"}
@@ -80,7 +86,7 @@ private fun condition(value:Condition)=when(value){Condition.ALLOWED->"허용";C
                             Text(if(s.completed)"철수 완료" else steps[s.stage!!.ordinal],style=IviType.smallTitle)
                             Text("${s.input.people}명 · ${s.input.cookingPlan.label}",style=IviType.smallBody)
                             if(s.batteryVisible)Text("배터리 ${s.soc?.let{"$it%"} ?: "미확인"} · ${sourceLabel(s.socSource)}",style=IviType.smallBody)
-                            if(!s.completed)Text("출발 준비 ${s.departureCheckedCount} / ${s.departureProgress.total}",style=IviType.label)
+                            if(!s.completed)Text(departureSummary(s),style=IviType.label)
                             if(s.route==RoutePhase.GUIDING && !s.completed)Text("길 안내 중",style=IviType.smallBody)
                         }
                         IviButton("새 차박 시작",size=IviButtonSize.MEDIUM,enabled=!ui.saving){confirm="new-trip"}
@@ -108,7 +114,7 @@ private fun condition(value:Condition)=when(value){Condition.ALLOWED->"허용";C
                                         Text("차박 계획",style=IviType.title)
                                         IviSegments(listOf("여행 조건","장소 비교"),s.step-1){send(JourneyEvent.PlanningTab(it))}
                                     }
-                                    JourneyContent(s,send,candidates,scenery,confirmedOnly,{scenery=it},{confirmedOnly=it})
+                                    JourneyContent(s,send,candidates,scenery,confirmedOnly,{scenery=it},{confirmedOnly=it},ui.history.firstOrNull{it.id==s.tripId})
                                     if(s.step>0 && s.step!=2 && !s.completed) IviButton("이전 단계",size=IviButtonSize.MEDIUM,enabled=!ui.saving){send(JourneyEvent.Back)}
                                     Spacer(Modifier.height(24.dp))
                                 }
@@ -144,9 +150,10 @@ private fun condition(value:Condition)=when(value){Condition.ALLOWED->"허용";C
                 ui.history.forEach { trip->
                     Text("${trip.date} · ${trip.placeName}",style=IviType.smallTitle)
                     Text("확인 기록 ${trip.records.size}개 · 시간대 ${trip.zone}",style=IviType.label)
+                    JourneyMemorySummary(trip.records,trip.memory)
                     trip.records.filter{it.subject==null}.sortedBy{it.eventAtMillis ?: it.observedAtMillis}.forEach{record->
                         val time=java.time.Instant.ofEpochMilli(record.eventAtMillis ?: record.observedAtMillis).atZone(runCatching{java.time.ZoneId.of(trip.zone)}.getOrDefault(java.time.ZoneOffset.UTC)).toLocalTime().withNano(0)
-                        val label=when(record.kind){"PLACE_INFO"->"장소 자료 · 당시 확인 정보";"SUNSET"->"일몰 · 계산";"SUNRISE"->"일출 · 계산";"PLACE_SELECTED"->"장소 선택";"CHARGING_PLAN"->"충전 경유 계획";"PREPARATION_COMPLETED"->"출발 준비 확인";"ROUTE_REQUESTED"->"길 안내 요청";"GUIDANCE_OBSERVED"->"길 안내 확인";"ARRIVAL"->"도착 확인";"PARKING_CONFIRMED"->"주차 확인";"TRIP_COMPLETED"->"철수 완료";else->"상태 확인"}
+                        val label=when(record.kind){"PLACE_CONTEXT"->"장소·풍경 기록";"PLACE_INFO"->"장소 자료 · 당시 확인 정보";"SUNSET"->"일몰 · 계산";"SUNRISE"->"일출 · 계산";"PLACE_SELECTED"->"장소 선택";"CHARGING_PLAN"->"충전 경유 계획";"PREPARATION_COMPLETED"->"출발 준비 확인";"ROUTE_REQUESTED"->"길 안내 요청";"ROUTE_FAILED"->"길 안내 확인 실패";"GUIDANCE_OBSERVED"->"길 안내 확인";"ARRIVAL"->"도착 확인";"PARKING_CONFIRMED"->"주차 확인";"TRIP_COMPLETED"->"철수 완료";else->"상태 확인"}
                         Text("$time · $label",style=IviType.smallBody)
                     record.label?.let{Text(it,style=IviType.label)}
                     }
@@ -248,7 +255,7 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
 
 @Composable private fun JourneyContent(s:Journey,send:(JourneyEvent)->Unit,
     candidates:List<com.chapark.app.data.NavigationPlace>,scenery:String?,confirmedOnly:Boolean,
-    onScenery:(String?)->Unit,onConfirmed:(Boolean)->Unit) {
+    onScenery:(String?)->Unit,onConfirmed:(Boolean)->Unit,completedArchive:ArchivedTrip?=null) {
     val p=LocalIviColors.current
     when(s.step) {
         0 -> {
@@ -407,16 +414,16 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
         6 -> if(s.completed) {
             Heading("오늘의 차박을 마쳤어요","내 차와 보낸 하룻밤의 기억을 저장했어요.")
             Panel {
-                Text(names[s.placeId] ?: "오늘의 쉼터",style=IviType.title)
+                Text(completedArchive?.placeName ?: s.records.lastOrNull{it.kind=="PLACE_CONTEXT"}?.label ?: s.place.name,style=IviType.title)
                 Text("수면 준비 ${s.sleepChecks.intersect(s.requiredSleepIds).size}/${s.requiredSleepIds.size} · 철수 확인 ${s.exitChecks.intersect(s.requiredExitIds).size}/${s.requiredExitIds.size}",style=IviType.body)
-                Text("직접 확인한 준비 항목 ${s.checkedCount}/${s.decisions.size}",style=IviType.body)
+                JourneyMemorySummary(completedArchive?.records ?: s.records,completedArchive?.memory,includeChecks=false)
                 val missingItems=s.forgotten+s.decisions.filter{it.id in s.omitted}.map{it.title}
                 if(missingItems.isNotEmpty())Text("다음에 챙길 것 · ${missingItems.sorted().joinToString()}",style=IviType.smallBody)
                 Text("내 차와 보낸 하룻밤 기억",style=IviType.smallTitle)
                 val zone=runCatching{java.time.ZoneId.of(s.input.schedule?.zoneId ?: "UTC")}.getOrDefault(java.time.ZoneOffset.UTC)
                 s.records.filter{it.subject==null}.sortedBy{it.eventAtMillis ?: it.observedAtMillis}.forEach { record->
-                    val label=when(record.kind){"PLACE_INFO"->"장소 자료 · 당시 확인 정보";"SUNSET"->"일몰 · 계산";"SUNRISE"->"일출 · 계산";"PLACE_SELECTED"->"장소 선택";"CHARGING_PLAN"->"충전 경유 계획";
-                        "PREPARATION_COMPLETED"->"출발 준비 확인";"ROUTE_REQUESTED"->"길 안내 요청"
+                    val label=when(record.kind){"PLACE_CONTEXT"->"장소·풍경 기록";"PLACE_INFO"->"장소 자료 · 당시 확인 정보";"SUNSET"->"일몰 · 계산";"SUNRISE"->"일출 · 계산";"PLACE_SELECTED"->"장소 선택";"CHARGING_PLAN"->"충전 경유 계획";
+                        "PREPARATION_COMPLETED"->"출발 준비 확인";"ROUTE_REQUESTED"->"길 안내 요청";"ROUTE_FAILED"->"길 안내 확인 실패"
                         "GUIDANCE_OBSERVED"->"길 안내 확인";"ARRIVAL"->if(record.origin=="SDK")"도착 알림 수신" else "도착 직접 확인"
                         "PARKING_CONFIRMED"->"주차 직접 확인";"TRIP_COMPLETED"->"철수 확인 완료";else->"여행 상태 확인"
                     }
@@ -449,6 +456,32 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
         }
     }
 }
+@Composable internal fun JourneyMemorySummary(records:List<JourneyRecord>,memory:MemoryDetails?,includeChecks:Boolean=true) {
+    val context=records.lastOrNull{it.kind=="PLACE_CONTEXT"}?.placeMemory
+    val departure=records.lastOrNull{it.kind=="PREPARATION_COMPLETED"}
+    val checkout=records.lastOrNull{it.kind=="TRIP_COMPLETED"}
+    Text("풍경 태그 · ${context?.sceneryTags?.joinToString()?.ifBlank{"미확인"} ?: "미수집"}",style=IviType.smallBody)
+    Text("정보 확인일 · ${context?.informationDates?.joinToString()?.ifBlank{"미확인"} ?: "미수집"}${if(context?.hasUndatedInfo==true)" · 일부 날짜 미확인" else ""}",style=IviType.label)
+    fun reading(record:JourneyRecord?):String {
+        if(record==null)return "미수집"
+        val value=record.soc?.takeIf{it in 0..100 && (record.readingStatus==null || record.readingStatus==ReadingStatus.AVAILABLE)}
+        return "${value?.let{"$it%"} ?: "확인하지 못함"} · ${sourceLabel(record.socSource)}"
+    }
+    Text("출발 배터리 · ${reading(departure)}",style=IviType.smallBody)
+    Text("철수 배터리 · ${reading(checkout)}",style=IviType.smallBody)
+    Text(if(departure?.preparationCompleted!=null && departure.preparationRequired!=null)"출발 전 필수 확인 ${departure.preparationCompleted}/${departure.preparationRequired}" else "준비 완료 수 · 미수집",style=IviType.smallBody)
+    Text("선택 경유지 · ${if(memory==null)"미수집" else if(!memory.chargerSelected)"경유 없음" else memory.chargerName ?: "이름 미수집"}",style=IviType.smallBody)
+    val navigation=records.lastOrNull{it.kind in setOf("ROUTE_REQUESTED","GUIDANCE_OBSERVED","ROUTE_FAILED")}
+    Text("내비 결과 · ${when(navigation?.kind){"GUIDANCE_OBSERVED"->if(navigation.origin=="USER")"안내 확인 · 경유 위치 사용자 확인 포함" else "안내 확인";"ROUTE_FAILED"->"안내 확인 실패";"ROUTE_REQUESTED"->"요청 기록 있음 · 안내 확인 미수집";else->"미수집"}}",style=IviType.smallBody)
+    if(includeChecks) {
+        if(memory==null)Text("수면·철수 확인 요약 · 미수집",style=IviType.smallBody)
+        else {
+            Text("수면 준비 ${memory.sleepChecked}/${memory.sleepRequired} · 철수 확인 ${memory.exitChecked}/${memory.exitRequired}",style=IviType.smallBody)
+            Text(if(memory.completed)"철수 완료 · 사용자 확인" else "철수 완료 확인 없음",style=IviType.label)
+        }
+    }
+}
+
 @Composable private fun SelectedCharger(s:Journey,send:(JourneyEvent)->Unit) {
     com.chapark.app.data.ChargingPlaces.find(s.chargerId)?.let { charger->
         Panel(Modifier.testTag("selected-charger")) {
@@ -526,7 +559,7 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
     val p=LocalIviColors.current
     Column(modifier.background(p.surface,RoundedCornerShape(32.dp)).padding(28.dp).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(28.dp)) {
         Text("오늘 밤의 계획",style=IviType.smallTitle)
-        Text(names[s.placeId] ?: "오늘의 쉼터",style=IviType.title)
+        Text(if(s.completed) s.records.lastOrNull{it.kind=="PLACE_CONTEXT"}?.label ?: s.place.name else s.place.name,style=IviType.title)
         Text("오늘의 목적지",style=IviType.label,color=p.tertiary)
         HorizontalDivider(color=p.divider)
         if(s.batteryVisible){
@@ -535,7 +568,7 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
         }
         Text("${s.input.people}인\n${s.input.cookingPlan.label}\n${if(s.input.sleepingBag)"침낭 보유" else "침낭 미보유"}",style=IviType.body)
         HorizontalDivider(color=p.divider)
-        Text("출발 전 필수 ${s.departureCheckedCount}/${s.departureProgress.total}개 확인",style=IviType.smallTitle)
+        Text(departureSummary(s),style=IviType.smallTitle)
         Text("준비 항목을 확인하고\n편안하게 출발하세요.",style=IviType.label,color=p.tertiary)
     }
 }

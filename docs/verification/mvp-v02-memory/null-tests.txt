@@ -1,0 +1,6 @@
+
+com.chapark.ivi.TripMemoryStoreTest:..
+
+Time: 2.692
+
+OK (2 tests)

@@ -81,6 +81,11 @@ class JourneyFlowTest {
             org.junit.Assert.assertTrue(finished.records.any{it.kind=="GUIDANCE_OBSERVED" && it.origin=="SDK"})
             org.junit.Assert.assertEquals(1,finished.records.count{it.kind=="TRIP_COMPLETED"})
             org.junit.Assert.assertNotNull(store.archivedRecord(finished.tripId!!))
+            val memory=store.history().single{it.id==finished.tripId}.memory!!
+            org.junit.Assert.assertEquals(6,memory.sleepChecked)
+            org.junit.Assert.assertEquals(5,memory.exitChecked)
+            org.junit.Assert.assertTrue(finished.records.any{it.kind=="PLACE_CONTEXT" && it.placeMemory!=null})
+            org.junit.Assert.assertNotNull(finished.records.single{it.kind=="PREPARATION_COMPLETED"}.preparationRequired)
         }
         // Activity recreation must restore the persisted terminal state, not restart the trip.
         compose.activityRule.scenario.recreate();waitText("오늘의 차박을 마쳤어요")

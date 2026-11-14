@@ -90,4 +90,18 @@ class ApiTest(unittest.TestCase):
         self.assertEqual(4,len(catalog['places']))
         self.assertEqual(4,len({p['id'] for p in catalog['places']}))
 
+    def test_memory_metadata_round_trips_without_rewriting_completed_snapshot(self):
+        path='/v1/records/memory-v02'
+        record={'placeId':'camp-nanji','placeName':'난지캠핑장',
+                'memory':{'version':1,'sleepChecked':6,'sleepRequired':6,'exitChecked':5,'exitRequired':5,
+                          'chargerSelected':False,'completed':True},
+                'records':[{'kind':'PLACE_CONTEXT','origin':'REFERENCE','placeMemory':{
+                    'sceneryTags':['강'],'informationDates':[],'hasUndatedInfo':True}},
+                    {'kind':'TRIP_COMPLETED','origin':'USER','readingStatus':'DISCONNECTED','source':'SDK'}]}
+        self.assertEqual(200,self.request('PUT',path,record)[0])
+        rows=self.request('GET','/v1/records')[1]['records']
+        self.assertEqual(record,next(r['data'] for r in rows if r['id']=='memory-v02'))
+        changed=dict(record,memory=dict(record['memory'],sleepChecked=5))
+        self.assertEqual(409,self.request('PUT',path,changed)[0])
+
 if __name__=='__main__': unittest.main()

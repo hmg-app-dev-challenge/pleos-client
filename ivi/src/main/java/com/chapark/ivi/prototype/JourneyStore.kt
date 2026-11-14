@@ -110,6 +110,7 @@ class JourneyStore(context:Context) {
                 val encoded=data.getJSONArray("records").toString()
                 require(encoded.length<=1_000_000)
                 JourneyRecordCodec.decode(encoded)
+                MemoryDetails.decode(data.optJSONObject("memory"))
                 if(id !in deleted){
                     val old=archive.optJSONObject(id)
                     if(old==null)archive.put(id,data)
@@ -134,7 +135,7 @@ class JourneyStore(context:Context) {
             val o=archive.getJSONObject(id)
             val records=JourneyRecordCodec.decode(o.getJSONArray("records").toString())
             ArchivedTrip(id,o.getString("placeName"),o.optString("date", "날짜 미수집"),o.optString("zone","UTC"),records,
-                o.optJSONArray("forgotten")?.let{a->(0 until a.length()).map{a.getString(it)}} ?: emptyList())
+                o.optJSONArray("forgotten")?.let{a->(0 until a.length()).map{a.getString(it)}} ?: emptyList(),MemoryDetails.decode(o.optJSONObject("memory")))
         }.sortedByDescending{it.records.lastOrNull()?.observedAtMillis ?: 0}.toList()
     }
     suspend fun deleteHistory(id:String){store.edit{p->
@@ -147,10 +148,11 @@ class JourneyStore(context:Context) {
         val deleted=p[stringSetPreferencesKey("deletedArchives")] ?: emptySet()
         val syncRevisions=p[stringPreferencesKey("syncRevisions")] ?: "{}"
         if(s.completed && s.tripId!=null && s.tripId !in deleted && !archive.has(s.tripId))archive.put(s.tripId,JSONObject().apply {
-            put("chargerId",s.chargerId);put("placeId",s.placeId);put("placeName",s.place.name)
+            put("chargerId",s.chargerId);put("placeId",s.placeId);put("placeName",s.records.lastOrNull{it.kind=="PLACE_CONTEXT"}?.label ?: s.place.name)
             put("date",s.input.schedule?.date);put("zone",s.input.schedule?.zoneId)
             put("forgotten",JSONArray((s.forgotten+s.decisions.filter{it.id in s.omitted}.map{it.title}).sorted()));
             put("cookingPlan",s.input.cookingPlan.name);put("omitted",JSONArray(s.omitted.sorted()));
+            put("memory",MemoryDetails.capture(s).encode())
             put("people",s.input.people);put("threshold",s.input.batteryThreshold)
             put("records",JSONArray(JourneyRecordCodec.encode(s.records)))
         })
@@ -184,4 +186,4 @@ class JourneyStore(context:Context) {
     } }
 }
 
-data class ArchivedTrip(val id:String,val placeName:String,val date:String,val zone:String,val records:List<JourneyRecord>,val forgotten:List<String>)
+data class ArchivedTrip(val id:String,val placeName:String,val date:String,val zone:String,val records:List<JourneyRecord>,val forgotten:List<String>,val memory:MemoryDetails?=null)

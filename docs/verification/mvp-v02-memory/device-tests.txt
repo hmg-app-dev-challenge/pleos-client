@@ -1,0 +1,9 @@
+
+com.chapark.ivi.TripMemoryStoreTest:..
+com.chapark.ivi.TripMemoryScreenTest:..
+com.chapark.ivi.OvernightChecklistScreenTest:..
+com.chapark.ivi.JourneyLayoutTest:.
+
+Time: 27.304
+
+OK (7 tests)

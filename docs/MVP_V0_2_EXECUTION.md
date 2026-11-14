@@ -82,3 +82,17 @@ JVM 52개와 IVI debug/시험 APK 빌드·Lint 통과. [화면 4개](verificatio
 DataStore schema 9는 완료된 schema 1~8 여행의 checklistVersion=1을 유지해 당시 4/4 기준을 보존한다. 미완료 여행은 현재 version 2로 전환하며 새로 추가되거나 범위가 달라진 항목은 재확인한다. 이전 체크와 기록은 같은 의미 범위에서 유지하고, 철수 화면에 있던 미완료 여행은 부족한 수면 확인으로 돌아간다. 완료 archive는 재작성하지 않는다. 다음 여행은 항상 새 기준을 쓴다.
 
 폰·IVI debug/시험 APK와 Lint, JVM 55개·기기 10개 통과. [단위 결과](verification/mvp-v02-overnight/unit-tests.txt)와 [기기 결과](verification/mvp-v02-overnight/device-tests.txt)에 체크별 관문·완료 과거 버전·사용자 출처·주행 제한·legacy 1~8 복원·좁은 창 양 테마를 기록한다. 일몰 자동 밤 모드와 새 release 인수는 이번 범위에 포함하지 않는다.
+
+## V02-07B: 여행 당시 정보와 기록 요약
+
+2026-11-14. 출발 준비 완료 시 장소명·풍경 태그·정보 확인일/날짜 미확인 여부와 필수 준비 완료 수를 journal에 담는다. 출발/철수 배터리는 값·출처·읽기 상태를 보관하고 stale/실패 값을 새 측정처럼 표시하지 않는다. 요청 기록, 안내 관측, 안내 확인 실패를 분리했다. 요청 기록만으로 전달 성공을 만들지 않는다. 수면/철수 항목은 사용자가 확인한 문구와 출처를 남긴다.
+
+완료 archive에 version 1 memory 요약(당시 수면/철수 분모와 확인 수·선택 경유지 이름·완료 여부)을 최초 한 번 저장한다. 이후 재저장·자료 변경·다음 여행으로 덮어쓰지 않고 삭제 표식도 유지한다. 완료/지난 기록 화면에서 당시 장소·풍경·확인일·배터리·준비 수·선택 경유지·내비 결과·현장 확인을 함께 표시한다. 기존 타임라인과 누락 목록은 유지한다. 이전 archive의 없는 필드는 현재 카탈로그/배터리로 채우지 않고 미수집으로 표시한다. 새 메타데이터와 명시적 JSON null은 이전 이벤트 형식과 함께 읽는다. 서버는 새 필드를 그대로 보존하고 완료 기록 충돌을 거절한다.
+
+[단위 58개](verification/mvp-v02-memory/unit-tests.txt), [서버 7개](verification/mvp-v02-memory/server-tests.txt), [저장·화면 회귀 7개](verification/mvp-v02-memory/device-tests.txt), [읽기 실패 상태 화면 2개](verification/mvp-v02-memory/ui-final-tests.txt)가 통과했다. 폰·IVI debug 빌드와 Lint도 통과했다. 기기 7개 시험의 마지막 좁은 창 Activity는 시스템 DrivingView가 초점을 가져가 한 번 복귀시켰다.
+
+[실제 내비 포함 전체 흐름 1개](verification/mvp-v02-memory/flow-tests.txt)는 확대된 준비·수면 6개·철수 5개, 단일 목적지 안내 관측, 복귀/재실행, 새 메모리 저장과 다크 완료를 검증했다. 시험 전에 에뮬레이터를 데이터 삭제 없이 재부팅했으며 종료 화면까지 진행된 뒤 앱 task에 한 차례 초점을 복귀시켰다. 완전 무인 실행 안정성/실차 인수로 해석하지 않는다. [Light](verification/mvp-v02-memory/completed-light.png)와 [Dark](verification/mvp-v02-memory/completed-dark.png) 완료 화면을 확인했다. 전체 흐름 후 추가한 명시적 JSON null 호환 수정은 [저장 2개 재검증](verification/mvp-v02-memory/null-tests.txt)으로 확인한다.
+
+전체 흐름 후 홈·우측 요약의 출발 준비 수도 출발 당시 저장값을 표시하도록 보완했다. 이후 배터리 변화로 필수 항목 수가 달라져도 출발 기록을 재계산하지 않는다. 기록이 없는 이전 여행은 미수집으로 표시한다. 최종 IVI debug 빌드·Lint와 [완료 요약/기록 창 양 테마 2개 재검증](verification/mvp-v02-memory/summary-tests.txt)이 통과했다. 같은 문구가 완료 화면과 기록 창에 함께 있어 발생한 시험 선택자 오류는 기록 창 내부로 범위를 좁혀 수정했다. 최종 2개 실행은 수동 초점 복귀 없이 완료됐다.
+
+원시 Navi API 전달 반환의 세분화, 자동 일몰 밤 모드, 주행/capability 전체 인수, 자료 확충, 새 release 패키징은 후속이다. 데스크톱 release APK는 아직 이전 버전이다.
