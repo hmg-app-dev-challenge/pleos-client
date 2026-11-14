@@ -1,0 +1,9 @@
+
+com.chapark.ivi.TripMemoryScreenTest:.
+
+Time: 1.684
+
+OK (1 test)
+
+
+

@@ -1,0 +1,15 @@
+62788 Ts     0.0 /Users/woongaaaa/Library/Android/sdk/emulator/qemu/darwin-aarch64/qemu-system-aarch64
+State T means paused. CPU is a recent average; use top for a fresh sample.
+62788 Rs     0.0 /Users/woongaaaa/Library/Android/sdk/emulator/qemu/darwin-aarch64/qemu-system-aarch64
+Resumed: SDK connections may need to reconnect after a long pause.
+
+Success
+
+graphicCoversRemainWideAndReadableInBothThemesAndLargeText PASS
+moreShowsOnlyArchivedFactsAndCollapseHidesDetailsInBothThemes PASS
+oldArchiveKeepsMissingDataAndCardsExpandIndependently PASS
+completedJourneyAlsoUsesCollapsedCardWithoutChangingTheTrip PASS
+Starting: Intent { cmp=com.chapark.ivi/.IviActivity }
+
+62788 Ts   282.5 /Users/woongaaaa/Library/Android/sdk/emulator/qemu/darwin-aarch64/qemu-system-aarch64
+Paused: window/ADB frozen, memory retained.

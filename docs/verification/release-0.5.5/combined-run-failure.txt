@@ -1,0 +1,62 @@
+62788 Ts     0.0 /Users/woongaaaa/Library/Android/sdk/emulator/qemu/darwin-aarch64/qemu-system-aarch64
+State T means paused. CPU is a recent average; use top for a fresh sample.
+62788 Rs     0.0 /Users/woongaaaa/Library/Android/sdk/emulator/qemu/darwin-aarch64/qemu-system-aarch64
+Resumed: SDK connections may need to reconnect after a long pause.
+Success
+
+
+com.chapark.ivi.TripMemoryScreenTest:.
+Error in moreShowsOnlyArchivedFactsAndCollapseHidesDetailsInBothThemes(com.chapark.ivi.TripMemoryScreenTest):
+java.lang.NullPointerException: Current state was null unexpectedly. Last stage = STARTED
+	at androidx.test.internal.util.Checks.checkNotNull(Checks.java:50)
+	at androidx.test.core.app.ActivityScenario.moveToState(ActivityScenario.java:657)
+	at androidx.test.core.app.ActivityScenario.close(ActivityScenario.java:421)
+	at com.chapark.ivi.TripMemoryScreenTest.restore(TripMemoryScreenTest.kt:55)
+
+Error in oldArchiveKeepsMissingDataAndCardsExpandIndependently(com.chapark.ivi.TripMemoryScreenTest):
+java.lang.IllegalStateException: No compose hierarchies found in the app. Possible reasons include: (1) the Activity that calls setContent did not launch; (2) setContent was not called; (3) setContent was called before the ComposeTestRule ran. If setContent is called by the Activity, make sure the Activity is launched after the ComposeTestRule runs
+	at androidx.compose.ui.test.TestContext.getAllSemanticsNodes$ui_test_release(TestOwner.kt:87)
+	at androidx.compose.ui.test.SemanticsNodeInteraction.fetchSemanticsNodes$ui_test_release(SemanticsNodeInteraction.kt:63)
+	at androidx.compose.ui.test.SemanticsNodeInteraction.fetchOneOrThrow(SemanticsNodeInteraction.kt:157)
+	at androidx.compose.ui.test.SemanticsNodeInteraction.fetchOneOrThrow$default(SemanticsNodeInteraction.kt:150)
+	at androidx.compose.ui.test.SemanticsNodeInteraction.fetchSemanticsNode(SemanticsNodeInteraction.kt:84)
+	at androidx.compose.ui.test.ActionsKt.performScrollTo(Actions.kt:76)
+	at com.chapark.ivi.TripMemoryScreenTest.oldArchiveKeepsMissingDataAndCardsExpandIndependently(TripMemoryScreenTest.kt:110)
+.
+
+Time: 24.382
+There were 3 failures:
+1) moreShowsOnlyArchivedFactsAndCollapseHidesDetailsInBothThemes(com.chapark.ivi.TripMemoryScreenTest)
+java.lang.IllegalStateException: No compose hierarchies found in the app. Possible reasons include: (1) the Activity that calls setContent did not launch; (2) setContent was not called; (3) setContent was called before the ComposeTestRule ran. If setContent is called by the Activity, make sure the Activity is launched after the ComposeTestRule runs
+	at androidx.compose.ui.test.TestContext.getAllSemanticsNodes$ui_test_release(TestOwner.kt:87)
+	at androidx.compose.ui.test.SemanticsNodeInteraction.fetchSemanticsNodes$ui_test_release(SemanticsNodeInteraction.kt:63)
+	at androidx.compose.ui.test.SemanticsNodeInteraction.fetchOneOrThrow(SemanticsNodeInteraction.kt:157)
+	at androidx.compose.ui.test.SemanticsNodeInteraction.fetchOneOrThrow$default(SemanticsNodeInteraction.kt:150)
+	at androidx.compose.ui.test.SemanticsNodeInteraction.fetchSemanticsNode(SemanticsNodeInteraction.kt:84)
+	at androidx.compose.ui.test.ActionsKt.performTouchInput(Actions.kt:394)
+	at androidx.compose.ui.test.Actions_androidKt.performClickImpl(Actions.android.kt:20)
+	at androidx.compose.ui.test.ActionsKt.performClick(Actions.kt:54)
+	at com.chapark.ivi.TripMemoryScreenTest.moreShowsOnlyArchivedFactsAndCollapseHidesDetailsInBothThemes(TripMemoryScreenTest.kt:80)
+2) moreShowsOnlyArchivedFactsAndCollapseHidesDetailsInBothThemes(com.chapark.ivi.TripMemoryScreenTest)
+java.lang.NullPointerException: Current state was null unexpectedly. Last stage = STARTED
+	at androidx.test.internal.util.Checks.checkNotNull(Checks.java:50)
+	at androidx.test.core.app.ActivityScenario.moveToState(ActivityScenario.java:657)
+	at androidx.test.core.app.ActivityScenario.close(ActivityScenario.java:421)
+	at com.chapark.ivi.TripMemoryScreenTest.restore(TripMemoryScreenTest.kt:55)
+3) oldArchiveKeepsMissingDataAndCardsExpandIndependently(com.chapark.ivi.TripMemoryScreenTest)
+java.lang.IllegalStateException: No compose hierarchies found in the app. Possible reasons include: (1) the Activity that calls setContent did not launch; (2) setContent was not called; (3) setContent was called before the ComposeTestRule ran. If setContent is called by the Activity, make sure the Activity is launched after the ComposeTestRule runs
+	at androidx.compose.ui.test.TestContext.getAllSemanticsNodes$ui_test_release(TestOwner.kt:87)
+	at androidx.compose.ui.test.SemanticsNodeInteraction.fetchSemanticsNodes$ui_test_release(SemanticsNodeInteraction.kt:63)
+	at androidx.compose.ui.test.SemanticsNodeInteraction.fetchOneOrThrow(SemanticsNodeInteraction.kt:157)
+	at androidx.compose.ui.test.SemanticsNodeInteraction.fetchOneOrThrow$default(SemanticsNodeInteraction.kt:150)
+	at androidx.compose.ui.test.SemanticsNodeInteraction.fetchSemanticsNode(SemanticsNodeInteraction.kt:84)
+	at androidx.compose.ui.test.ActionsKt.performScrollTo(Actions.kt:76)
+	at com.chapark.ivi.TripMemoryScreenTest.oldArchiveKeepsMissingDataAndCardsExpandIndependently(TripMemoryScreenTest.kt:110)
+
+FAILURES!!!
+Tests run: 4,  Failures: 3
+
+
+
+62788 Ts   292.0 /Users/woongaaaa/Library/Android/sdk/emulator/qemu/darwin-aarch64/qemu-system-aarch64
+Paused: window/ADB frozen, memory retained.
