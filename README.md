@@ -2,11 +2,11 @@
 
 처음 가는 차박 장소의 조건과 차량 배터리를 함께 확인하고, 준비·길 안내·철수를 ‘내 차와 보낸 하룻밤 기억’으로 연결하는 Pleos 차량 앱 프로토타입. 핵심 메시지는 **내 차로 오늘 밤**이다.
 
-기획 기준은 **v2.1.1**, IVI 앱 버전은 `0.5.3`이다. 문서 개정은 전체 기능 구현 완료를 의미하지 않는다. [2.1.1 상세 변경 검토](docs/V2_1_1_CHANGE_REVIEW.md)와 [구현 현황](docs/IMPLEMENTATION_STATUS.md)을 참고한다.
+기획 기준은 **v2.1.1**, IVI 앱 버전은 `0.5.4`이다. 문서 개정은 전체 기능 구현 완료를 의미하지 않는다. [2.1.1 상세 변경 검토](docs/V2_1_1_CHANGE_REVIEW.md)와 [구현 현황](docs/IMPLEMENTATION_STATUS.md)을 참고한다.
 
 ## 최신 개발 기준
 
-최신 APK는 `~/Desktop/ChaPark-IVI-0.5.3-release.apk`다. [0.5.3 변경·검증](docs/RELEASE_0_5_3.md)에 내비 응답 단절 처리와 복귀·경유 회귀를 기록했다. 내비 화면 전환·준비 화면 간격과 에뮬레이터 일시정지는 [0.5.2](docs/RELEASE_0_5_2.md)를 따른다.
+최신 APK는 `~/Desktop/ChaPark-IVI-0.5.4-release.apk`다. [0.5.4 별 보기 구현·검증](docs/RELEASE_0_5_4.md)에 전용 별 화면, 복귀·복원 및 화면 픽셀 검사를 기록했다. [0.5.3 변경·검증](docs/RELEASE_0_5_3.md)에 내비 응답 단절 처리와 복귀·경유 회귀를 기록했다. 내비 화면 전환·준비 화면 간격과 에뮬레이터 일시정지는 [0.5.2](docs/RELEASE_0_5_2.md)를 따른다.
 
 2026-11-14 첨부 MVP PRD v0.2를 [개발 계획](docs/IVI_WORK_PLAN.md)에 반영했다. [기능별 차이·결정 대장](docs/MVP_PRD_V0_2_REVIEW.md)과 [목표 5단계 흐름](docs/PRODUCT_FLOW_PLAN.md)을 따른다. 디자인은 기존 현대차 Pleos 시스템을 유지한다. 서명된 0.5.0은 5단계·취사 3종·준비/누락·밤 전환·차량 경계·기록을 구현했다. [0.5.0 인수 범위](docs/MVP_V0_2_ACCEPTANCE.md)의 남은 자료·실차 조건을 포함한 PRD 전체 인수 완료로 보지는 않는다. 단계별 구현과 시험은 [MVP 실행 기록](docs/MVP_V0_2_EXECUTION.md)에 남긴다.
 

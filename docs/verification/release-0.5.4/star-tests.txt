@@ -1,0 +1,11 @@
+
+com.chapark.ivi.StarViewingTest:..
+com.chapark.ivi.NightDisplayScreenTest:...
+com.chapark.ivi.NightDisplayStoreTest:..
+
+Time: 21.453
+
+OK (7 tests)
+
+
+
