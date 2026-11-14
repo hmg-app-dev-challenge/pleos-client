@@ -48,8 +48,8 @@ class CarUxMonitor(context: Context) : UxMonitor {
             }, mutable.value.parking)
         }
         handler.postDelayed({
-            if (gate.accepts(token) && mutable.value.mode == UxMode.UNKNOWN)
-                mutable.value = UxSnapshot(reason = "차량 UX 제한 응답 대기 · 상세 조작 잠금")
+            if (gate.accepts(token))
+                mutable.value = UxPolicy.waitingForUx(mutable.value)
         }, 8_000)
         try {
             car = Car.createCar(context, handler, Car.CAR_WAIT_TIMEOUT_DO_NOT_WAIT) { client, ready ->

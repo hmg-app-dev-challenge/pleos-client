@@ -12,6 +12,10 @@ data class UxSnapshot(
     val allowsDetailedInteraction: Boolean get() = mode == UxMode.AVAILABLE && parking == ParkingSignal.PARK
 }
 object UxPolicy {
+    /** An absent UX response must lock, without discarding an independently observed gear. */
+    fun waitingForUx(snapshot:UxSnapshot):UxSnapshot = if(snapshot.mode==UxMode.UNKNOWN)
+        snapshot.copy(reason="차량 UX 제한 응답 대기 · 상세 조작 잠금") else snapshot
+
     fun evaluate(requiresOptimization: Boolean?, restrictions: Int?): UxMode = when {
         requiresOptimization == null || restrictions == null -> UxMode.UNKNOWN
         requiresOptimization || restrictions != 0 -> UxMode.RESTRICTED
