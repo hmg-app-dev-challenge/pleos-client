@@ -41,6 +41,8 @@ scripts/run-pleos-emulator.sh -port 5556
 
 실행 중인 AVD는 다시 실행하지 않는다. APK는 `app/build/outputs/apk/debug/app-debug.apk`, `ivi/build/outputs/apk/debug/ivi-debug.apk`다. 서명된 제출용 release가 아닌 개발용 APK다.
 
+M3 Pro에서는 실행 스크립트가 `-gpu host`를 명시한다. 창 없는 실행도 `scripts/run-pleos-emulator.sh -port 5556 -no-window -no-audio`로 실행한다. `-no-window`만으로 CPU 사용량이 줄어드는 것은 아니다. 2026-11-14 확인한 CPU 렌더링 전환 문제와 측정 결과, 일상 개발·SDK 검증 운영 방법은 [에뮬레이터 운영 안내](docs/IVI_DEMO_GUIDE.md#m3-pro--macos-에뮬레이터-운영)를 참고한다.
+
 고정 조합: AGP 8.7.3 / Gradle 8.9 / Kotlin 2.0.21 / Compose BOM 2024.12.01 / compileSdk 35 / targetSdk 34 / minSdk 28.
 
 ## 로컬 개발 서버

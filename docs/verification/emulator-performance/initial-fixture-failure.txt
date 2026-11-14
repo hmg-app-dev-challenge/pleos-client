@@ -1,0 +1,31 @@
+
+com.chapark.ivi.PleosRuntimeTest:SDK_PROBE: SdkSnapshot(vehicle=READY, navigation=READY, rawSoc=100, receivedAtElapsedMs=57308, capability=READ, detail=SDK 응답 수신 · 단위 검증 전이므로 준비 판단에는 사용하지 않습니다.)
+..
+com.chapark.ivi.BatterySessionTest:BATTERY: BatterySnapshot(value=100, status=AVAILABLE, source=EMULATOR, receivedAt=1794620868444, delivery=read)
+.
+com.chapark.ivi.JourneyFlowTest:
+Error in completeProductJourneyWithAutomaticPreparationAndManualParking(com.chapark.ivi.JourneyFlowTest):
+java.lang.AssertionError: Failed: assertExists.
+Reason: Expected exactly '1' node but could not find any node that satisfies: (Text + EditableText contains '충전 경유 검토' (ignoreCase: false))
+
+	at androidx.compose.ui.test.SemanticsNodeInteraction.fetchOneOrThrow(SemanticsNodeInteraction.kt:178)
+	at androidx.compose.ui.test.SemanticsNodeInteraction.fetchOneOrThrow$default(SemanticsNodeInteraction.kt:150)
+	at androidx.compose.ui.test.SemanticsNodeInteraction.assertExists(SemanticsNodeInteraction.kt:125)
+	at androidx.compose.ui.test.SemanticsNodeInteraction.assertExists$default(SemanticsNodeInteraction.kt:124)
+	at com.chapark.ivi.JourneyFlowTest.completeProductJourneyWithAutomaticPreparationAndManualParking(JourneyFlowTest.kt:54)
+
+
+Time: 6.703
+There was 1 failure:
+1) completeProductJourneyWithAutomaticPreparationAndManualParking(com.chapark.ivi.JourneyFlowTest)
+java.lang.AssertionError: Failed: assertExists.
+Reason: Expected exactly '1' node but could not find any node that satisfies: (Text + EditableText contains '충전 경유 검토' (ignoreCase: false))
+
+	at androidx.compose.ui.test.SemanticsNodeInteraction.fetchOneOrThrow(SemanticsNodeInteraction.kt:178)
+	at androidx.compose.ui.test.SemanticsNodeInteraction.fetchOneOrThrow$default(SemanticsNodeInteraction.kt:150)
+	at androidx.compose.ui.test.SemanticsNodeInteraction.assertExists(SemanticsNodeInteraction.kt:125)
+	at androidx.compose.ui.test.SemanticsNodeInteraction.assertExists$default(SemanticsNodeInteraction.kt:124)
+	at com.chapark.ivi.JourneyFlowTest.completeProductJourneyWithAutomaticPreparationAndManualParking(JourneyFlowTest.kt:54)
+
+FAILURES!!!
+Tests run: 4,  Failures: 1

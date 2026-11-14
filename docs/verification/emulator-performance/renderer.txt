@@ -1,0 +1,15 @@
+BEFORE
+library_mode swangle_indirect gpu mode swangle_indirect
+I1114 08:24:50.591425 bcc6180 FrameBuffer.cpp:522] Graphics Adapter Vendor Google (Google Inc. (Google))
+I1114 08:24:50.591477 bcc6180 FrameBuffer.cpp:523] Graphics Adapter Android Emulator OpenGL ES Translator (ANGLE (Google, Vulkan 1.2.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver-5.0.0))
+I1114 08:24:50.591485 bcc6180 FrameBuffer.cpp:524] Graphics API Version OpenGL ES 3.0 (OpenGL ES 3.1.0 (ANGLE 2.1.1 git hash: fbf66f49c7cc))
+INFO    | Boot completed in 20963 ms
+INFO    | Boot completed in 19288 ms
+INFO    | Boot completed in 11723 ms
+INFO    | Boot completed in 15115 ms
+AFTER
+library_mode host gpu mode host
+I1114 10:46:53.772352 bcc6180 FrameBuffer.cpp:522] Graphics Adapter Vendor Google (Apple)
+I1114 10:46:53.772365 bcc6180 FrameBuffer.cpp:523] Graphics Adapter Android Emulator OpenGL ES Translator (Apple M3 Pro)
+I1114 10:46:53.772370 bcc6180 FrameBuffer.cpp:524] Graphics API Version OpenGL ES 3.0 (4.1 Metal - 90.5)
+INFO    | Boot completed in 13336 ms

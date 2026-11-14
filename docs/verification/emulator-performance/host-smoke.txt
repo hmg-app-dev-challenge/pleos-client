@@ -1,0 +1,13 @@
+
+com.chapark.ivi.PleosRuntimeTest:SDK_PROBE: SdkSnapshot(vehicle=READY, navigation=READY, rawSoc=100, receivedAtElapsedMs=122131, capability=READ, detail=SDK 응답 수신 · 단위 검증 전이므로 준비 판단에는 사용하지 않습니다.)
+..
+com.chapark.ivi.BatterySessionTest:BATTERY: BatterySnapshot(value=100, status=AVAILABLE, source=EMULATOR, receivedAt=1794620933254, delivery=read)
+.
+com.chapark.ivi.NaviRouteProbeTest:NAVI_ROUTE: NavigationSnapshot(phase=GUIDING, message=null, destinationName=난지캠핑장, routeConfirmed=true, confirmationSource=SDK)
+NAVI_RECONNECT: NavigationSnapshot(phase=GUIDING, message=null, destinationName=난지캠핑장, routeConfirmed=true, confirmationSource=SDK)
+.
+com.chapark.ivi.JourneyLayoutTest:.
+
+Time: 15.17
+
+OK (5 tests)

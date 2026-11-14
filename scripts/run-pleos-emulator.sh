@@ -53,4 +53,16 @@ mkdir -p "$ANDROID_EMULATOR_HOME"
 if [ ! -s "$ANDROID_EMULATOR_HOME/adbkey" ]; then
     "$SDK_DIR/platform-tools/adb" keygen "$ANDROID_EMULATOR_HOME/adbkey"
 fi
+# Emulator 35.2.10 selects swangle_indirect in headless mode even when the
+# AVD says hw.gpu.mode=host. On Apple Silicon that rasterizes with SwiftShader
+# on the CPU. An explicit CLI choice keeps both windowed and headless runs on
+# the host GPU. Preserve an explicitly requested diagnostic renderer.
+HAS_GPU_OPTION=no
+for ARG in "$@"; do
+    case "$ARG" in -gpu|-gpu=*) HAS_GPU_OPTION=yes;; esac
+done
+if [ "$HAS_GPU_OPTION" = no ]; then
+    set -- -gpu host "$@"
+fi
+# Pleos VHAL requires cold boot; do not substitute Quick Boot snapshots.
 exec "$SDK_DIR/emulator/emulator" -avd "$AVD_NAME" -no-snapshot "$@"
