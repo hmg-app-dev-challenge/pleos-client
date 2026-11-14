@@ -61,7 +61,21 @@ macOS `top`의 프로세스 CPU(100%=논리 코어 하나)를 사용했고 첫 �
 - [첫 전체 흐름 시도](verification/emulator-performance/initial-fixture-failure.txt)는 Cold Boot 후 SOC가 100%로 돌아와 기존 시험의 SOC 20% 전제(충전 검토 표시)에서 실패했다. GPU 변경 후 전체 여행 성공으로 계산하지 않는다. 전체 흐름 재실행 전 Virtual Console에서 시험용 차량 조건을 다시 설정해야 한다.
 - 저장 파일을 `.local-avd/backups/performance-20261114/`에 보관하고 데이터 삭제 없이 재시작했다. 수정은 실행 스크립트와 문서에 한정한다. 폰/IVI APK와 앱 저장 스키마는 변경하지 않았다.
 
-### Android Studio와 ADB
+### 추가 CPU 대응 — 2026-11-14 저녁
+
+`-gpu host` 상태에서도 장시간 실행 후 QEMU 173.7~205.3%, Android 내부 `ai.umos.drivingview` 약 103~111%를 관찰했다. 시스템 3D 차량 화면이 주요 지속 부하였다. DrivingView 비활성화 시 QEMU가 약 77~84%로 감소했지만 Pleos Home이 해당 Activity를 다시 실행하다 예외를 냈다. **이 방법은 채택하지 않았고 사용자 10의 패키지를 다시 활성화했다.** 정상 재부팅 후 DrivingView 실행, 내비 경로·화면 전환, 차Park 화면을 다시 확인했다.
+
+현재 방식은 기능을 삭제하거나 프로세스에 강제 CPU 비율 제한을 거는 대신 **편집·빌드 중 일시정지, UI/SDK 확인 중 재개**다. `scripts/pleos-runtime.py`는 지정한 프로젝트 AVD의 QEMU 프로세스에만 SIGSTOP/SIGCONT를 보낸다. AVD 디스크 데이터와 메모리는 유지하지만 정지 중 화면·ADB도 멈춘다. 메모리 반환이 필요하면 정지 대신 정상 종료한다. 긴 정지 후 SDK 연결이 회복되지 않으면 데이터 삭제 없이 Cold Boot한다.
+
+```sh
+python3 scripts/pleos-runtime.py pause --avd ChaPark_Release
+python3 scripts/pleos-runtime.py resume --avd ChaPark_Release
+python3 scripts/pleos-runtime.py status --avd ChaPark_Release
+```
+
+데스크톱의 `Pleos 일시정지.command` / `Pleos 재개.command`는 같은 명령을 실행한다. 현재 실행 중인 Release AVD에 사용하며 종료한 AVD를 새로 만드는 명령은 아니다. 테스트 실행 도중에는 정지하지 않는다. 측정에서 정지 후 QEMU CPU는 세 표본 모두 0.0%였다. 이는 **실행 중 3D 부하 자체를 해결했다는 의미가 아니다.** [실행 중 측정](verification/release-0.5.2/cpu-active.txt), [정지 측정](verification/release-0.5.2/cpu-paused.txt).
+
+### Android Studio와 ADB (기존 환경 제한)
 
 현재 기본 ADB 35.0.2는 `~/.android/adbkey`가 root 소유·0600이어서 인증 초기화가 실패한다. 따라서 Studio용 기본 ADB의 `unauthorized`는 GPU와 별개다. 개인 키 삭제·교체·소유권 변경은 하지 않았다. `ADB_VENDOR_KEYS`와 `ANDROID_USER_HOME` 지정만으로는 이 버전의 사용자 키 초기화 실패를 해결하지 못했고 기본 서버 실행으로 되돌렸다. 이번 작업에서 Studio 중단점 연결까지 검증했다고 보지 않는다.
 
