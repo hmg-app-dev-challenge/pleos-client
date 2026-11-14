@@ -1,0 +1,12 @@
+
+com.chapark.ivi.NavigationPresentationTest:..
+com.chapark.ivi.NaviRouteProbeTest:WAYPOINT_GUIDANCE: NavigationSnapshot(phase=VERIFY_WAYPOINT, message=충전 경유지 이름은 확인됐어요. 위치를 내비게이션에서 확인해 주세요., destinationName=난지캠핑장, routeConfirmed=false, confirmationSource=SDK)
+EXPLICIT_USER_CONFIRMATION: NavigationSnapshot(phase=GUIDING, message=직접 확인한 이마트 마포점 충전시설 경유 안내, destinationName=난지캠핑장, routeConfirmed=true, confirmationSource=USER)
+.
+
+Time: 18.856
+
+OK (3 tests)
+
+
+

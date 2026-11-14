@@ -1,6 +1,6 @@
 # 차Park 1차 MVP 개발 실행 계획 — PRD v0.2 반영
 
-2026-11-14 · 제품 기획 v2.1.1 + [MVP PRD v0.2](reference/CHAPARK_MVP_PRD_V0_2.md) · 현재 앱 IVI 0.5.1 (versionCode 4). 현재 구현 진행은 아래 상태와 [실행 기록](MVP_V0_2_EXECUTION.md)을 따른다. 새 PRD 전체 인수는 아직 완료되지 않았다.
+2026-11-14 · 제품 기획 v2.1.1 + [MVP PRD v0.2](reference/CHAPARK_MVP_PRD_V0_2.md) · 현재 앱 IVI 0.5.3 (versionCode 6). 현재 구현 진행은 아래 상태와 [실행 기록](MVP_V0_2_EXECUTION.md)을 따른다. 새 PRD 전체 인수는 아직 완료되지 않았다.
 
 기능 범위는 PRD를 적용하되 **시각 디자인은 사용자가 지정한 기존 현대차 Pleos 디자인 시스템을 우선**한다. [상세 차이·결정 대장](MVP_PRD_V0_2_REVIEW.md), [목표 화면 흐름](PRODUCT_FLOW_PLAN.md), [현재 구현](IMPLEMENTATION_STATUS.md)을 함께 본다. 이전 A~H 작업과 증거는 [이전 계획](history/20261114_before_mvp_prd_v02/IVI_WORK_PLAN.md), [실행 이력](V2_1_1_EXECUTION.md)에 보존한다.
 
@@ -50,6 +50,10 @@ D-01은 양의 인원 수(차량 정원 추정 없음), D-02는 기본 35%/5% �
 | V02-08 인수·패키징 | 테스트·release·README·증거 | V02-01~07 | 아래 AC 전체, 실제 새 release 대표 흐름/오프라인/실패, schema6 업그레이드와 새 설치, 비밀정보 점검·서명·해시·영상. 불충족 조건과 fallback을 제출 설명에 일치시킴 | `release(ivi): verify the MVP PRD acceptance matrix` |
 
 V02-01의 준비 상태는 `PENDING / COMPLETED / OMITTED` 등 동등한 표현을 사용하되 `required`와 분리한다. 정차에서만 변경할 수 있다. 조건 변경으로 사라진 항목의 과거 누락은 사건 기록으로 보존하고 새 준비 목록과 혼동하지 않는다.
+
+### 0.5.3 후속 진행
+
+V02-06/08: 내비 응답 단절 시 오래된 안내 표시를 해제하고 전경 복귀 때 확인한다. 응답 종류별 30초 경계·준비 보존·실제 SDK 정상 유지/시계 주입/observer 재연결 및 화면·경유 회귀를 완료했다. [0.5.3 검증](RELEASE_0_5_3.md). 실제 네트워크 단절 후 재부팅 없는 동일 여행 복구는 여전히 별도 미완료 항목이다. 대표 장소 3곳의 근거와 실차 검증도 유지한다.
 
 ## 기존 저장과 신호를 옮기는 규칙
 

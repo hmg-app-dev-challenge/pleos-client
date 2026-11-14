@@ -1,0 +1,12 @@
+
+com.chapark.ivi.NavigationRecoveryTest:NAVIGATION_RECOVERY: real GUIDING observed; keeping public SDK polling alive for 31 seconds
+NAVIGATION_RECOVERY: injected receipt age revoked guidance; observer reconnect follows, no route replacement
+NAVIGATION_RECOVERY: real SDK guidance recovered with exactly one route delivery across the session
+.
+
+Time: 39.12
+
+OK (1 test)
+
+
+
