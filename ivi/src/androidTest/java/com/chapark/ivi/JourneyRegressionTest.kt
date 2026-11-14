@@ -61,7 +61,7 @@ class JourneyRegressionTest {
         for(mode in listOf("light","dark","night")) {
             compose.runOnIdle{state=Journey(placeId="camp-nanji",dark=mode=="dark",step=if(mode=="night")5 else 0,restMode=if(mode=="night")"SLEEP" else "REST",
                 route=RoutePhase.ARRIVED,parked=true,nightDisplay=if(mode=="night")NightDisplay.NIGHT else NightDisplay.AUTO)}
-            val ink=when(mode){"dark"->Color.White;"night"->Color(0xFFFFE4BD);else->Color(0xFF131417)}
+            val ink=when(mode){"dark"->Color.White;"night"->Color.White;else->Color(0xFF131417)}
             compose.onNodeWithText("설정").performClick()
             assertInk("화면과 여행 계획을 관리하세요.",ink)
             assertInk("어두운 화면",ink)
@@ -89,7 +89,7 @@ class JourneyRegressionTest {
         }
         compose.runOnIdle{state=Journey(step=5,placeId="camp-nanji",route=RoutePhase.ARRIVED,parked=true)}
         compose.onNodeWithText("수면",useUnmergedTree=true).performScrollTo().performClick()
-        assertInk("수면",Color(0xFFFFE4BD))
+        assertInk("수면",Color.White)
         capture("night-segments")
     }
 

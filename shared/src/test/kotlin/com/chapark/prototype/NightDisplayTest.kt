@@ -60,4 +60,20 @@ class NightDisplayTest {
         assertEquals(NightDisplay.AUTO,NightDisplayPolicy.restore("future","SLEEP"))
         assertEquals(NightDisplay.STANDARD,NightDisplayPolicy.restore("STANDARD","SLEEP"))
     }
+    @Test fun starSceneRequiresConfirmedParkingAndLeavesJourneyChecksUntouched(){
+        val base=stay.copy(checked=setOf("drinking-water"),sleepChecks=setOf("parking"))
+        val stars=JourneyReducer.apply(base,JourneyEvent.RestMode("STARS"))
+        assertTrue(NightDisplayPolicy.starsActive(stars))
+        for(blocked in listOf(stars.copy(restricted=true),stars.copy(parked=false),stars.copy(route=RoutePhase.GUIDING),
+            stars.copy(step=4),stars.copy(step=6),stars.copy(completed=true))) {
+            assertFalse(NightDisplayPolicy.starsActive(blocked))
+        }
+        val returned=JourneyReducer.apply(stars,JourneyEvent.RestMode("REST"))
+        assertFalse(NightDisplayPolicy.starsActive(returned))
+        assertEquals(base.checked,returned.checked)
+        assertEquals(base.sleepChecks,returned.sleepChecks)
+        assertEquals(base.step,returned.step)
+        assertEquals(base.input,returned.input)
+        assertEquals(base.dark,returned.dark)
+    }
 }

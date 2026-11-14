@@ -14,6 +14,7 @@ data class NightWindow(val sunset:Instant,val sunrise:Instant) {
 
 /** Presentation only. Never changes the user's theme, journey facts, or vehicle controls. */
 object NightDisplayPolicy {
+    fun starsActive(s:Journey)=s.step==5 && s.canSleep && !s.restricted && !s.completed && s.restMode=="STARS"
     fun window(s:Journey):NightWindow?=runCatching {
         val schedule=s.input.schedule ?: return null
         val place=NavigationPlaces.find(s.placeId) ?: return null

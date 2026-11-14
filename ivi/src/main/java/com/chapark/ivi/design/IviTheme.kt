@@ -49,9 +49,8 @@ object IviType {
     val smallBody = style(26,34,FontWeight.Normal)
     val label = style(24,28,FontWeight.Normal)
 }
-private val night = IviColors(Color(0xFF19140F),Color(0xFF29221B),Color(0xFFFFE4BD),Color(0xFFE1C49D),Color(0xFFC4A681),Color(0xFF19140F))
 @Composable fun IviTheme(isDark:Boolean, nightMode:Boolean=false, content:@Composable ()->Unit) {
-    val colors = if(nightMode) night else if(isDark) dark else light
+    val colors = if(nightMode || isDark) dark else light
     CompositionLocalProvider(LocalIviColors provides colors, LocalContentColor provides colors.ink) {
         MaterialTheme(colorScheme=(if(colors.isDark) darkColorScheme() else lightColorScheme()).copy(
             background=colors.background,onBackground=colors.ink, surface=colors.surface,onSurface=colors.ink,

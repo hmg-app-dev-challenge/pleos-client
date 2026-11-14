@@ -36,7 +36,8 @@ private fun condition(value:Condition)=when(value){Condition.ALLOWED->"허용";C
     val atHome=s.step==0 || showHome
     val currentTime=now ?: journeyTime()
     val nightWindow=remember(s.placeId,s.input.schedule){NightDisplayPolicy.window(s)}
-    val nightActive=!atHome && NightDisplayPolicy.active(s,currentTime,nightWindow)
+    val starsActive=!atHome && NightDisplayPolicy.starsActive(s)
+    val nightActive=starsActive || (!atHome && NightDisplayPolicy.active(s,currentTime,nightWindow))
     var scenery by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf<String?>(null) }
     var confirmedOnly by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
     val candidates=PlaceEvidenceCatalog.filter(scenery?.let{Scenery.valueOf(it)},confirmedOnly,java.time.LocalDate.now())
@@ -45,11 +46,14 @@ private fun condition(value:Condition)=when(value){Condition.ALLOWED->"허용";C
     var deleteId by remember { mutableStateOf<String?>(null) }
     var settings by remember { mutableStateOf(false) }
     var confirm by remember { mutableStateOf<String?>(null) }
-    BackHandler(!atHome && !s.restricted && !settings && !history && deleteId==null && confirm==null) { showHome=true }
+    BackHandler(!atHome && !s.restricted && !settings && !history && deleteId==null && confirm==null) {
+        if(starsActive)send(JourneyEvent.RestMode("REST")) else showHome=true
+    }
     IviTheme(s.dark,nightMode=nightActive) {
         val p=LocalIviColors.current
         Surface(Modifier.fillMaxSize().testTag(if(nightActive)"night-screen" else "standard-screen"),color=p.background) {
             if(!ui.loaded) Box(Modifier.fillMaxSize(),contentAlignment=Alignment.Center) { Text("저장된 여행을 불러오고 있어요",style=IviType.title) }
+            else if(starsActive && ui.error==null) StarViewingScreen(s.place.name){send(JourneyEvent.RestMode("REST"))}
             else Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing).padding(horizontal=40.dp,vertical=24.dp)) {
                 Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(20.dp)) {
                     Text("차Park",style=IviType.title,modifier=Modifier.weight(1f))
@@ -430,8 +434,8 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
             }
         }
         5 -> {
-            Panel { s.siteItems.forEach {item->PreparationItem(s,item,send)} }
             IviSegments(listOf("휴식","수면","별 보기"),listOf("REST","SLEEP","STARS").indexOf(s.restMode).coerceAtLeast(0)){send(JourneyEvent.RestMode(listOf("REST","SLEEP","STARS")[it]))}
+            Panel { s.siteItems.forEach {item->PreparationItem(s,item,send)} }
             Panel {
                 Text("밤 화면",style=IviType.smallTitle)
                 IviSegments(listOf("자동 전환","기본 화면","밤 화면 켜기"),s.nightDisplay.ordinal){send(JourneyEvent.NightScreen(NightDisplay.entries[it]))}
