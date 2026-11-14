@@ -13,7 +13,11 @@ import com.chapark.app.data.NavigationPlace
 import com.chapark.app.data.ChargingPlace
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.channels.Channel
 import kotlin.math.abs
+
+data class NavigationDelivery(val id:String,val observedAt:Long,val returned:Boolean,val errorType:String?=null)
 
 enum class NavigationPhase { IDLE, CONNECTING, SEARCHING, VERIFY_WAYPOINT, GUIDING, ARRIVED, FAILED }
 data class NavigationSnapshot(val phase:NavigationPhase=NavigationPhase.IDLE,val message:String?=null,
@@ -30,6 +34,8 @@ class NavigationSession(context:Context):AutoCloseable {
     private var destinationMatches=false
     private var ready=false
     private var manualWaypointConfirmation:(()->Unit)?=null
+    private val deliveries=Channel<NavigationDelivery>(Channel.UNLIMITED)
+    val requestDeliveries=deliveries.receiveAsFlow()
     private val mutable=MutableStateFlow(NavigationSnapshot())
     val state=mutable.asStateFlow()
 
@@ -126,10 +132,18 @@ class NavigationSession(context:Context):AutoCloseable {
                 if(requestRoute){
                     val destination=RouteInfo(latitude=place.latitude,longitude=place.longitude,
                         displayLatitude=null,displayLongitude=null,poiName=place.place.name,poiId="",poiSubId="",address=place.address)
+                    val attempt=java.util.UUID.randomUUID().toString()
+                    try {
                     if(charger==null)n.requestRoute(destination)
                     else n.requestRouteWithWaypoints(RouteWithWaypointsRequest(destination,listOf(RequestWaypointInfo(
                         latitude=charger.latitude,longitude=charger.longitude,poiName=charger.name,
                         waypointIndex=WaypointIndex.FIRST,poiId="",address=charger.address,poiSubId="",poiProvider=""))))
+                    // Unit return only means the local call returned; guidance is confirmed separately.
+                    deliveries.trySend(NavigationDelivery(attempt,System.currentTimeMillis(),true))
+                    } catch(e:Exception) {
+                        deliveries.trySend(NavigationDelivery(attempt,System.currentTimeMillis(),false,e.javaClass.simpleName))
+                        throw e
+                    }
                 }
                 fun poll(){
                     if(token!=generation || mutable.value.phase==NavigationPhase.ARRIVED)return

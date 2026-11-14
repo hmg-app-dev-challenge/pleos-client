@@ -13,19 +13,21 @@ import com.chapark.ivi.prototype.*
 
 class IviActivity:ComponentActivity() {
     private lateinit var uxMonitor:UxMonitor
+    private lateinit var journeyModel:JourneyViewModel
     override fun onCreate(savedInstanceState:Bundle?) {
         super.onCreate(savedInstanceState)
         uxMonitor=createUxMonitor(this)
+        journeyModel=androidx.lifecycle.ViewModelProvider(this)[JourneyViewModel::class.java]
         setContent {
             val ux by uxMonitor.state.collectAsStateWithLifecycle()
-            val vm:JourneyViewModel=viewModel()
+            val vm=journeyModel
             val ui by vm.state.collectAsStateWithLifecycle()
             LaunchedEffect(ux.allowsDetailedInteraction,ui.loaded){if(ui.loaded)vm.send(JourneyEvent.Driving(!ux.allowsDetailedInteraction))}
             val presented=ui.copy(journey=ui.journey.copy(restricted=!ux.allowsDetailedInteraction))
             JourneyScreen(presented,vm::send,vm::openNavigation,vm::deleteHistory,vm::confirmWaypoint,vm::forkPlan,vm::loadPlans,vm::importPlan)
         }
     }
-    override fun onStart(){super.onStart();uxMonitor.start()}
-    override fun onStop(){uxMonitor.close();super.onStop()}
+    override fun onStart(){super.onStart();uxMonitor.start();journeyModel.startVehicleObservation()}
+    override fun onStop(){uxMonitor.close();journeyModel.stopVehicleObservation();super.onStop()}
     override fun onDestroy(){uxMonitor.close();super.onDestroy()}
 }

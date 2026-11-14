@@ -13,7 +13,7 @@ import com.chapark.app.domain.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-data class BatterySnapshot(val value:Int?=null,val status:ReadingStatus=ReadingStatus.UNKNOWN,val source:Source=Source.UNKNOWN,val receivedAt:Long?=null,val delivery:String="none")
+data class BatterySnapshot(val value:Int?=null,val status:ReadingStatus=ReadingStatus.UNKNOWN,val source:Source=Source.UNKNOWN,val receivedAt:Long?=null,val delivery:String="none",val capability:BatteryCapability=BatteryCapability.UNKNOWN)
 /** Public SOC API only, verified against Virtual Console's 0..100 percent contract. */
 class BatterySession(context:Context):AutoCloseable {
     private val context=context.applicationContext
@@ -27,12 +27,13 @@ class BatterySession(context:Context):AutoCloseable {
     fun start(){
         close();val token=generation
         val source=if(Build.HARDWARE.contains("ranchu") || Build.HARDWARE.contains("goldfish"))Source.EMULATOR else Source.SDK
+        mutable.value=BatterySnapshot(source=source)
         fun post(block:()->Unit){handler.post{if(token==generation)block()}}
         fun receive(value:Int?,delivery:String)=post{
-            mutable.value=if(value!=null && value in 0..100)BatterySnapshot(value,ReadingStatus.AVAILABLE,source,System.currentTimeMillis(),delivery)
-                else BatterySnapshot(status=ReadingStatus.INVALID,source=source)
+            mutable.value=if(value!=null && value in 0..100)BatterySnapshot(value,ReadingStatus.AVAILABLE,source,System.currentTimeMillis(),delivery,mutable.value.capability)
+                else mutable.value.copy(value=null,status=ReadingStatus.INVALID,source=source)
         }
-        fun failed(e:Exception)=post{mutable.value=BatterySnapshot(status=BatteryErrors.status(e),source=source)}
+        fun failed(e:Exception)=post{mutable.value=mutable.value.copy(value=null,status=BatteryErrors.status(e),source=source)}
         if(context.checkSelfPermission("pleos.car.permission.CAR_ENERGY")!=PackageManager.PERMISSION_GRANTED){
             mutable.value=BatterySnapshot(status=ReadingStatus.PERMISSION_DENIED,source=source);return
         }
@@ -41,8 +42,9 @@ class BatterySession(context:Context):AutoCloseable {
             val b=client.getEvBattery();battery=b
             b.checkEvBatteryStateOfChargeCapabilities({cap->post{
                 if(cap.accessType !in setOf(AccessType.READ,AccessType.READ_WRITE)){
-                    mutable.value=BatterySnapshot(status=ReadingStatus.UNSUPPORTED,source=source)
+                    mutable.value=BatterySnapshot(status=ReadingStatus.UNSUPPORTED,source=source,capability=BatteryCapability.UNSUPPORTED)
                 }else{
+                    mutable.value=mutable.value.copy(capability=if(cap.accessType==AccessType.READ)BatteryCapability.READ else BatteryCapability.READ_WRITE)
                     val l=object:EvBatteryStateOfChargeListener {
                         override fun onEvBatteryStateOfChargeUpdated(value:Int?)=receive(value,"subscription")
                         override fun onFailed(e:Exception)=failed(e)
@@ -60,8 +62,8 @@ class BatterySession(context:Context):AutoCloseable {
             fun watchdog(){
                 if(token!=generation)return
                 val value=mutable.value
-                if(value.status==ReadingStatus.UNKNOWN || (value.receivedAt!=null && System.currentTimeMillis()-value.receivedAt>45_000))
-                    mutable.value=BatterySnapshot(status=ReadingStatus.STALE,source=source)
+                if(value.status==ReadingStatus.UNKNOWN || (value.status==ReadingStatus.AVAILABLE && value.receivedAt!=null && System.currentTimeMillis()-value.receivedAt>45_000))
+                    mutable.value=value.copy(value=null,status=ReadingStatus.STALE,source=source)
                 handler.postDelayed({watchdog()},10_000)
             }
             handler.postDelayed({watchdog()},10_000)
@@ -71,5 +73,6 @@ class BatterySession(context:Context):AutoCloseable {
         generation++;handler.removeCallbacksAndMessages(null)
         runCatching{listener?.let{battery?.unregisterEvBatteryStateOfCharge(it)}}
         runCatching{vehicle?.release()};listener=null;battery=null;vehicle=null
+        mutable.value=BatterySnapshot(status=ReadingStatus.DISCONNECTED)
     }
 }

@@ -15,6 +15,14 @@ data class JourneyRecord(
     val placeMemory:PlaceMemory?=null,
 )
 object JourneyJournal {
+    fun recordNavigationDelivery(state:Journey,id:String,now:Long,returned:Boolean,errorType:String?=null):Journey {
+        if(state.step!=4 || state.completed || state.records.any{it.subject==id && it.kind.startsWith("ROUTE_CALL_")})return state
+        return state.copy(records=state.records+JourneyRecord(
+            if(returned)"ROUTE_CALL_RETURNED" else "ROUTE_CALL_FAILED",now,"SDK",subject=id,
+            label=if(returned)"요청 호출 완료 · 안내 시작은 별도 확인" else "요청 호출 실패 · ${errorType ?: "원인 미확인"}",
+            placeId=state.placeId))
+    }
+
     fun apply(old:Journey,event:JourneyEvent,now:Long,origin:String="USER"):Journey {
         require(now>=0)
         val next=JourneyReducer.apply(old,event)

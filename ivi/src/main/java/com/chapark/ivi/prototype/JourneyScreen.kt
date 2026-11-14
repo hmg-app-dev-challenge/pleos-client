@@ -156,7 +156,7 @@ private fun condition(value:Condition)=when(value){Condition.ALLOWED->"허용";C
                     JourneyMemorySummary(trip.records,trip.memory)
                     trip.records.filter{it.subject==null}.sortedBy{it.eventAtMillis ?: it.observedAtMillis}.forEach{record->
                         val time=java.time.Instant.ofEpochMilli(record.eventAtMillis ?: record.observedAtMillis).atZone(runCatching{java.time.ZoneId.of(trip.zone)}.getOrDefault(java.time.ZoneOffset.UTC)).toLocalTime().withNano(0)
-                        val label=when(record.kind){"PLACE_CONTEXT"->"장소·풍경 기록";"PLACE_INFO"->"장소 자료 · 당시 확인 정보";"SUNSET"->"일몰 · 계산";"SUNRISE"->"일출 · 계산";"PLACE_SELECTED"->"장소 선택";"CHARGING_PLAN"->"충전 경유 계획";"PREPARATION_COMPLETED"->"출발 준비 확인";"ROUTE_REQUESTED"->"길 안내 요청";"ROUTE_FAILED"->"길 안내 확인 실패";"GUIDANCE_OBSERVED"->"길 안내 확인";"ARRIVAL"->"도착 확인";"PARKING_CONFIRMED"->"주차 확인";"TRIP_COMPLETED"->"철수 완료";else->"상태 확인"}
+                        val label=when(record.kind){"PLACE_CONTEXT"->"장소·풍경 기록";"PLACE_INFO"->"장소 자료 · 당시 확인 정보";"SUNSET"->"일몰 · 계산";"SUNRISE"->"일출 · 계산";"PLACE_SELECTED"->"장소 선택";"CHARGING_PLAN"->"충전 경유 계획";"PREPARATION_COMPLETED"->"출발 준비 확인";"ROUTE_REQUESTED"->"길 안내 요청";"ROUTE_CALL_RETURNED"->"내비 요청 호출 완료";"ROUTE_CALL_FAILED"->"내비 요청 호출 실패";"ROUTE_FAILED"->"길 안내 확인 실패";"GUIDANCE_OBSERVED"->"길 안내 확인";"ARRIVAL"->"도착 확인";"PARKING_CONFIRMED"->"주차 확인";"TRIP_COMPLETED"->"철수 완료";else->"상태 확인"}
                         Text("$time · $label",style=IviType.smallBody)
                     record.label?.let{Text(it,style=IviType.label)}
                     }
@@ -437,7 +437,7 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
                 val zone=runCatching{java.time.ZoneId.of(s.input.schedule?.zoneId ?: "UTC")}.getOrDefault(java.time.ZoneOffset.UTC)
                 s.records.filter{it.subject==null}.sortedBy{it.eventAtMillis ?: it.observedAtMillis}.forEach { record->
                     val label=when(record.kind){"PLACE_CONTEXT"->"장소·풍경 기록";"PLACE_INFO"->"장소 자료 · 당시 확인 정보";"SUNSET"->"일몰 · 계산";"SUNRISE"->"일출 · 계산";"PLACE_SELECTED"->"장소 선택";"CHARGING_PLAN"->"충전 경유 계획";
-                        "PREPARATION_COMPLETED"->"출발 준비 확인";"ROUTE_REQUESTED"->"길 안내 요청";"ROUTE_FAILED"->"길 안내 확인 실패"
+                        "PREPARATION_COMPLETED"->"출발 준비 확인";"ROUTE_REQUESTED"->"길 안내 요청";"ROUTE_CALL_RETURNED"->"내비 요청 호출 완료";"ROUTE_CALL_FAILED"->"내비 요청 호출 실패";"ROUTE_FAILED"->"길 안내 확인 실패"
                         "GUIDANCE_OBSERVED"->"길 안내 확인";"ARRIVAL"->if(record.origin=="SDK")"도착 알림 수신" else "도착 직접 확인"
                         "PARKING_CONFIRMED"->"주차 직접 확인";"TRIP_COMPLETED"->"철수 확인 완료";else->"여행 상태 확인"
                     }
@@ -633,6 +633,12 @@ private fun sourceLabel(source:Source)=when(source){Source.SDK->"차량";Source.
 @Composable private fun BatteryReading(s:Journey,send:(JourneyEvent)->Unit){
     Text("현재 배터리 · ${sourceLabel(s.socSource)}",style=IviType.smallTitle)
     Text(s.soc?.let{"$it%"} ?: "확인 필요",style=IviType.title)
+    Text(when(s.batteryCapability){
+        BatteryCapability.READ, BatteryCapability.READ_WRITE -> "차량 배터리 조회 지원"
+        BatteryCapability.UNSUPPORTED -> "차량에서 잔량을 제공하지 않아요. 직접 확인한 값을 입력할 수 있어요."
+        BatteryCapability.UNKNOWN -> "차량 배터리 조회 지원 여부 확인 필요"
+    },style=IviType.label)
+    if(s.socSource!=Source.MANUAL)s.socReceivedAtMillis?.let{Text("마지막 수신 · ${java.time.Instant.ofEpochMilli(it).atZone(java.time.ZoneId.systemDefault()).format(java.time.format.DateTimeFormatter.ofPattern("MM-dd HH:mm"))}",style=IviType.label)}
     if(s.socSource==Source.MANUAL) {
         Text("직접 확인한 잔량이에요. 차량의 현재 잔량이 달라지면 다시 입력해 주세요.",style=IviType.label)
         s.socReceivedAtMillis?.let{Text("입력 시각 · ${java.time.Instant.ofEpochMilli(it).atZone(java.time.ZoneId.systemDefault()).format(java.time.format.DateTimeFormatter.ofPattern("MM-dd HH:mm"))}",style=IviType.label)}

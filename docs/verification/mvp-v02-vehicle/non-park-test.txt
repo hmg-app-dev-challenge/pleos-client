@@ -1,0 +1,10 @@
+
+com.chapark.ivi.CarUxMonitorTest:VEHICLE_GATE: UxSnapshot(mode=RESTRICTED, restrictions=80, reason=차량 UX 제한으로 상세 조작이 잠겼습니다, parking=NOT_PARK)
+.
+
+Time: 0.118
+
+OK (1 test)
+
+
+

@@ -80,6 +80,7 @@ class JourneyFlowTest {
             val finished=store.load().first
             org.junit.Assert.assertTrue(finished.records.any{it.kind=="GUIDANCE_OBSERVED" && it.origin=="SDK"})
             org.junit.Assert.assertEquals(1,finished.records.count{it.kind=="TRIP_COMPLETED"})
+            org.junit.Assert.assertEquals(1,finished.records.count{it.kind=="ROUTE_CALL_RETURNED"})
             org.junit.Assert.assertNotNull(store.archivedRecord(finished.tripId!!))
             val memory=store.history().single{it.id==finished.tripId}.memory!!
             org.junit.Assert.assertEquals(6,memory.sleepChecked)

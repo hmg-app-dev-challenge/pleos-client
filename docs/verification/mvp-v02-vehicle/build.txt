@@ -1,0 +1,174 @@
+> Task :shared:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :shared:processResources NO-SOURCE
+> Task :shared:processTestResources NO-SOURCE
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+> Task :app:generateDebugResValues UP-TO-DATE
+> Task :app:mapDebugSourceSetPaths UP-TO-DATE
+> Task :app:generateDebugResources UP-TO-DATE
+> Task :app:mergeDebugResources UP-TO-DATE
+> Task :app:packageDebugResources UP-TO-DATE
+> Task :app:parseDebugLocalResources UP-TO-DATE
+> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+> Task :app:processDebugMainManifest UP-TO-DATE
+> Task :app:processDebugManifest UP-TO-DATE
+> Task :app:processDebugManifestForPackage UP-TO-DATE
+> Task :app:processDebugResources UP-TO-DATE
+> Task :app:javaPreCompileDebug UP-TO-DATE
+> Task :app:preDebugUnitTestBuild UP-TO-DATE
+> Task :app:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :ivi:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :ivi:preBuild UP-TO-DATE
+> Task :ivi:preDebugBuild UP-TO-DATE
+> Task :ivi:generateDebugBuildConfig UP-TO-DATE
+> Task :ivi:checkDebugAarMetadata UP-TO-DATE
+> Task :ivi:generateDebugResValues UP-TO-DATE
+> Task :ivi:mapDebugSourceSetPaths UP-TO-DATE
+> Task :ivi:generateDebugResources UP-TO-DATE
+> Task :ivi:mergeDebugResources UP-TO-DATE
+> Task :ivi:packageDebugResources UP-TO-DATE
+> Task :ivi:parseDebugLocalResources UP-TO-DATE
+> Task :ivi:createDebugCompatibleScreenManifests UP-TO-DATE
+> Task :ivi:extractDeepLinksDebug UP-TO-DATE
+> Task :ivi:processDebugMainManifest UP-TO-DATE
+> Task :ivi:processDebugManifest UP-TO-DATE
+> Task :ivi:processDebugManifestForPackage UP-TO-DATE
+> Task :ivi:processDebugResources UP-TO-DATE
+> Task :ivi:javaPreCompileDebug UP-TO-DATE
+> Task :ivi:preDebugUnitTestBuild UP-TO-DATE
+> Task :ivi:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :ivi:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :ivi:mergeDebugShaders UP-TO-DATE
+> Task :ivi:compileDebugShaders NO-SOURCE
+> Task :ivi:generateDebugAssets UP-TO-DATE
+> Task :ivi:mergeDebugAssets UP-TO-DATE
+> Task :ivi:compressDebugAssets UP-TO-DATE
+> Task :ivi:desugarDebugFileDependencies UP-TO-DATE
+> Task :ivi:checkDebugDuplicateClasses UP-TO-DATE
+> Task :ivi:mergeExtDexDebug UP-TO-DATE
+> Task :ivi:mergeDebugJniLibFolders UP-TO-DATE
+> Task :ivi:validateSigningDebug UP-TO-DATE
+> Task :ivi:writeDebugAppMetadata UP-TO-DATE
+> Task :ivi:writeDebugSigningConfigVersions UP-TO-DATE
+> Task :ivi:preDebugAndroidTestBuild SKIPPED
+> Task :ivi:processDebugAndroidTestManifest UP-TO-DATE
+> Task :ivi:generateDebugAndroidTestBuildConfig UP-TO-DATE
+> Task :ivi:checkDebugAndroidTestAarMetadata UP-TO-DATE
+> Task :ivi:generateDebugAndroidTestResValues UP-TO-DATE
+> Task :ivi:mapDebugAndroidTestSourceSetPaths UP-TO-DATE
+> Task :ivi:generateDebugAndroidTestResources UP-TO-DATE
+> Task :ivi:mergeDebugAndroidTestResources UP-TO-DATE
+> Task :ivi:processDebugAndroidTestResources UP-TO-DATE
+> Task :ivi:javaPreCompileDebugAndroidTest UP-TO-DATE
+> Task :ivi:mergeDebugAndroidTestShaders UP-TO-DATE
+> Task :ivi:compileDebugAndroidTestShaders NO-SOURCE
+> Task :ivi:generateDebugAndroidTestAssets UP-TO-DATE
+> Task :ivi:mergeDebugAndroidTestAssets UP-TO-DATE
+> Task :ivi:compressDebugAndroidTestAssets UP-TO-DATE
+> Task :ivi:desugarDebugAndroidTestFileDependencies UP-TO-DATE
+> Task :ivi:checkDebugAndroidTestDuplicateClasses UP-TO-DATE
+> Task :ivi:mergeExtDexDebugAndroidTest UP-TO-DATE
+> Task :ivi:mergeDebugAndroidTestJniLibFolders UP-TO-DATE
+> Task :ivi:validateSigningDebugAndroidTest UP-TO-DATE
+> Task :ivi:writeDebugAndroidTestSigningConfigVersions UP-TO-DATE
+> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :app:mergeDebugShaders UP-TO-DATE
+> Task :app:compileDebugShaders NO-SOURCE
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :app:mergeDebugAssets UP-TO-DATE
+> Task :app:compressDebugAssets UP-TO-DATE
+> Task :app:desugarDebugFileDependencies UP-TO-DATE
+> Task :app:checkDebugDuplicateClasses UP-TO-DATE
+> Task :app:mergeExtDexDebug UP-TO-DATE
+> Task :app:mergeDebugJniLibFolders UP-TO-DATE
+> Task :app:validateSigningDebug UP-TO-DATE
+> Task :app:writeDebugAppMetadata UP-TO-DATE
+> Task :app:writeDebugSigningConfigVersions UP-TO-DATE
+> Task :ivi:extractProguardFiles UP-TO-DATE
+> Task :app:preDebugAndroidTestBuild SKIPPED
+> Task :app:generateDebugAndroidTestResValues UP-TO-DATE
+> Task :app:extractProguardFiles UP-TO-DATE
+> Task :shared:compileKotlin
+> Task :shared:compileJava NO-SOURCE
+> Task :shared:classes UP-TO-DATE
+> Task :shared:jar
+> Task :ivi:mergeDebugNativeLibs UP-TO-DATE
+> Task :ivi:stripDebugDebugSymbols UP-TO-DATE
+> Task :ivi:mergeLibDexDebugAndroidTest UP-TO-DATE
+> Task :ivi:mergeDebugAndroidTestNativeLibs NO-SOURCE
+> Task :ivi:stripDebugAndroidTestDebugSymbols NO-SOURCE
+> Task :app:mergeDebugNativeLibs UP-TO-DATE
+> Task :app:stripDebugDebugSymbols UP-TO-DATE
+> Task :ivi:mergeLibDexDebug
+> Task :app:compileDebugKotlin
+> Task :app:compileDebugJavaWithJavac NO-SOURCE
+> Task :app:bundleDebugClassesToRuntimeJar UP-TO-DATE
+> Task :app:bundleDebugClassesToCompileJar UP-TO-DATE
+> Task :app:mergeLibDexDebug
+> Task :app:processDebugJavaRes UP-TO-DATE
+> Task :app:dexBuilderDebug UP-TO-DATE
+> Task :app:mergeDebugGlobalSynthetics UP-TO-DATE
+> Task :app:mergeProjectDexDebug UP-TO-DATE
+> Task :app:generateDebugAndroidTestLintModel
+> Task :app:generateDebugLintReportModel
+> Task :app:generateDebugUnitTestLintModel
+> Task :app:compileDebugUnitTestKotlin
+> Task :app:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :app:processDebugUnitTestJavaRes UP-TO-DATE
+> Task :app:mergeDebugJavaResource
+> Task :shared:compileTestKotlin
+> Task :app:testDebugUnitTest
+> Task :shared:compileTestJava NO-SOURCE
+> Task :shared:testClasses UP-TO-DATE
+> Task :shared:test
+> Task :app:packageDebug
+> Task :app:createDebugApkListingFileRedirect UP-TO-DATE
+> Task :app:assembleDebug
+> Task :app:lintAnalyzeDebugUnitTest
+> Task :ivi:compileDebugKotlin
+> Task :ivi:compileDebugJavaWithJavac UP-TO-DATE
+> Task :ivi:processDebugJavaRes UP-TO-DATE
+> Task :ivi:bundleDebugClassesToRuntimeJar
+> Task :ivi:bundleDebugClassesToCompileJar
+> Task :app:lintAnalyzeDebugAndroidTest
+> Task :ivi:dexBuilderDebug
+> Task :ivi:mergeDebugGlobalSynthetics UP-TO-DATE
+> Task :ivi:generateDebugAndroidTestLintModel
+> Task :ivi:generateDebugLintReportModel
+> Task :ivi:generateDebugUnitTestLintModel
+> Task :ivi:mergeProjectDexDebug
+> Task :ivi:mergeDebugJavaResource
+> Task :ivi:compileDebugUnitTestKotlin
+> Task :ivi:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :ivi:processDebugUnitTestJavaRes UP-TO-DATE
+> Task :app:lintAnalyzeDebug
+> Task :ivi:compileDebugAndroidTestKotlin
+> Task :ivi:testDebugUnitTest
+> Task :ivi:compileDebugAndroidTestJavaWithJavac UP-TO-DATE
+> Task :ivi:dexBuilderDebugAndroidTest
+> Task :ivi:mergeDebugAndroidTestGlobalSynthetics UP-TO-DATE
+> Task :ivi:processDebugAndroidTestJavaRes UP-TO-DATE
+> Task :ivi:mergeDebugAndroidTestJavaResource UP-TO-DATE
+> Task :ivi:mergeProjectDexDebugAndroidTest
+> Task :ivi:packageDebug
+> Task :ivi:createDebugApkListingFileRedirect UP-TO-DATE
+> Task :ivi:assembleDebug
+> Task :ivi:packageDebugAndroidTest
+> Task :ivi:createDebugAndroidTestApkListingFileRedirect UP-TO-DATE
+> Task :ivi:assembleDebugAndroidTest
+> Task :ivi:lintAnalyzeDebugUnitTest
+> Task :app:lintReportDebug UP-TO-DATE
+> Task :app:lintDebug
+> Task :ivi:lintAnalyzeDebugAndroidTest
+> Task :ivi:lintAnalyzeDebug
+
+> Task :ivi:lintReportDebug
+Wrote HTML report to file:///Users/woongaaaa/Downloads/cha-park/ivi/build/reports/lint-results-debug.html
+
+> Task :ivi:lintDebug
+
+BUILD SUCCESSFUL in 11s
+135 actionable tasks: 39 executed, 96 up-to-date

@@ -15,6 +15,10 @@ class UxPolicyTest {
     }
     @Test fun onlyKnownUnrestrictedSignalAllowsDetails() {
         assertEquals(UxMode.AVAILABLE, UxPolicy.evaluate(false, 0))
-        assertTrue(UxSnapshot(UxMode.AVAILABLE).allowsDetailedInteraction)
+        assertFalse(UxSnapshot(UxMode.AVAILABLE).allowsDetailedInteraction)
+        assertFalse(UxSnapshot(UxMode.AVAILABLE, parking=ParkingSignal.NOT_PARK).allowsDetailedInteraction)
+        assertTrue(UxSnapshot(UxMode.AVAILABLE, parking=ParkingSignal.PARK).allowsDetailedInteraction)
+        for (mode in listOf(UxMode.UNKNOWN, UxMode.RESTRICTED))
+            assertFalse(UxSnapshot(mode, parking=ParkingSignal.PARK).allowsDetailedInteraction)
     }
 }

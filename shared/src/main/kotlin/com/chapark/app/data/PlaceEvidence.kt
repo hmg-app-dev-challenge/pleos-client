@@ -18,7 +18,7 @@ data class PlaceEvidence(val scenery:Scenery,val facts:List<Evidence>,val parkin
     }
 }
 object PlaceEvidenceCatalog {
-    const val VERSION="2026-11-14.2"
+    const val VERSION="2026-11-14.3"
     private const val POLICY="https://reservation.knps.or.kr/contents/usagePolicy.do"
     private const val MONG="https://reservation.knps.or.kr/contents/C/serviceGuide.do?deptId=B081002&parkId=B08&prdDvcd=C"
     fun find(id:String):PlaceEvidence=AcceptedCatalog.snapshot?.evidence?.get(id) ?: when(id){

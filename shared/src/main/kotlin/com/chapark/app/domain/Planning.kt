@@ -2,6 +2,7 @@ package com.chapark.app.domain
 
 enum class Condition { ALLOWED, RESTRICTED, UNKNOWN }
 enum class Source { SDK, MANUAL, EMULATOR, DEMO, UNKNOWN }
+enum class BatteryCapability { UNKNOWN, READ, READ_WRITE, UNSUPPORTED }
 enum class ReadingStatus { AVAILABLE, STALE, UNSUPPORTED, PERMISSION_DENIED, DISCONNECTED, DRIVING_RESTRICTED, INVALID, UNKNOWN }
 
 /** Only a verified, normalized percentage may enter the decision engine. */
@@ -20,7 +21,7 @@ enum class CookingPlan(val label:String) { NONE("취사 안 함"), SIMPLE("간�
 }
 /** Compatibility defaults, not vehicle capacity or a safety threshold. Final MVP policies remain configurable. */
 object TripPolicy {
-    const val RULE_VERSION="mvp-v02-rules-2"
+    const val RULE_VERSION="mvp-v02-rules-3"
     const val MAX_PEOPLE=Int.MAX_VALUE
     const val DEFAULT_SOC_THRESHOLD=35
     const val DEFAULT_END_HOUR=10
@@ -47,8 +48,9 @@ fun preparationProgress(items:List<DecisionItem>,checked:Set<String>,omitted:Set
 object PlanningRules {
     const val DEMO_SOC_THRESHOLD = 35.0
     fun evaluate(place: Place, input: TripInput, soc: SocReading): List<DecisionItem> = buildList {
-        if (soc.status==ReadingStatus.UNSUPPORTED) Unit
-        else if (!soc.usable) add(DecisionItem("battery-check", Group.BEFORE, "배터리 확인 필요", "배터리 잔량을 확인하지 못해 충전 경유를 판단할 수 없어요."))
+        add(DecisionItem("battery-threshold", Group.BEFORE, "배터리 확인 기준 ${input.batteryThreshold}% 확인",
+            "이번 여행에서 잔량이 ${input.batteryThreshold}% 미만이면 충전 경유를 검토해요. 사용 가능 시간이나 안전을 보장하는 기준은 아니에요."))
+        if (!soc.usable) add(DecisionItem("battery-check", Group.BEFORE, "배터리 확인 필요", "배터리 잔량을 확인하지 못해 충전 경유를 판단할 수 없어요."))
         else if (soc.percent!! < input.batteryThreshold)
             add(DecisionItem("charge-review", Group.BEFORE, "충전 경유 검토", "현재 잔량이 확인 기준 ${input.batteryThreshold}% 미만이에요. 출발 전 충전 계획을 확인하세요."))
         when (place.overnight) {

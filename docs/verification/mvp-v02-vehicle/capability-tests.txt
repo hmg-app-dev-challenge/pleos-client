@@ -1,0 +1,11 @@
+
+com.chapark.ivi.BatterySessionTest:BATTERY: BatterySnapshot(value=20, status=AVAILABLE, source=EMULATOR, receivedAt=1794623379639, delivery=subscription, capability=READ)
+.
+com.chapark.ivi.BatteryCapabilityStoreTest:..
+
+Time: 1.046
+
+OK (3 tests)
+
+
+

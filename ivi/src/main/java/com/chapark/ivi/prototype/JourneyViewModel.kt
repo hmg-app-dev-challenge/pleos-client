@@ -28,6 +28,7 @@ class JourneyViewModel(app:Application):AndroidViewModel(app) {
         data object ForkPlan:Command
         data class DeleteHistory(val id:String):Command
         data class Event(val value:JourneyEvent):Command
+        data class Delivery(val value:NavigationDelivery):Command
         data class Navigation(val value:NavigationSnapshot):Command
     }
     private var importPlans:List<SavedPlan> = emptyList()
@@ -39,8 +40,8 @@ class JourneyViewModel(app:Application):AndroidViewModel(app) {
         viewModelScope.launch {
             while(true){kotlinx.coroutines.delay(15_000);val status=sync.sync();mutable.value=mutable.value.copy(syncStatus=status,history=store.history());val catalogStatus=catalog.refresh();mutable.value=mutable.value.copy(catalogStatus=catalogStatus)}
         }
-        battery.start()
-        viewModelScope.launch {battery.state.collect{b->commands.send(Command.Event(JourneyEvent.Battery(b.value,b.status,b.source,b.receivedAt)))}}
+        viewModelScope.launch {battery.state.collect{b->commands.send(Command.Event(JourneyEvent.Battery(b.value,b.status,b.source,b.receivedAt,b.capability)))}}
+        viewModelScope.launch {navigation.requestDeliveries.collect{commands.send(Command.Delivery(it))}}
         viewModelScope.launch {navigation.state.collect {commands.send(Command.Navigation(it))}}
         viewModelScope.launch {
             try {
@@ -70,7 +71,7 @@ class JourneyViewModel(app:Application):AndroidViewModel(app) {
                     if(mutable.value.journey.restricted || mutable.value.journey.step!=0)continue
                     val plan=importPlans.find{it.id==command.id} ?: continue
                     val b=battery.state.value
-                    persist(JourneyReducer.apply(plan.asNewJourney(mutable.value.journey.dark),JourneyEvent.Battery(b.value,b.status,b.source,b.receivedAt)))
+                    persist(JourneyReducer.apply(plan.asNewJourney(mutable.value.journey.dark),JourneyEvent.Battery(b.value,b.status,b.source,b.receivedAt,b.capability)))
                     mutable.value=mutable.value.copy(savedPlans=emptyList(),notice="계획 조건을 가져왔어요. 준비와 현장 확인은 이번 여행에서 다시 진행합니다.")
                     continue
                 }
@@ -84,6 +85,12 @@ class JourneyViewModel(app:Application):AndroidViewModel(app) {
                     if(mutable.value.journey.restricted)continue
                     try{store.deleteHistory(command.id);mutable.value=mutable.value.copy(history=store.history())}
                     catch(e:Exception){mutable.value=mutable.value.copy(notice="기록을 삭제하지 못했어요. 다시 시도해 주세요.")}
+                    continue
+                }
+                if(command is Command.Delivery){
+                    val d=command.value
+                    val next=JourneyJournal.recordNavigationDelivery(mutable.value.journey,d.id,d.observedAt,d.returned,d.errorType)
+                    if(next!=mutable.value.journey)persist(next)
                     continue
                 }
                 if(command is Command.Navigation){
@@ -118,7 +125,7 @@ class JourneyViewModel(app:Application):AndroidViewModel(app) {
                 var reduced=realPlace(JourneyJournal.apply(current,event,System.currentTimeMillis(),if(event is JourneyEvent.Battery)"SDK" else "USER"))
                 if(event==JourneyEvent.NewTrip || event==JourneyEvent.ResetScenario){
                     val b=battery.state.value
-                    reduced=JourneyReducer.apply(reduced,JourneyEvent.Battery(b.value,b.status,b.source,b.receivedAt))
+                    reduced=JourneyReducer.apply(reduced,JourneyEvent.Battery(b.value,b.status,b.source,b.receivedAt,b.capability))
                 }
                 val next=if(reduced.tripId==null)reduced.copy(tripId=java.util.UUID.randomUUID().toString()) else reduced
                 if(next==old && event!=JourneyEvent.ResetScenario)continue
@@ -140,6 +147,8 @@ class JourneyViewModel(app:Application):AndroidViewModel(app) {
         try {store.save(next);mutable.value=mutable.value.copy(saving=false,error=null,history=store.history())}
         catch(e:Exception){mutable.value=mutable.value.copy(saving=false,error="저장하지 못했습니다. 저장 공간을 확인한 뒤 다시 실행해 주세요.")}
     }
+    fun startVehicleObservation(){battery.start()}
+    fun stopVehicleObservation(){battery.close()}
     fun send(event:JourneyEvent){if(mutable.value.loaded)commands.trySend(Command.Event(event))}
     fun loadPlans(){commands.trySend(Command.LoadPlans)}
     fun importPlan(id:String){commands.trySend(Command.ImportPlan(id))}

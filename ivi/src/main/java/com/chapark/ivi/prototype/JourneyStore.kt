@@ -27,12 +27,12 @@ class JourneyStore(context:Context) {
         val p=store.data.first()
         val decoded=decode(p)
         val result=decoded.first.let{if(it.tripId==null)it.copy(tripId=UUID.randomUUID().toString()) else it} to decoded.second
-        if((p[intPreferencesKey("schema")] ?: 1)<10 || decoded.first.tripId==null)save(result.first)
+        if((p[intPreferencesKey("schema")] ?: 1)<11 || decoded.first.tripId==null)save(result.first)
         return result
     }
     internal fun decode(p:Preferences):Pair<Journey,String?> {
         val version=p[intPreferencesKey("schema")] ?: 1
-        require(version in 1..10) { "저장 형식을 읽을 수 없습니다. 초기화 후 시작해 주세요." }
+        require(version in 1..11) { "저장 형식을 읽을 수 없습니다. 초기화 후 시작해 주세요." }
         fun bool(k:String,default:Boolean=false)=p[booleanPreferencesKey(k)] ?: default
         fun int(k:String,default:Int)=p[intPreferencesKey(k)] ?: default
         fun checks(k:String)=p[stringSetPreferencesKey(k)] ?: emptySet()
@@ -57,6 +57,8 @@ class JourneyStore(context:Context) {
             sleepChecks=checks("sleep").intersect(JourneyChecklists.sleep(checklistVersion).keys),exitChecks=checks("exit").intersect(JourneyChecklists.exit(checklistVersion).keys),
             checklistVersion=checklistVersion,
             sleepReady=bool("sleepReady"),completed=bool("completed"),restricted=bool("restricted"),dark=bool("dark"),
+            batteryCapability=runCatching{com.chapark.app.domain.BatteryCapability.valueOf(p[stringPreferencesKey("batteryCapability")] ?: "UNKNOWN")}.getOrDefault(com.chapark.app.domain.BatteryCapability.UNKNOWN),
+            vehicleBatteryStatus=runCatching{ReadingStatus.valueOf(p[stringPreferencesKey("vehicleBatteryStatus")] ?: "UNKNOWN")}.getOrDefault(ReadingStatus.UNKNOWN),
             batteryStatus=runCatching{ReadingStatus.valueOf(p[stringPreferencesKey("batteryStatus")] ?: "UNKNOWN")}.getOrDefault(ReadingStatus.UNKNOWN),
             socSource=if(version==1)Source.DEMO else runCatching { Source.valueOf(p[stringPreferencesKey("socSource")] ?: "UNKNOWN") }.getOrDefault(Source.UNKNOWN),
             socReceivedAtMillis=p[longPreferencesKey("socReceivedAt")])
@@ -161,7 +163,7 @@ class JourneyStore(context:Context) {
         p[stringPreferencesKey("syncRevisions")]=syncRevisions
         p[stringPreferencesKey("archive")]=archive.toString()
         p[stringSetPreferencesKey("deletedArchives")]=deleted
-        p[intPreferencesKey("schema")]=10
+        p[intPreferencesKey("schema")]=11
         p[intPreferencesKey("checklistVersion")]=s.checklistVersion
         p[stringPreferencesKey("restMode")]=s.restMode
         p[stringPreferencesKey("nightDisplay")]=s.nightDisplay.name
@@ -173,6 +175,8 @@ class JourneyStore(context:Context) {
         s.input.schedule?.let{p[stringPreferencesKey("tripDate")]=it.date;p[stringPreferencesKey("tripZone")]=it.zoneId}
         p[intPreferencesKey("threshold")]=s.input.batteryThreshold
         p[intPreferencesKey("endHour")]=s.input.endHour
+        p[stringPreferencesKey("batteryCapability")]=s.batteryCapability.name
+        p[stringPreferencesKey("vehicleBatteryStatus")]=s.vehicleBatteryStatus.name
         p[stringPreferencesKey("batteryStatus")]=s.batteryStatus.name
         p[stringPreferencesKey("socSource")]=s.socSource.name
         s.socReceivedAtMillis?.let{p[longPreferencesKey("socReceivedAt")]=it}

@@ -110,3 +110,17 @@ DataStore schema 10은 schema 1~9의 수면/별 보기 선택을 수동 밤으�
 폰·IVI debug 빌드와 Lint, [JVM 63개](verification/mvp-v02-night/unit-tests.txt), [기기 16개](verification/mvp-v02-night/device-tests.txt)가 통과했다. 새 시험은 일몰/일출·새벽·지난/미래 날짜, 좌표/시간대 실패, 수동 해제, 주행 제한, 홈/이어하기, schema 1~9 변환과 archive 보존을 검사한다. 기존 글자색·800dp Light/Dark·준비/체크 마이그레이션 회귀도 포함한다. [Light](verification/mvp-v02-night/light.png), [Dark](verification/mvp-v02-night/dark.png), [밤 화면](verification/mvp-v02-night/night.png)을 확인했다.
 
 최초 화면 시험의 홈 스크롤 요청 오류를 수정했고, 수동 선택은 스크롤 후 렌더된 버튼 캡처와 클릭으로 검증했다. 최종 묶음은 수동 초점 복귀 없이 완료됐다. 시간과 제한 상태는 시험에서 주입했으므로 실제 주행 신호·서비스 단절 전환 인수 또는 새 release 전체 흐름 통과를 의미하지 않는다. V02-02의 차량 경계, 자료 확충, 원시 내비 전달 결과 세분화와 V02-08 패키징은 남아 있다. 데스크톱 release APK는 교체하지 않았다.
+
+## V02-01/02/06D: 차량 경계와 요청 전달 기록
+
+2026-11-14. 공개 Android `GEAR_SELECTION`과 UX 제한을 독립적으로 읽는다. P단과 UX 허용이 함께 확인되어야 상세 조작을 연다. 비P/누락/오류/서비스 종료는 잠금이다. Pleos Vehicle 2.3.2의 deprecated Gear가 안내하는 공개 속성 경로이며 `CAR_POWERTRAIN` 일반 읽기 권한만 사용한다. 속도나 주차 브레이크, 도착을 P단으로 추정하지 않는다. 근거: [Android 속성 계약](https://developer.android.com/reference/android/car/VehiclePropertyIds#GEAR_SELECTION), [Pleos 공식 샘플](https://github.com/Pleos-Playground/pleos-sample-vehicle-app).
+
+SOC capability(UNKNOWN/READ/READ_WRITE/UNSUPPORTED), 차량 읽기 상태, 실제 사용 잔량/출처/시각을 분리했다. 미지원도 직접 입력할 수 있으며 수동값은 읽기 실패로 지우지 않는다. 정상 차량값 수신 때 차량 출처로 교체한다. 화면을 떠나면 구독·poll을 해제하고 복귀 때 새로 확인한다. 실패 시 마지막 정상 수신 시각은 보존하지만 실패 값을 새 측정으로 사용하지 않는다. 새 schema 11은 1~10의 capability를 UNKNOWN으로 복원하고 기존 archive를 유지한다.
+
+D-01/02/03/06 구현 정책: 인원은 기존 양의 정수 범위(차량 정원 주장 아님), 철수는 다음 날 0~23시 정각을 유지한다. SOC 기본 35%, 5% 조정은 유지하며 **출발 준비의 필수 ‘배터리 확인 기준 N% 확인’**으로 매 여행 명시 확인한다. 기준 변경은 해당 확인만 해제한다. 35%를 안전 보장/사용시간으로 설명하지 않는다. 미지원 수동 입력을 허용하는 PRD 정책을 적용했다. 규칙 계약 `mvp-v02-rules-3`, 자료 버전 `2026-11-14.3`; 시설 사실 날짜는 변경하지 않았다.
+
+NaviHelper 3.0.5의 요청 API는 Unit 반환이다. 호출 반환/예외를 고유 attempt ID로 별도 기록하며 반환을 경로 수락 또는 안내 시작으로 표시하지 않는다. GUIDANCE_OBSERVED는 목적지·경유지·안내 상태를 실제로 대조한 후에만 남긴다. 요청 전 저장과 재연결 시 중복 요청 방지는 유지한다.
+
+[빌드·Lint](verification/mvp-v02-vehicle/build.txt), JVM 66개(shared 52/phone 7/IVI 7), [서버 7개](verification/mvp-v02-vehicle/server-tests.txt), [P단/SOC/화면·저장 15개](verification/mvp-v02-vehicle/device-tests.txt), [비P 잠금 1개](verification/mvp-v02-vehicle/non-park-test.txt), [SOC 20% 및 schema 11 저장 3개](verification/mvp-v02-vehicle/capability-tests.txt), [전체 여행 1개](verification/mvp-v02-vehicle/flow-tests.txt) 통과. 전체 흐름은 수동 초점 개입 없이 24.78초에 내비 전환·복귀/재생성·6개 수면/5개 철수·archive·다크 완료까지 진행했고 요청 호출 반환 1개와 실제 안내 관측을 별도로 검사했다.
+
+비P 첫 시도는 Virtual Console 비활성(HTTP 503) 때문에 값을 변경하지 못했다. Console 세션 heartbeat를 활성화하고 다시 검증했으며 이후 D단에서 NOT_PARK/UX RESTRICTED, P단 복귀를 확인했다. `console-api.py`는 비2xx를 실패 종료해 이런 준비 실패가 통과처럼 보이지 않게 했다. 실제 차량의 권한/지원 조합, 서비스 단절 하드웨어 시험 및 EV 잔여시간은 이 결과에 포함하지 않는다.

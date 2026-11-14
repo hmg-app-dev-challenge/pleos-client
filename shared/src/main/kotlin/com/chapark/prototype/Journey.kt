@@ -18,6 +18,8 @@ data class Journey(
     val nightDisplay:NightDisplay=NightDisplay.AUTO,
     val records:List<JourneyRecord> = emptyList(),
     val forgotten:Set<String> = emptySet(), val reminders:Set<String> = emptySet(), val followUps:Set<String> = emptySet(),
+    val batteryCapability:BatteryCapability=BatteryCapability.UNKNOWN,
+    val vehicleBatteryStatus:ReadingStatus=ReadingStatus.UNKNOWN,
     val batteryStatus:ReadingStatus=ReadingStatus.AVAILABLE,
     val socSource:Source=Source.DEMO, val socReceivedAtMillis:Long?=null,
 ) {
@@ -28,7 +30,7 @@ data class Journey(
         5->JourneyStage.STAYING;else->JourneyStage.COMPLETED
     }
     fun preparationStatus(id:String)=when {id in omitted->PreparationStatus.OMITTED;id in checked->PreparationStatus.COMPLETED;else->PreparationStatus.PENDING}
-    val batteryVisible get()=batteryStatus!=ReadingStatus.UNSUPPORTED
+    val batteryVisible get()=true
     val place get()=PlaceCatalog.find(placeId) ?: Place(placeId,"장소 정보 확인 필요","저장된 장소 자료를 확인해 주세요.",Condition.UNKNOWN,Condition.UNKNOWN,Condition.UNKNOWN,Condition.UNKNOWN,Condition.UNKNOWN,12)
     val decisions get()=followUps.sorted().map{DecisionItem("followup-$it",Group.BEFORE,"다시 확인 · $it","지난 여행에서 확인하지 못한 정보예요. 이번 장소의 조건도 확인해 주세요.")} + reminders.sorted().map{DecisionItem("reminder-$it",Group.GEAR,"다시 챙기기 · $it","지난 여행에서 빠뜨렸다고 기록한 준비물이에요.")} + PlanningRules.evaluate(place,input,SocReading(soc?.toDouble(),
         if(soc==null && batteryStatus==ReadingStatus.AVAILABLE)ReadingStatus.UNKNOWN else batteryStatus,socSource))
@@ -64,7 +66,7 @@ sealed interface JourneyEvent {
     data class Conditions(val value:TripInput):JourneyEvent
     data class Place(val id:String):JourneyEvent
     data class Charger(val id:String?):JourneyEvent
-    data class Battery(val value:Int?,val status:ReadingStatus,val source:Source,val receivedAt:Long?):JourneyEvent
+    data class Battery(val value:Int?,val status:ReadingStatus,val source:Source,val receivedAt:Long?,val capability:BatteryCapability=if(status==ReadingStatus.UNSUPPORTED)BatteryCapability.UNSUPPORTED else BatteryCapability.UNKNOWN):JourneyEvent
     data class Soc(val value:Int?,val receivedAt:Long?=null):JourneyEvent
     data class Check(val id:String):JourneyEvent
     data class Omit(val id:String):JourneyEvent
@@ -94,9 +96,9 @@ object JourneyReducer {
         if(event is JourneyEvent.Battery){
             if(old.completed)return old
             // A failed refresh cannot relabel or erase the user's explicit reading.
-            // A valid vehicle value, unsupported capability, or new trip replaces it.
-            if(old.socSource==Source.MANUAL && event.status !in setOf(ReadingStatus.AVAILABLE,ReadingStatus.UNSUPPORTED))return old
-            val next=old.copy(soc=event.value?.takeIf{it in 0..100 && event.status==ReadingStatus.AVAILABLE},batteryStatus=event.status,socSource=event.source,socReceivedAtMillis=event.receivedAt)
+            // Only a valid vehicle reading replaces a manual value. Capability remains independent.
+            if(old.socSource==Source.MANUAL && event.status!=ReadingStatus.AVAILABLE)return old.copy(batteryCapability=event.capability,vehicleBatteryStatus=event.status)
+            val next=old.copy(batteryCapability=event.capability,vehicleBatteryStatus=event.status,soc=event.value?.takeIf{it in 0..100 && event.status==ReadingStatus.AVAILABLE},batteryStatus=event.status,socSource=event.source,socReceivedAtMillis=event.receivedAt)
             return if(old.step<=3)next.copy(omitted=retainedChecks(old.decisions,next.decisions,old.omitted),checked=retainedChecks(old.decisions,next.decisions,old.checked)) else next
         }
         if(old.restricted) return old

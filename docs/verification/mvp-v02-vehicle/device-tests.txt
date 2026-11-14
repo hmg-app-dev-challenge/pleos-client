@@ -1,0 +1,14 @@
+
+com.chapark.ivi.CarUxMonitorTest:VEHICLE_GATE: UxSnapshot(mode=AVAILABLE, restrictions=0, reason=P단 및 플랫폼 상세 조작 허용 확인, parking=PARK)
+.
+com.chapark.ivi.BatterySessionTest:BATTERY: BatterySnapshot(value=100, status=AVAILABLE, source=EMULATOR, receivedAt=1794623226447, delivery=subscription, capability=READ)
+..
+com.chapark.ivi.JourneyRegressionTest:.....
+com.chapark.ivi.MvpMigrationTest:.....
+com.chapark.ivi.NightDisplayStoreTest:..
+
+Time: 12.268
+
+OK (15 tests)
+
+
