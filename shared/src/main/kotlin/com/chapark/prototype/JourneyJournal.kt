@@ -32,6 +32,8 @@ object JourneyJournal {
         val id=when(event){is JourneyEvent.Check->event.id;is JourneyEvent.Omit->event.id;is JourneyEvent.SleepCheck->event.id;is JourneyEvent.ExitCheck->event.id;else->null}
         val checked=when(event){is JourneyEvent.Check->event.id in next.checked;is JourneyEvent.Omit->event.id in next.omitted;is JourneyEvent.SleepCheck->event.id in next.sleepChecks;is JourneyEvent.ExitCheck->event.id in next.exitChecks;else->null}
         val label=when(event){
+            is JourneyEvent.SleepCheck->JourneyChecklists.sleep(next.checklistVersion)[event.id]
+            is JourneyEvent.ExitCheck->JourneyChecklists.exit(next.checklistVersion)[event.id]
             is JourneyEvent.Omit->next.decisions.firstOrNull{it.id==id}?.title
             is JourneyEvent.Check->next.decisions.firstOrNull{it.id==id}?.let{"${it.title} · ${it.reason}"}
             is JourneyEvent.Place->next.place.name

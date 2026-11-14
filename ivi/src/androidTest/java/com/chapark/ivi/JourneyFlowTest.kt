@@ -70,9 +70,9 @@ class JourneyFlowTest {
         compose.onNodeWithText("수면 준비로").assertDoesNotExist()
         next();waitText("수면 준비로");next();waitText("잠들기 전, 하나씩 확인해요")
         compose.onNodeWithTag("journey-next").assertIsNotEnabled()
-        listOf("현장 운영 안내 확인","주차 위치와 현장 숙박 조건 확인","환기 방법과 비상 이동 동선 확인","차량 기본 설정에서 공조 직접 확인","차량 기본 설정에서 조명 직접 확인").forEach{click(it)}
+        listOf("현장 운영 안내 확인","주차 위치와 현장 숙박 조건 확인","환기 방법과 비상 이동 동선 확인","차량 기본 설정에서 공조 직접 확인","차량 기본 설정에서 조명 직접 확인","문 잠금 직접 확인","개인 준비물 정리 확인").forEach{click(it)}
         screenshot("s6-sleep.png");next();waitText("떠나기 전, 한 번 더.")
-        listOf("직접 변경한 차량 설정 확인","침구와 개인 장비 모두 챙기기","쓰레기 수거와 주변 정리","출발 전 차량 주변 확인").forEach{click(it)}
+        listOf("직접 변경한 차량 설정 확인","실내·외 장비 모두 회수","쓰레기 수거와 주변 정리","놓고 가는 물품 확인","출발 전 장소 상태 확인").forEach{click(it)}
         screenshot("s7-exit.png");next();waitText("오늘의 차박을 마칠까요?");compose.onNodeWithText("종료").performClick()
         waitText("오늘의 차박을 마쳤어요");screenshot("s7-completed.png")
         kotlinx.coroutines.runBlocking {

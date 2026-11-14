@@ -25,7 +25,7 @@ class JourneyJournalTest {
     }
     @Test fun completionSnapshotsValueSourceAndTimeWithoutInventingSensorTime(){
         val s=Journey(step=6,route=RoutePhase.ARRIVED,parked=true,sleepReady=true,
-            exitChecks=Journey.EXIT_IDS,soc=20,socSource=Source.DEMO)
+            sleepChecks=Journey.SLEEP_IDS,exitChecks=Journey.EXIT_IDS,soc=20,socSource=Source.DEMO)
         val done=JourneyJournal.apply(s,JourneyEvent.Finish,1000)
         assertEquals(20,done.records.single().soc)
         assertEquals(Source.DEMO,done.records.single().socSource)

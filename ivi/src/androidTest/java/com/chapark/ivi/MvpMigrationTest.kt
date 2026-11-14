@@ -53,6 +53,22 @@ class MvpMigrationTest {
             assertEquals(RoutePhase.GUIDING,state.route);assertEquals(4,state.step)
         }
     }
+    @Test fun completedLegacyTripsKeepTheirOriginalChecklistVersion() {
+        for(version in 1..8){
+            val p=preferencesOf(intPreferencesKey("schema") to version,intPreferencesKey("step") to 6,
+                booleanPreferencesKey("completed") to true,booleanPreferencesKey("sleepReady") to true,
+                booleanPreferencesKey("parked") to true,stringPreferencesKey("route") to "ARRIVED",
+                stringSetPreferencesKey("sleep") to JourneyChecklists.legacySleep.keys,
+                stringSetPreferencesKey("exit") to JourneyChecklists.legacyExit.keys)
+            val completed=store().decode(p).first
+            assertTrue(completed.completed);assertEquals(1,completed.checklistVersion);assertTrue(completed.canFinish)
+            val active=p.toMutablePreferences().apply{this[booleanPreferencesKey("completed")]=false}
+            val restored=store().decode(active).first
+            assertEquals(2,restored.checklistVersion);assertFalse(restored.sleepReady);assertEquals(5,restored.step)
+            assertEquals(JourneyChecklists.legacySleep.keys,restored.sleepChecks)
+            assertEquals(setOf("settings","waste"),restored.exitChecks)
+        }
+    }
     @Test fun unknownNewCookingCannotSilentlyPassDepartureReview() {
         val state=store().decode(preferencesOf(intPreferencesKey("schema") to 7,
             stringPreferencesKey("cookingPlan") to "FUTURE_MODE")).first

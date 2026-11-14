@@ -12,7 +12,7 @@ data class Journey(
     val soc:Int?=20, val checked:Set<String> = emptySet(), val omitted:Set<String> = emptySet(),
     val route:RoutePhase=RoutePhase.NONE, val parked:Boolean=false,
     val sleepChecks:Set<String> = emptySet(), val exitChecks:Set<String> = emptySet(),
-    val sleepReady:Boolean=false, val completed:Boolean=false,
+    val sleepReady:Boolean=false, val completed:Boolean=false, val checklistVersion:Int=JourneyChecklists.CURRENT_VERSION,
     val restricted:Boolean=false, val dark:Boolean=false,
     val tripId:String?=null, val chargerId:String?=null, val restMode:String="REST",
     val records:List<JourneyRecord> = emptyList(),
@@ -48,10 +48,12 @@ data class Journey(
     val canDepart get()=input.valid && (input.schedule?.departureEnd(input.endHour)!=null) && !input.cookingNeedsReview && departureProgress.ready
     val siteReady get()=preparationProgress(siteItems,checked,omitted).ready
     val canSleep get()=parked && route==RoutePhase.ARRIVED
-    val canFinish get()=canSleep && sleepReady && exitChecks.containsAll(EXIT_IDS)
+    val requiredSleepIds get()=JourneyChecklists.sleep(checklistVersion).keys
+    val requiredExitIds get()=JourneyChecklists.exit(checklistVersion).keys
+    val canFinish get()=canSleep && sleepReady && sleepChecks.containsAll(requiredSleepIds) && exitChecks.containsAll(requiredExitIds)
     companion object {
-        val SLEEP_IDS=setOf("parking","ventilation","climate","lights")
-        val EXIT_IDS=setOf("settings","gear","waste","surroundings")
+        val SLEEP_IDS=JourneyChecklists.sleep.keys
+        val EXIT_IDS=JourneyChecklists.exit.keys
     }
 }
 sealed interface JourneyEvent {
@@ -111,7 +113,7 @@ object JourneyReducer {
                 in 0..2 -> old.copy(step=old.step+1)
                 3 -> if(old.canDepart) old.copy(step=4) else old
                 4 -> if(old.canSleep) old.copy(step=5) else old
-                5 -> if(old.canSleep && old.siteReady && old.sleepChecks.containsAll(Journey.SLEEP_IDS)) old.copy(step=6,sleepReady=true) else old
+                5 -> if(old.canSleep && old.siteReady && old.sleepChecks.containsAll(old.requiredSleepIds)) old.copy(step=6,sleepReady=true) else old
                 else -> old
             }
             is JourneyEvent.PlanningTab -> if(old.step in 1..2 && event.index in 0..1)old.copy(step=event.index+1) else old
@@ -139,8 +141,8 @@ object JourneyReducer {
             JourneyEvent.NavigationLost -> if(old.step==4 && old.route in setOf(RoutePhase.REQUESTED,RoutePhase.GUIDING)) old.copy(route=RoutePhase.FAILED,parked=false) else old
             JourneyEvent.Arrive -> if(old.step==4 && old.route==RoutePhase.GUIDING) old.copy(route=RoutePhase.ARRIVED,parked=false) else old
             JourneyEvent.Park -> if(old.step==4 && old.route==RoutePhase.ARRIVED) old.copy(parked=true) else old
-            is JourneyEvent.SleepCheck -> if(old.step==5 && old.canSleep && event.id in Journey.SLEEP_IDS) old.copy(sleepChecks=toggle(old.sleepChecks,event.id),sleepReady=false) else old
-            is JourneyEvent.ExitCheck -> if(old.step==6 && event.id in Journey.EXIT_IDS) old.copy(exitChecks=toggle(old.exitChecks,event.id)) else old
+            is JourneyEvent.SleepCheck -> if(old.step==5 && old.canSleep && event.id in old.requiredSleepIds) old.copy(sleepChecks=toggle(old.sleepChecks,event.id),sleepReady=false) else old
+            is JourneyEvent.ExitCheck -> if(old.step==6 && event.id in old.requiredExitIds) old.copy(exitChecks=toggle(old.exitChecks,event.id)) else old
             is JourneyEvent.RestMode -> if(old.step==5 && event.mode in setOf("REST","SLEEP","STARS"))old.copy(restMode=event.mode) else old
             is JourneyEvent.Forgotten -> {
                 val name=event.name.trim()

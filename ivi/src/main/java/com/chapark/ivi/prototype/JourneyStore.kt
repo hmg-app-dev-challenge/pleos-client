@@ -27,12 +27,12 @@ class JourneyStore(context:Context) {
         val p=store.data.first()
         val decoded=decode(p)
         val result=decoded.first.let{if(it.tripId==null)it.copy(tripId=UUID.randomUUID().toString()) else it} to decoded.second
-        if((p[intPreferencesKey("schema")] ?: 1)<8 || decoded.first.tripId==null)save(result.first)
+        if((p[intPreferencesKey("schema")] ?: 1)<9 || decoded.first.tripId==null)save(result.first)
         return result
     }
     internal fun decode(p:Preferences):Pair<Journey,String?> {
         val version=p[intPreferencesKey("schema")] ?: 1
-        require(version in 1..8) { "저장 형식을 읽을 수 없습니다. 초기화 후 시작해 주세요." }
+        require(version in 1..9) { "저장 형식을 읽을 수 없습니다. 초기화 후 시작해 주세요." }
         fun bool(k:String,default:Boolean=false)=p[booleanPreferencesKey(k)] ?: default
         fun int(k:String,default:Int)=p[intPreferencesKey(k)] ?: default
         fun checks(k:String)=p[stringSetPreferencesKey(k)] ?: emptySet()
@@ -41,6 +41,7 @@ class JourneyStore(context:Context) {
         val parsedCooking=storedCooking?.let{runCatching{CookingPlan.valueOf(it)}.getOrNull()}
         val cooking=parsedCooking ?: if(version<7)CookingPlan.fromLegacy(bool("cooking",true)) else CookingPlan.NONE
         val review=if(version<7)p[booleanPreferencesKey("cooking")]==true else parsedCooking==null || bool("cookingNeedsReview")
+        val checklistVersion=if(bool("completed") && (version<9 || int("checklistVersion",2)==1))1 else JourneyChecklists.CURRENT_VERSION
         var state=Journey(step=int("step",0).coerceIn(0,6),
             input=TripInput(int("people",1).coerceAtLeast(1),cooking,bool("pets"),bool("bag",true),
                 int("threshold",35).coerceIn(0,100),int("endHour",10).coerceIn(0,23),
@@ -52,7 +53,8 @@ class JourneyStore(context:Context) {
             soc=if(bool("socMissing"))null else int("soc",20).takeIf{it in 0..100},
             checked=checks("checked"),omitted=checks("omitted"),route=if(route==RoutePhase.REQUESTED)RoutePhase.FAILED else route,
             parked=bool("parked") && route==RoutePhase.ARRIVED,
-            sleepChecks=checks("sleep").intersect(Journey.SLEEP_IDS),exitChecks=checks("exit").intersect(Journey.EXIT_IDS),
+            sleepChecks=checks("sleep").intersect(JourneyChecklists.sleep(checklistVersion).keys),exitChecks=checks("exit").intersect(JourneyChecklists.exit(checklistVersion).keys),
+            checklistVersion=checklistVersion,
             sleepReady=bool("sleepReady"),completed=bool("completed"),restricted=bool("restricted"),dark=bool("dark"),
             batteryStatus=runCatching{ReadingStatus.valueOf(p[stringPreferencesKey("batteryStatus")] ?: "UNKNOWN")}.getOrDefault(ReadingStatus.UNKNOWN),
             socSource=if(version==1)Source.DEMO else runCatching { Source.valueOf(p[stringPreferencesKey("socSource")] ?: "UNKNOWN") }.getOrDefault(Source.UNKNOWN),
@@ -61,7 +63,7 @@ class JourneyStore(context:Context) {
         val itemIds=state.decisions.map{it.id}.toSet()
         state=state.copy(checked=state.checked.intersect(itemIds)-state.omitted,omitted=state.omitted.intersect(itemIds))
         if(state.step>=5 && !state.canSleep) state=state.copy(step=4,sleepReady=false,completed=false)
-        if(!state.sleepChecks.containsAll(Journey.SLEEP_IDS)) state=state.copy(sleepReady=false)
+        if(!state.sleepChecks.containsAll(state.requiredSleepIds)) state=state.copy(sleepReady=false)
         if(state.step==6 && !state.sleepReady) state=state.copy(step=5,completed=false)
         if(!state.canFinish) state=state.copy(completed=false)
         return state to if(bool("recovered"))"손상된 여행 저장 파일을 복구했습니다. 처음부터 시작합니다." else if(route==RoutePhase.REQUESTED)"이동 정보 준비가 중단됐어요. 다시 시도해 주세요." else if(version<8 && state.step<=3 && (checks("checked")+checks("omitted")).any{it in setOf("water","bedding-count")})"준비 항목을 나눴어요. 식수·회수 용품과 매트·침구를 각각 확인해 주세요." else null
@@ -156,7 +158,8 @@ class JourneyStore(context:Context) {
         p[stringPreferencesKey("syncRevisions")]=syncRevisions
         p[stringPreferencesKey("archive")]=archive.toString()
         p[stringSetPreferencesKey("deletedArchives")]=deleted
-        p[intPreferencesKey("schema")]=8
+        p[intPreferencesKey("schema")]=9
+        p[intPreferencesKey("checklistVersion")]=s.checklistVersion
         p[stringPreferencesKey("restMode")]=s.restMode
         p[stringSetPreferencesKey("followUps")]=s.followUps
         p[stringSetPreferencesKey("forgotten")]=s.forgotten;p[stringSetPreferencesKey("reminders")]=s.reminders

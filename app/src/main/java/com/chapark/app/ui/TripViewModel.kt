@@ -36,7 +36,10 @@ class TripViewModel(private val saved:SavedStateHandle):ViewModel() {
             sleepChecks=saved.get<ArrayList<String>>("journey.sleep")?.toSet() ?: emptySet(),
             exitChecks=saved.get<ArrayList<String>>("journey.exit")?.toSet() ?: emptySet(),
             sleepReady=saved["journey.sleepReady"] ?: false,completed=saved["journey.completed"] ?: false,
-            dark=saved["journey.dark"] ?: false,forgotten=saved.get<ArrayList<String>>("journey.forgotten")?.toSet() ?: emptySet(),reminders=saved.get<ArrayList<String>>("journey.reminders")?.toSet() ?: emptySet()))
+            checklistVersion=if(saved.get<Boolean>("journey.completed")==true)(saved["journey.checklistVersion"] ?: 1) else JourneyChecklists.CURRENT_VERSION,
+            dark=saved["journey.dark"] ?: false,forgotten=saved.get<ArrayList<String>>("journey.forgotten")?.toSet() ?: emptySet(),reminders=saved.get<ArrayList<String>>("journey.reminders")?.toSet() ?: emptySet())).let {
+                if(!it.completed && it.step==6 && !it.sleepChecks.containsAll(it.requiredSleepIds))it.copy(step=5,sleepReady=false) else it
+            }
     }
     fun send(event:JourneyEvent) {
         val next=JourneyReducer.apply(mutable.value,event)
@@ -49,6 +52,7 @@ class TripViewModel(private val saved:SavedStateHandle):ViewModel() {
         saved["journey.place"]=next.placeId;saved["journey.route"]=next.route.name;saved["journey.parked"]=next.parked
         saved["journey.reminders"]=ArrayList(next.reminders);saved["journey.forgotten"]=ArrayList(next.forgotten)
         saved["journey.checked"]=ArrayList(next.checked);saved["journey.omitted"]=ArrayList(next.omitted);saved["journey.sleep"]=ArrayList(next.sleepChecks);saved["journey.exit"]=ArrayList(next.exitChecks)
+        saved["journey.checklistVersion"]=next.checklistVersion
         saved["journey.sleepReady"]=next.sleepReady;saved["journey.completed"]=next.completed;saved["journey.dark"]=next.dark
         if(event==JourneyEvent.RequestRoute && next.route==RoutePhase.REQUESTED) {
             routeJob?.cancel()

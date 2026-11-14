@@ -28,8 +28,6 @@ class MainActivity:ComponentActivity() {
     override fun onCreate(savedInstanceState:Bundle?) { super.onCreate(savedInstanceState);setContent { ChaParkApp() } }
 }
 private val steps=listOf("오늘 밤 시작","조건 확인","장소 비교","오늘의 계획","이동","수면 준비","철수")
-private val sleepItems=linkedMapOf("parking" to "주차 위치와 현장 숙박 조건 확인","ventilation" to "환기 방법과 비상 이동 동선 확인","climate" to "차량 기본 설정에서 공조 직접 확인","lights" to "차량 기본 설정에서 조명 직접 확인")
-private val exitItems=linkedMapOf("settings" to "직접 변경한 차량 설정 확인","gear" to "침구와 개인 장비 모두 챙기기","waste" to "쓰레기 수거와 주변 정리","surroundings" to "출발 전 차량 주변 확인")
 
 @Composable fun ChaParkApp(vm:TripViewModel=viewModel()) {
     val s by vm.state.collectAsState()
@@ -109,7 +107,7 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
         RoutePhase.GUIDING->"도착했어요" to true;RoutePhase.FAILED->"다시 시도" to true
         RoutePhase.ARRIVED->(if(s.parked)"수면 준비로" else "주차했어요") to true
     }
-    s.step==5->"수면 준비 확인 · 다음 날" to (s.canSleep && s.siteReady && s.sleepChecks.containsAll(Journey.SLEEP_IDS))
+    s.step==5->"수면 준비 확인 · 다음 날" to (s.canSleep && s.siteReady && s.sleepChecks.containsAll(s.requiredSleepIds))
     else->"차박 종료" to s.canFinish
 }
 @Composable private fun Content(s:Journey,send:(JourneyEvent)->Unit) {
@@ -183,15 +181,15 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
         5->{
             Panel {s.siteItems.forEach{item->Check(item.title,item.id in s.checked){send(JourneyEvent.Check(item.id))}}}
             Heading("잠들기 전,\n하나씩 확인해요","편안히 쉴 수 있도록 주변과 차량 설정을 확인해 주세요.")
-            Panel {Text("차량의 공조와 조명을 원하는 상태로 맞춘 뒤 체크해 주세요.");sleepItems.forEach{(id,title)->Check(title,id in s.sleepChecks){send(JourneyEvent.SleepCheck(id))}}}
+            Panel {Text("차량의 공조와 조명을 원하는 상태로 맞춘 뒤 체크해 주세요.");JourneyChecklists.sleep(s.checklistVersion).forEach{(id,title)->Check(title,id in s.sleepChecks){send(JourneyEvent.SleepCheck(id))}}}
             Text("차내 화기를 사용하지 마세요. 차량 사용 설명서와 현장 운영 안내를 따라주세요.")
         }
         6->if(s.completed){
             Heading("오늘의 차박을 마쳤어요","내 차와 보낸 하룻밤의 기억을 저장했어요.")
-            Panel {Text(s.place.name,style=MaterialTheme.typography.titleLarge);Text("수면 준비 ${s.sleepChecks.size}/4 · 철수 확인 ${s.exitChecks.size}/4");Text("다음 여행도 차Park와 함께 준비해 보세요.")}
+            Panel {Text(s.place.name,style=MaterialTheme.typography.titleLarge);Text("수면 준비 ${s.sleepChecks.intersect(s.requiredSleepIds).size}/${s.requiredSleepIds.size} · 철수 확인 ${s.exitChecks.intersect(s.requiredExitIds).size}/${s.requiredExitIds.size}");Text("다음 여행도 차Park와 함께 준비해 보세요.")}
         }else{
             Heading("떠나기 전,\n한 번 더.","직접 바꾼 설정과 가져온 물건을 확인하고 마무리해요.")
-            Panel {exitItems.forEach{(id,title)->Check(title,id in s.exitChecks){send(JourneyEvent.ExitCheck(id))}}}
+            Panel {JourneyChecklists.exit(s.checklistVersion).forEach{(id,title)->Check(title,id in s.exitChecks){send(JourneyEvent.ExitCheck(id))}}}
         }
     }
 }

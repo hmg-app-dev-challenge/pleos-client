@@ -20,8 +20,6 @@ import com.chapark.prototype.*
 private val steps=listOf("차박 계획","출발 준비","이동","차박","철수와 기록")
 private fun stageLabel(s:Journey)=s.stage?.let{"${it.ordinal+1} / 5 · ${steps[it.ordinal]}"} ?: "오늘의 차박"
 private val names get()=com.chapark.app.data.PlaceCatalog.all.associate { it.id to it.name }
-private val sleepItems=linkedMapOf("parking" to "주차 위치와 현장 숙박 조건 확인", "ventilation" to "환기 방법과 비상 이동 동선 확인", "climate" to "차량 기본 설정에서 공조 직접 확인", "lights" to "차량 기본 설정에서 조명 직접 확인")
-private val exitItems=linkedMapOf("settings" to "직접 변경한 차량 설정 확인", "gear" to "침구와 개인 장비 모두 챙기기", "waste" to "쓰레기 수거와 주변 정리", "surroundings" to "출발 전 차량 주변 확인")
 private fun condition(value:Condition)=when(value){Condition.ALLOWED->"허용";Condition.RESTRICTED->"제한";Condition.UNKNOWN->"미확인"}
 
 @Composable fun JourneyScreen(ui:JourneyUi,send:(JourneyEvent)->Unit,onNavigation:()->Unit={},onDeleteHistory:(String)->Unit={},onConfirmWaypoint:()->Unit={},onForkPlan:()->Unit={},onLoadPlans:()->Unit={},onImportPlan:(String)->Unit={}) {
@@ -228,7 +226,7 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
         RoutePhase.FAILED -> "다시 시도" to true
         RoutePhase.ARRIVED -> (if(s.parked)"수면 준비로" else "주차했어요") to true
     }
-    s.step==5 -> "철수 시작" to (s.canSleep && s.siteReady && s.sleepChecks.containsAll(Journey.SLEEP_IDS))
+    s.step==5 -> "철수 시작" to (s.canSleep && s.siteReady && s.sleepChecks.containsAll(s.requiredSleepIds))
     else -> "철수 완료" to s.canFinish
 }
 @Composable private fun Panel(modifier:Modifier=Modifier,content:@Composable ColumnScope.()->Unit) {
@@ -402,7 +400,7 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
             Panel {
                 Text("편안한 휴식 준비",style=IviType.smallTitle)
                 Text("차량의 공조와 조명을 원하는 상태로 맞춘 뒤 체크해 주세요.",style=IviType.smallBody)
-                sleepItems.forEach{(id,title)->IviCheckRow(title,id in s.sleepChecks){send(JourneyEvent.SleepCheck(id))}}
+                JourneyChecklists.sleep(s.checklistVersion).forEach{(id,title)->IviCheckRow(title,id in s.sleepChecks){send(JourneyEvent.SleepCheck(id))}}
             }
             Text("차내 화기를 사용하지 마세요. 실제 사용은 차량 사용 설명서와 현장 운영 안내를 따르세요.",style=IviType.label,color=p.tertiary)
         }
@@ -410,7 +408,7 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
             Heading("오늘의 차박을 마쳤어요","내 차와 보낸 하룻밤의 기억을 저장했어요.")
             Panel {
                 Text(names[s.placeId] ?: "오늘의 쉼터",style=IviType.title)
-                Text("수면 준비 ${s.sleepChecks.size}/4 · 철수 확인 ${s.exitChecks.size}/4",style=IviType.body)
+                Text("수면 준비 ${s.sleepChecks.intersect(s.requiredSleepIds).size}/${s.requiredSleepIds.size} · 철수 확인 ${s.exitChecks.intersect(s.requiredExitIds).size}/${s.requiredExitIds.size}",style=IviType.body)
                 Text("직접 확인한 준비 항목 ${s.checkedCount}/${s.decisions.size}",style=IviType.body)
                 val missingItems=s.forgotten+s.decisions.filter{it.id in s.omitted}.map{it.title}
                 if(missingItems.isNotEmpty())Text("다음에 챙길 것 · ${missingItems.sorted().joinToString()}",style=IviType.smallBody)
@@ -446,7 +444,7 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
             }
             Panel {
                 Text("출발 전 확인",style=IviType.smallTitle)
-                exitItems.forEach{(id,title)->IviCheckRow(title,id in s.exitChecks){send(JourneyEvent.ExitCheck(id))}}
+                JourneyChecklists.exit(s.checklistVersion).forEach{(id,title)->IviCheckRow(title,id in s.exitChecks){send(JourneyEvent.ExitCheck(id))}}
             }
         }
     }
