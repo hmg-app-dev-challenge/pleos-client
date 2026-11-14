@@ -93,3 +93,15 @@ UI에서 배터리를 임의로 바꾸거나 내비 성공·실패를 주입하�
 IVI는 실제 길 안내 요청을 전송한다. 도착은 SDK 도착 알림 또는 사용자 확인이며 주차·수면·철수 체크는 사용자 확인 기록이다. 차량 제어 결과가 아니다. SOC 등 일부 데이터는 로컬 fixture를 유지한다. 에뮬레이터의 지도 타일·자동 이동 재생 제한은 [내비 연동 문서](NAVIGATION_INTEGRATION.md)를 참고한다.
 
 최신 검증 결과와 캡처는 [제품 흐름 계획](PRODUCT_FLOW_PLAN.md)의 검증 기록 및 `verification/product/`를 참고한다. 기존 `verification/prototype/`는 개편 이전 화면이다.
+
+### 발열 대응 — 2026-11-15
+
+사용자의 반복적인 QEMU/Java 발열 보고에 따라 빌드와 에뮬레이터 검증을 동시에 실행하지 않는다. 에뮬레이터는 편집·빌드 중 정지하고, 빌드가 끝난 후에만 짧은 기기 시험을 진행한다.
+
+- `gradle.properties`: worker 1개, 프로젝트 병렬 실행 해제, JVM `ActiveProcessorCount=1`, Kotlin 컴파일을 Gradle 프로세스 안에서 실행, 상주 Gradle 데몬 사용 해제. 일회용 JVM은 빌드 중 생길 수 있으며 완료 후 종료한다. 기존 Gradle/Kotlin 데몬은 종료했다.
+- 이 설정은 병렬도를 낮추며 CPU 사용률을 특정 백분율로 강제 제한하지 않는다. 빌드 시간이 길어지는 대신 동시에 사용하는 자원을 줄인다. 새 설정으로 전체 빌드 검증은 발열 때문에 아직 재실행하지 않았다.
+- 기기 명령은 `python3 scripts/pleos-session.py --timeout 180 -- <명령>`으로 실행한다. 기존 AVD를 재개하고 명령 성공·실패·시간 초과·일반 인터럽트 후 다시 일시정지한다. 프로세스 강제 종료(SIGKILL)나 OS 종료까지 보장하는 장치는 아니다.
+- 정상 종료(0), 실패(7), 1초 제한 초과(124) 뒤 QEMU의 T 상태를 각각 확인했다. [실행 증거](verification/release-0.5.5/session-guard.txt). 이는 기록 카드의 화면 검증 증거가 아니다.
+- 현재 QEMU 일시정지 CPU 0.0%, Gradle/Kotlin Java 프로세스 종료를 확인했다. 실제 칩 온도를 측정한 것은 아니다. `pmset -g therm`에 경고 기록이 없더라도 사용자가 느끼는 발열이 없다는 의미는 아니다.
+
+[Gradle 실행 설정](https://docs.gradle.org/current/userguide/project_properties.html), [데몬 동작](https://docs.gradle.org/current/userguide/gradle_daemon.html), [Kotlin 컴파일 실행 방식](https://kotlinlang.org/docs/compiler-execution-strategy.html)을 따른다. Pleos 시스템 앱 비활성화는 적용하지 않는다.

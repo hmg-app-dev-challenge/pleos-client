@@ -1,0 +1,30 @@
+command='pass'; expected=0; actual=0
+62788 Ts     0.0 /Users/woongaaaa/Library/Android/sdk/emulator/qemu/darwin-aarch64/qemu-system-aarch64
+State T means paused. CPU is a recent average; use top for a fresh sample.
+62788 Rs     0.0 /Users/woongaaaa/Library/Android/sdk/emulator/qemu/darwin-aarch64/qemu-system-aarch64
+Resumed: SDK connections may need to reconnect after a long pause.
+62788 Ts   127.4 /Users/woongaaaa/Library/Android/sdk/emulator/qemu/darwin-aarch64/qemu-system-aarch64
+Paused: window/ADB frozen, memory retained.
+
+QEMU state after session: Ts
+
+command='raise SystemExit(7)'; expected=7; actual=7
+62788 Ts    98.7 /Users/woongaaaa/Library/Android/sdk/emulator/qemu/darwin-aarch64/qemu-system-aarch64
+State T means paused. CPU is a recent average; use top for a fresh sample.
+62788 Rs    61.4 /Users/woongaaaa/Library/Android/sdk/emulator/qemu/darwin-aarch64/qemu-system-aarch64
+Resumed: SDK connections may need to reconnect after a long pause.
+62788 Ts   172.9 /Users/woongaaaa/Library/Android/sdk/emulator/qemu/darwin-aarch64/qemu-system-aarch64
+Paused: window/ADB frozen, memory retained.
+
+QEMU state after session: Ts
+
+command='import time;time.sleep(5)'; expected=124; actual=124
+62788 Ts   142.9 /Users/woongaaaa/Library/Android/sdk/emulator/qemu/darwin-aarch64/qemu-system-aarch64
+State T means paused. CPU is a recent average; use top for a fresh sample.
+62788 Rs    55.4 /Users/woongaaaa/Library/Android/sdk/emulator/qemu/darwin-aarch64/qemu-system-aarch64
+Resumed: SDK connections may need to reconnect after a long pause.
+62788 Ts   186.9 /Users/woongaaaa/Library/Android/sdk/emulator/qemu/darwin-aarch64/qemu-system-aarch64
+Paused: window/ADB frozen, memory retained.
+Device session exceeded 1s; stopping the task.
+
+QEMU state after session: Ts
