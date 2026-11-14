@@ -1,0 +1,10 @@
+
+com.chapark.ivi.NightDisplayStoreTest:..
+com.chapark.ivi.NightDisplayScreenTest:...
+com.chapark.ivi.JourneyRegressionTest:.....
+com.chapark.ivi.JourneyLayoutTest:.
+com.chapark.ivi.MvpMigrationTest:.....
+
+Time: 18.024
+
+OK (16 tests)

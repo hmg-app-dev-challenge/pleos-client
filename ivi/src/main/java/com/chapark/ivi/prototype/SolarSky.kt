@@ -18,9 +18,7 @@ import java.time.*
 import kotlin.math.sin
 
 /** Discrete minute updates: no animation, motion preferences need no separate bypass. */
-@Composable internal fun SolarSky(date:LocalDate,zone:ZoneId,day:SolarDay){
-    var now by remember { mutableStateOf(Instant.now()) }
-    LaunchedEffect(date,zone){while(true){now=Instant.now();kotlinx.coroutines.delay(60_000)}}
+@Composable internal fun SolarSky(date:LocalDate,zone:ZoneId,day:SolarDay,now:Instant){
     val rise=day.sunrise?.instant
     val set=day.sunset?.instant
     val today=now.atZone(zone).toLocalDate()==date

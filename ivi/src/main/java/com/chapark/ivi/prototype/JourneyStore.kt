@@ -27,12 +27,12 @@ class JourneyStore(context:Context) {
         val p=store.data.first()
         val decoded=decode(p)
         val result=decoded.first.let{if(it.tripId==null)it.copy(tripId=UUID.randomUUID().toString()) else it} to decoded.second
-        if((p[intPreferencesKey("schema")] ?: 1)<9 || decoded.first.tripId==null)save(result.first)
+        if((p[intPreferencesKey("schema")] ?: 1)<10 || decoded.first.tripId==null)save(result.first)
         return result
     }
     internal fun decode(p:Preferences):Pair<Journey,String?> {
         val version=p[intPreferencesKey("schema")] ?: 1
-        require(version in 1..9) { "저장 형식을 읽을 수 없습니다. 초기화 후 시작해 주세요." }
+        require(version in 1..10) { "저장 형식을 읽을 수 없습니다. 초기화 후 시작해 주세요." }
         fun bool(k:String,default:Boolean=false)=p[booleanPreferencesKey(k)] ?: default
         fun int(k:String,default:Int)=p[intPreferencesKey(k)] ?: default
         fun checks(k:String)=p[stringSetPreferencesKey(k)] ?: emptySet()
@@ -47,6 +47,7 @@ class JourneyStore(context:Context) {
                 int("threshold",35).coerceIn(0,100),int("endHour",10).coerceIn(0,23),
                 p[stringPreferencesKey("tripDate")]?.let{date->TripSchedule(date,p[stringPreferencesKey("tripZone")] ?: "")},cookingNeedsReview=review ),
             tripId=p[stringPreferencesKey("tripId")],chargerId=p[stringPreferencesKey("chargerId")]?.takeIf{com.chapark.app.data.ChargingPlaces.find(it)!=null},restMode=p[stringPreferencesKey("restMode")] ?: "REST",
+            nightDisplay=NightDisplayPolicy.restore(p[stringPreferencesKey("nightDisplay")],p[stringPreferencesKey("restMode")] ?: "REST"),
             forgotten=checks("forgotten"),reminders=checks("reminders"),followUps=checks("followUps"),
             records=JourneyRecordCodec.decode(p[stringPreferencesKey("records")] ?: "[]"),
             placeId=p[stringPreferencesKey("place")]?.takeIf{it.isNotBlank() && it.length<=100} ?: "demo-b",
@@ -160,9 +161,10 @@ class JourneyStore(context:Context) {
         p[stringPreferencesKey("syncRevisions")]=syncRevisions
         p[stringPreferencesKey("archive")]=archive.toString()
         p[stringSetPreferencesKey("deletedArchives")]=deleted
-        p[intPreferencesKey("schema")]=9
+        p[intPreferencesKey("schema")]=10
         p[intPreferencesKey("checklistVersion")]=s.checklistVersion
         p[stringPreferencesKey("restMode")]=s.restMode
+        p[stringPreferencesKey("nightDisplay")]=s.nightDisplay.name
         p[stringSetPreferencesKey("followUps")]=s.followUps
         p[stringSetPreferencesKey("forgotten")]=s.forgotten;p[stringSetPreferencesKey("reminders")]=s.reminders
         p[stringPreferencesKey("records")]=JourneyRecordCodec.encode(s.records)

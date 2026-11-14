@@ -28,10 +28,13 @@ private fun stageLabel(s:Journey)=s.stage?.let{"${it.ordinal+1} / 5 · ${steps[i
 private val names get()=com.chapark.app.data.PlaceCatalog.all.associate { it.id to it.name }
 private fun condition(value:Condition)=when(value){Condition.ALLOWED->"허용";Condition.RESTRICTED->"제한";Condition.UNKNOWN->"미확인"}
 
-@Composable fun JourneyScreen(ui:JourneyUi,send:(JourneyEvent)->Unit,onNavigation:()->Unit={},onDeleteHistory:(String)->Unit={},onConfirmWaypoint:()->Unit={},onForkPlan:()->Unit={},onLoadPlans:()->Unit={},onImportPlan:(String)->Unit={}) {
+@Composable fun JourneyScreen(ui:JourneyUi,send:(JourneyEvent)->Unit,onNavigation:()->Unit={},onDeleteHistory:(String)->Unit={},onConfirmWaypoint:()->Unit={},onForkPlan:()->Unit={},onLoadPlans:()->Unit={},onImportPlan:(String)->Unit={},now:java.time.Instant?=null) {
     val s=ui.journey
     var showHome by androidx.compose.runtime.saveable.rememberSaveable(s.tripId) { mutableStateOf(false) }
     val atHome=s.step==0 || showHome
+    val currentTime=now ?: journeyTime()
+    val nightWindow=remember(s.placeId,s.input.schedule){NightDisplayPolicy.window(s)}
+    val nightActive=!atHome && NightDisplayPolicy.active(s,currentTime,nightWindow)
     var scenery by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf<String?>(null) }
     var confirmedOnly by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
     val candidates=PlaceEvidenceCatalog.filter(scenery?.let{Scenery.valueOf(it)},confirmedOnly,java.time.LocalDate.now())
@@ -41,9 +44,9 @@ private fun condition(value:Condition)=when(value){Condition.ALLOWED->"허용";C
     var settings by remember { mutableStateOf(false) }
     var confirm by remember { mutableStateOf<String?>(null) }
     BackHandler(!atHome && !s.restricted && !settings && !history && deleteId==null && confirm==null) { showHome=true }
-    IviTheme(s.dark,nightMode=!atHome && s.step==5 && s.restMode!="REST" && !s.restricted) {
+    IviTheme(s.dark,nightMode=nightActive) {
         val p=LocalIviColors.current
-        Surface(Modifier.fillMaxSize(),color=p.background) {
+        Surface(Modifier.fillMaxSize().testTag(if(nightActive)"night-screen" else "standard-screen"),color=p.background) {
             if(!ui.loaded) Box(Modifier.fillMaxSize(),contentAlignment=Alignment.Center) { Text("저장된 여행을 불러오고 있어요",style=IviType.title) }
             else Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing).padding(horizontal=40.dp,vertical=24.dp)) {
                 Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(20.dp)) {
@@ -114,7 +117,7 @@ private fun condition(value:Condition)=when(value){Condition.ALLOWED->"허용";C
                                         Text("차박 계획",style=IviType.title)
                                         IviSegments(listOf("여행 조건","장소 비교"),s.step-1){send(JourneyEvent.PlanningTab(it))}
                                     }
-                                    JourneyContent(s,send,candidates,scenery,confirmedOnly,{scenery=it},{confirmedOnly=it},ui.history.firstOrNull{it.id==s.tripId})
+                                    JourneyContent(s,send,candidates,scenery,confirmedOnly,{scenery=it},{confirmedOnly=it},ui.history.firstOrNull{it.id==s.tripId},nightWindow,nightActive,currentTime)
                                     if(s.step>0 && s.step!=2 && !s.completed) IviButton("이전 단계",size=IviButtonSize.MEDIUM,enabled=!ui.saving){send(JourneyEvent.Back)}
                                     Spacer(Modifier.height(24.dp))
                                 }
@@ -255,7 +258,7 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
 
 @Composable private fun JourneyContent(s:Journey,send:(JourneyEvent)->Unit,
     candidates:List<com.chapark.app.data.NavigationPlace>,scenery:String?,confirmedOnly:Boolean,
-    onScenery:(String?)->Unit,onConfirmed:(Boolean)->Unit,completedArchive:ArchivedTrip?=null) {
+    onScenery:(String?)->Unit,onConfirmed:(Boolean)->Unit,completedArchive:ArchivedTrip?=null,nightWindow:NightWindow?=null,nightActive:Boolean=false,currentTime:java.time.Instant=java.time.Instant.now()) {
     val p=LocalIviColors.current
     when(s.step) {
         0 -> {
@@ -336,7 +339,7 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
         }
 
         3 -> {
-            SolarSummary(s)
+            SolarSummary(s,currentTime)
             Heading("오늘의 준비 계획","${names[s.placeId] ?: s.place.name} · 조건을 바꾸면 필요한 행동도 달라져요.")
             Panel {
                 if(s.batteryVisible) BatteryReading(s,send)
@@ -402,7 +405,18 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
         5 -> {
             Panel { s.siteItems.forEach {item->PreparationItem(s,item,send)} }
             IviSegments(listOf("휴식","수면","별 보기"),listOf("REST","SLEEP","STARS").indexOf(s.restMode).coerceAtLeast(0)){send(JourneyEvent.RestMode(listOf("REST","SLEEP","STARS")[it]))}
-            SolarSummary(s)
+            Panel {
+                Text("밤 화면",style=IviType.smallTitle)
+                IviSegments(listOf("자동 전환","기본 화면","밤 화면 켜기"),s.nightDisplay.ordinal){send(JourneyEvent.NightScreen(NightDisplay.entries[it]))}
+                Text(when(s.nightDisplay) {
+                    NightDisplay.AUTO->if(nightWindow==null)"일몰 정보를 계산하지 못했어요. 밤 화면을 직접 선택할 수 있어요."
+                        else if(nightActive)"계산한 일몰 시각이 지나 밤 화면을 적용했어요. 일출 시 기본 화면으로 돌아가요."
+                        else "여행 날짜의 일몰부터 다음 날 일출까지, 도착·주차 후 자동으로 바뀌어요."
+                    NightDisplay.STANDARD->"설정에서 선택한 밝은 화면 또는 어두운 화면을 사용해요."
+                    NightDisplay.NIGHT->"직접 선택한 밤 화면을 사용해요. 기본 화면으로 언제든 돌아갈 수 있어요."
+                },style=IviType.label)
+            }
+            SolarSummary(s,currentTime)
             Heading("잠들기 전, 하나씩 확인해요","편안히 쉴 수 있도록 주변과 차량 설정을 확인해 주세요.")
             Panel {
                 Text("편안한 휴식 준비",style=IviType.smallTitle)
@@ -597,7 +611,7 @@ private fun sourceLabel(source:Source)=when(source){Source.SDK->"차량";Source.
     }
 }
 
-@Composable private fun SolarSummary(s:Journey){
+@Composable private fun SolarSummary(s:Journey,now:java.time.Instant){
     val place=NavigationPlaces.find(s.placeId) ?: return
     val schedule=s.input.schedule ?: return
     val zone=runCatching{java.time.ZoneId.of(schedule.zoneId)}.getOrNull() ?: return
@@ -605,7 +619,7 @@ private fun sourceLabel(source:Source)=when(source){Source.SDK->"차량";Source.
     val today=runCatching{SolarTimes.calculate(date,zone,place.latitude,place.longitude)}.getOrNull() ?: return
     val tomorrow=runCatching{SolarTimes.calculate(date.plusDays(1),zone,place.latitude,place.longitude)}.getOrNull() ?: return
     fun describe(event:SolarEvent?)=event?.let{"${it.instant.atZone(zone).format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"))} · 방위 ${it.azimuthDegrees.toInt()}°"} ?: "해당 날짜에 없음"
-    SolarSky(date,zone,today)
+    SolarSky(date,zone,today,now)
     Panel {
         Text("해의 시간",style=IviType.smallTitle)
         Text("일몰 약 ${describe(today.sunset)}",style=IviType.body)

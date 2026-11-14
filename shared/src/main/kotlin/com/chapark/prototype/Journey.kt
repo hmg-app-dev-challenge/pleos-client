@@ -15,6 +15,7 @@ data class Journey(
     val sleepReady:Boolean=false, val completed:Boolean=false, val checklistVersion:Int=JourneyChecklists.CURRENT_VERSION,
     val restricted:Boolean=false, val dark:Boolean=false,
     val tripId:String?=null, val chargerId:String?=null, val restMode:String="REST",
+    val nightDisplay:NightDisplay=NightDisplay.AUTO,
     val records:List<JourneyRecord> = emptyList(),
     val forgotten:Set<String> = emptySet(), val reminders:Set<String> = emptySet(), val followUps:Set<String> = emptySet(),
     val batteryStatus:ReadingStatus=ReadingStatus.AVAILABLE,
@@ -75,6 +76,7 @@ sealed interface JourneyEvent {
     data class SleepCheck(val id:String):JourneyEvent
     data class ExitCheck(val id:String):JourneyEvent
     data class RestMode(val mode:String):JourneyEvent
+    data class NightScreen(val preference:NightDisplay):JourneyEvent
     data class Forgotten(val name:String):JourneyEvent
     data object Finish:JourneyEvent
     data object NewTrip:JourneyEvent
@@ -143,7 +145,9 @@ object JourneyReducer {
             JourneyEvent.Park -> if(old.step==4 && old.route==RoutePhase.ARRIVED) old.copy(parked=true) else old
             is JourneyEvent.SleepCheck -> if(old.step==5 && old.canSleep && event.id in old.requiredSleepIds) old.copy(sleepChecks=toggle(old.sleepChecks,event.id),sleepReady=false) else old
             is JourneyEvent.ExitCheck -> if(old.step==6 && event.id in old.requiredExitIds) old.copy(exitChecks=toggle(old.exitChecks,event.id)) else old
-            is JourneyEvent.RestMode -> if(old.step==5 && event.mode in setOf("REST","SLEEP","STARS"))old.copy(restMode=event.mode) else old
+            is JourneyEvent.RestMode -> if(old.step==5 && old.canSleep && event.mode in setOf("REST","SLEEP","STARS"))old.copy(restMode=event.mode,
+                nightDisplay=if(event.mode=="REST")NightDisplay.AUTO else NightDisplay.NIGHT) else old
+            is JourneyEvent.NightScreen -> if(old.step==5 && old.canSleep)old.copy(nightDisplay=event.preference) else old
             is JourneyEvent.Forgotten -> {
                 val name=event.name.trim()
                 if(old.step==6 && name.isNotBlank() && name.length<=100)old.copy(forgotten=toggle(old.forgotten,name)) else old

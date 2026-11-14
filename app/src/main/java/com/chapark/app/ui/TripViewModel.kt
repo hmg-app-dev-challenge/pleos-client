@@ -29,6 +29,8 @@ class TripViewModel(private val saved:SavedStateHandle):ViewModel() {
                 batteryThreshold=saved["journey.threshold"] ?: 35,endHour=saved["journey.endHour"] ?: 10,
                 schedule=saved.get<String>("journey.date")?.let{com.chapark.app.domain.TripSchedule(it,saved["journey.zone"] ?: "")}),
             placeId=saved["journey.place"] ?: base.placeId,
+            restMode=saved["journey.restMode"] ?: "REST",
+            nightDisplay=NightDisplayPolicy.restore(saved["journey.nightDisplay"],saved["journey.restMode"] ?: "REST"),
             route=if(route==RoutePhase.REQUESTED)RoutePhase.FAILED else route,
             parked=saved["journey.parked"] ?: false,
             omitted=saved.get<ArrayList<String>>("journey.omitted")?.toSet() ?: emptySet(),
@@ -53,6 +55,7 @@ class TripViewModel(private val saved:SavedStateHandle):ViewModel() {
         saved["journey.reminders"]=ArrayList(next.reminders);saved["journey.forgotten"]=ArrayList(next.forgotten)
         saved["journey.checked"]=ArrayList(next.checked);saved["journey.omitted"]=ArrayList(next.omitted);saved["journey.sleep"]=ArrayList(next.sleepChecks);saved["journey.exit"]=ArrayList(next.exitChecks)
         saved["journey.checklistVersion"]=next.checklistVersion
+        saved["journey.restMode"]=next.restMode;saved["journey.nightDisplay"]=next.nightDisplay.name
         saved["journey.sleepReady"]=next.sleepReady;saved["journey.completed"]=next.completed;saved["journey.dark"]=next.dark
         if(event==JourneyEvent.RequestRoute && next.route==RoutePhase.REQUESTED) {
             routeJob?.cancel()
