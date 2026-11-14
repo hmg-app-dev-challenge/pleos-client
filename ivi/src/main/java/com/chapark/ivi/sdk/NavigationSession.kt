@@ -124,7 +124,7 @@ class NavigationSession(context:Context):AutoCloseable {
         }
         listener=l
         handler.postDelayed({if(token==generation && mutable.value.phase !in setOf(NavigationPhase.GUIDING,NavigationPhase.VERIFY_WAYPOINT,NavigationPhase.ARRIVED))
-            fail("내비게이션 응답이 늦어지고 있어요. 다시 시도해 주세요.")},30_000)
+            fail("내비게이션 응답이 늦어지고 있어요. 내비게이션 앱을 연 뒤 다시 시도해 주세요.")},30_000)
         try {n.initialize({post{
             ready=true;n.addListener(l)
             mutable.value=NavigationSnapshot(NavigationPhase.SEARCHING)

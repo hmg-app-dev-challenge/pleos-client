@@ -1,0 +1,8 @@
+Success
+
+com.chapark.ivi.ReleaseStorageAcceptanceTest:RELEASE_STORAGE: existed=false previousBytes=0 step=0 completed=false archived=0 preserved=true notice=null
+.
+
+Time: 0.033
+
+OK (1 test)

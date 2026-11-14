@@ -30,11 +30,13 @@ class JourneyFlowTest {
     private fun next() { saved(); compose.onNodeWithTag("journey-next").performClick(); compose.waitForIdle() }
     private fun screenshot(name:String) {
         saved()
-        listOf("시연","데모","가상","재현","SDK","미연동").forEach { word ->
+        listOf("시연","데모","가상","재현","SDK","미연동","예시","에뮬레이터").forEach { word ->
             compose.onAllNodes(hasText(word,substring=true)).assertCountEquals(0)
         }
-        val folder=File(InstrumentationRegistry.getInstrumentation().targetContext.filesDir,"verification").apply{mkdirs()}
+        val context=InstrumentationRegistry.getInstrumentation().targetContext
+        val folder=File(if(BuildConfig.DEBUG)context.filesDir else context.getExternalFilesDir(null),"verification").apply{mkdirs()}
         File(folder,name).outputStream().use { compose.onRoot().captureToImage().asAndroidBitmap().compress(Bitmap.CompressFormat.PNG,100,it) }
+        InstrumentationRegistry.getArguments().getString("captureDelayMs")?.toLongOrNull()?.coerceIn(0,3000)?.let{Thread.sleep(it)}
     }
     @Test fun completeProductJourneyWithAutomaticPreparationAndManualParking() {
         waitText("설정")

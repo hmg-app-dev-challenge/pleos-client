@@ -605,7 +605,7 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
     }
 }
 
-private fun sourceLabel(source:Source)=when(source){Source.SDK->"차량";Source.MANUAL->"직접 입력";Source.EMULATOR->"에뮬레이터";Source.DEMO->"예시";Source.UNKNOWN->"출처 미확인"}
+private fun sourceLabel(source:Source)=when(source){Source.SDK->"차량";Source.MANUAL->"직접 입력";Source.EMULATOR->"차량 연결";Source.DEMO->"저장된 값";Source.UNKNOWN->"출처 미확인"}
 @Composable private fun AdjustValue(label:String,value:String,canDecrease:Boolean,canIncrease:Boolean,onDecrease:()->Unit,onIncrease:()->Unit){
     Column(verticalArrangement=Arrangement.spacedBy(12.dp)){
         Text("$label · $value",style=IviType.smallTitle)

@@ -1,0 +1,12 @@
+Starting: Intent { cmp=ai.umos.maps.android.navigation.app/.MainActivity }
+Warning: Activity not started, intent has been delivered to currently running top-most instance.
+Success
+
+com.chapark.ivi.ReleaseStorageAcceptanceTest:RELEASE_STORAGE: existed=false previousBytes=0 step=0 completed=false archived=0 preserved=true notice=null
+.
+com.chapark.ivi.CarUxMonitorTest:VEHICLE_GATE: UxSnapshot(mode=AVAILABLE, restrictions=0, reason=P단 및 플랫폼 상세 조작 허용 확인, parking=PARK)
+.
+
+Time: 0.13
+
+OK (2 tests)

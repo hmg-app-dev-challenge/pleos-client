@@ -8,13 +8,14 @@ plugins {
 android {
     namespace = "com.chapark.ivi"
     compileSdk = 35
+    testBuildType = providers.gradleProperty("iviTestBuildType").getOrElse("debug")
     useLibrary("android.car", false)
     defaultConfig {
         applicationId = "com.chapark.ivi"
         minSdk = 28
         targetSdk = 34
-        versionCode = 2
-        versionName = "0.4.0"
+        versionCode = 3
+        versionName = "0.5.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     val releaseProperties=rootProject.file(".local-signing/release.properties")

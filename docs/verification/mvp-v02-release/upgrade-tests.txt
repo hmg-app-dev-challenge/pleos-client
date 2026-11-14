@@ -1,0 +1,10 @@
+
+com.chapark.ivi.ReleaseStorageAcceptanceTest:RELEASE_STORAGE: existed=true previousBytes=550 step=0 completed=false archived=0 preserved=true notice=null
+.
+com.chapark.ivi.CarUxMonitorTest:VEHICLE_GATE: UxSnapshot(mode=AVAILABLE, restrictions=0, reason=P단 및 플랫폼 상세 조작 허용 확인, parking=PARK)
+.
+com.chapark.ivi.BatteryCapabilityStoreTest:..
+
+Time: 0.202
+
+OK (4 tests)

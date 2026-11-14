@@ -134,3 +134,9 @@ NaviHelper 3.0.5의 요청 API는 Unit 반환이다. 호출 반환/예외를 고
 [카탈로그/큰 글자/내비/충전 화면 10개](verification/mvp-v02-final/device-tests.txt), [최종 메타데이터/큰 글자/계획/양 테마 12개](verification/mvp-v02-final/metadata-ui-tests.txt), [실제 SOC 20→37 구독 1개](verification/mvp-v02-final/soc-subscription.txt)가 통과했다. SOC는 검증 후 20으로 복귀했다. 큰 글자는 800dp 폭, 1.3배 글꼴, 내부 화면 0~6 전체를 Light/Dark로 검사했고 [Dark 계획](verification/mvp-v02-final/large-dark-plan.png)·[Light 철수](verification/mvp-v02-final/large-light-checkout.png)를 시각 확인했다. 내용은 스크롤하며 주요 CTA는 화면 안에 유지된다.
 
 Navi 단독 안내/재연결은 SDK로 확인했다. 경유지는 이름만 확인되고 좌표가 0,0인 기존 에뮬레이터 제약이 재현되어 VERIFY_WAYPOINT에서 자동 확정을 막았고, 명시적인 사용자 위치 확인 뒤 USER 출처로 안내를 열었다. 이를 경유 좌표 자동 검증 성공으로 해석하지 않는다. UI 회귀와 전체 흐름은 수동 초점 복귀 없이 완료됐다. SOC 구독 첫 실행은 변경 명령이 시험의 20초 대기 이후 도착해 실패했으며, 시작 3초 뒤 변경하도록 자동화한 재실행이 통과했다.
+
+## V02-08B: 0.5.0 서명 패키징
+
+2026-11-14. 0.5.0(3) release와 release 대상 instrumentation 빌드를 추가했다. 이전 동일 서명 0.4.0의 저장 파일을 유지하는 업데이트, 앱 데이터가 없는 임시 사용자 첫 설치, 실제 Navi 포함 전체 여행을 검증했다. 최종 APK 전체 흐름은 26.524초에 수동 개입 없이 통과했다. 폰·IVI 사용자 화면의 예시/에뮬레이터 진단 문구를 저장값/차량 연결로 정리했으며 내부 출처 식별은 유지한다.
+
+단위67/서버7, 빌드·Lint 및 실제 시험 범위·실패 재현·재시도·해시를 [0.5.0 인수 기록](MVP_V0_2_ACCEPTANCE.md)에 모았다. 데스크톱에 APK/해시/26.71초 release 검증 영상을 저장했다. 새 AVD 생성은 공간 부족으로 막혀 새 Android 사용자에 의한 앱 데이터 격리를 검증했다. 새 사용자 내비 앱 첫 실행 전에는 timeout이 발생했고 초기화 후 성공했다. APK의 timeout 안내에도 이 복구 순서를 반영했다. 대표 장소 자료·실차·새 AVD 전체 인수는 완료로 표시하지 않는다.

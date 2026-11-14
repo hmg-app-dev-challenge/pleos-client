@@ -117,7 +117,7 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
             Panel {
                 Text("오늘의 여행",style=MaterialTheme.typography.titleMedium)
                 Text("내 차와 함께하는 하룻밤")
-                Text("배터리 ${s.soc}% · 예시",style=MaterialTheme.typography.titleLarge)
+                Text("배터리 ${s.soc}% · 저장된 잔량",style=MaterialTheme.typography.titleLarge)
                 Text("${s.input.people}인 · ${s.input.cookingPlan.label} · ${if(s.input.sleepingBag)"침낭 보유" else "침낭 미보유"}")
             }
         }
@@ -152,7 +152,7 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
         }
         3->{
             Heading("오늘의 준비 계획",s.place.name)
-            Text("현재 배터리 ${s.soc?.let{"$it%"} ?: "확인 필요"} · 예시 · 출발 전 ${s.departureCheckedCount}/${s.departureProgress.total}개 확인")
+            Text("현재 배터리 ${s.soc?.let{"$it%"} ?: "확인 필요"} · 저장된 잔량 · 출발 전 ${s.departureCheckedCount}/${s.departureProgress.total}개 확인")
             s.departureBlockReason?.let { Text(it) }
             if(s.input.cookingNeedsReview) CookingPlan.entries.forEach { plan->
                 PleosButton(plan.label,filled=s.input.cookingPlan==plan){send(JourneyEvent.Conditions(s.input.copy(cookingPlan=plan,cookingNeedsReview=false)))}

@@ -16,3 +16,5 @@ __pycache__/
 .local-server/
 
 .local-signing/
+
+apk/*.apk
