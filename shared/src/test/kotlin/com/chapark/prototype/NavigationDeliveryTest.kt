@@ -17,4 +17,27 @@ class NavigationDeliveryTest {
         for(state in listOf(Journey(step=3),Journey(step=6,completed=true)))
             assertEquals(state,JourneyJournal.recordNavigationDelivery(state,"late",100,true))
     }
+    @Test fun lostGuidanceBlocksArrivalAndRetryPreservesThePreparedTrip() {
+        val input=com.chapark.app.domain.TripInput(people=3,
+            cookingPlan=com.chapark.app.domain.CookingPlan.SIMPLE,
+            schedule=com.chapark.app.domain.TripSchedule("2026-11-14","Asia/Seoul"))
+        val original=Journey(step=4,tripId="retained-trip",placeId="camp-nanji",input=input,
+            chargerId="selected-charger",checked=setOf("drinking-water","bedding-set"),
+            route=RoutePhase.GUIDING)
+        val lost=JourneyJournal.apply(original,JourneyEvent.NavigationLost,100,"SDK")
+        assertEquals(RoutePhase.FAILED,lost.route)
+        assertEquals(lost,JourneyJournal.apply(lost,JourneyEvent.Arrive,200,"USER"))
+        val retry=JourneyJournal.apply(lost,JourneyEvent.RequestRoute,300,"USER")
+        assertEquals(RoutePhase.REQUESTED,retry.route)
+        val recovered=JourneyJournal.apply(retry,JourneyEvent.RouteResponse(true),400,"SDK")
+        assertEquals(RoutePhase.GUIDING,recovered.route)
+        assertEquals(original.input,recovered.input)
+        assertEquals(original.placeId,recovered.placeId)
+        assertEquals(original.chargerId,recovered.chargerId)
+        assertEquals(original.checked,recovered.checked)
+        assertEquals(original.tripId,recovered.tripId)
+        assertFalse(recovered.parked)
+        assertFalse(recovered.completed)
+        assertEquals(listOf("ROUTE_FAILED","ROUTE_REQUESTED","GUIDANCE_OBSERVED"),recovered.records.map{it.kind})
+    }
 }

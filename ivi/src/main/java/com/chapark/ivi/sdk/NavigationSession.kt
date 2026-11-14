@@ -24,7 +24,8 @@ data class NavigationSnapshot(val phase:NavigationPhase=NavigationPhase.IDLE,val
     val destinationName:String?=null,val routeConfirmed:Boolean=false,val confirmationSource:String="SDK")
 
 /** Public SDK only. Releasing this observer never cancels a driver's route. */
-class NavigationSession(context:Context):AutoCloseable {
+class NavigationSession internal constructor(context:Context,
+    private val monotonicNow:()->Long={android.os.SystemClock.elapsedRealtime()}):AutoCloseable {
     private val context=context.applicationContext
     private val handler=Handler(Looper.getMainLooper())
     private var generation=0L
@@ -34,6 +35,7 @@ class NavigationSession(context:Context):AutoCloseable {
     private var destinationMatches=false
     private var ready=false
     private var manualWaypointConfirmation:(()->Unit)?=null
+    private var checkFreshness:(()->Unit)?=null
     private val deliveries=Channel<NavigationDelivery>(Channel.UNLIMITED)
     val requestDeliveries=deliveries.receiveAsFlow()
     private val mutable=MutableStateFlow(NavigationSnapshot())
@@ -45,6 +47,7 @@ class NavigationSession(context:Context):AutoCloseable {
         var waypointMatches=charger==null
         var waypointNamed=false
         var waypointManual=false
+        val freshness=NavigationFreshness(charger!=null)
         mutable.value=NavigationSnapshot(NavigationPhase.CONNECTING)
         fun fail(message:String){
             if(token!=generation)return
@@ -52,13 +55,21 @@ class NavigationSession(context:Context):AutoCloseable {
             handler.removeCallbacksAndMessages(null)
             runCatching{listener?.let{client?.removeListener(it)}}
             runCatching{client?.release()};client=null;listener=null;ready=false
+            checkFreshness=null;manualWaypointConfirmation=null
             mutable.value=NavigationSnapshot(NavigationPhase.FAILED,"$message 목적지: ${place.address}" + (charger?.let{" · 경유지: ${it.address}"} ?: ""))
         }
-        fun post(action:()->Unit){handler.post{
-            if(token==generation)try{action()}catch(e:Exception){fail("내비게이션 연결을 확인해 주세요.")}
-        }}
+        fun post(action:(Long)->Unit){
+            val receivedAt=monotonicNow()
+            handler.post{
+                if(token==generation)try{action(receivedAt)}catch(e:Exception){fail("내비게이션 연결을 확인해 주세요.")}
+            }
+        }
+        checkFreshness={
+            if(token==generation && mutable.value.phase in setOf(NavigationPhase.GUIDING,NavigationPhase.VERIFY_WAYPOINT) && !freshness.isFresh(monotonicNow()))
+                fail("길 안내 상태를 다시 확인해야 해요. 내비게이션을 확인한 뒤 다시 시도해 주세요.")
+        }
         fun confirm(){
-            if(guidance && destinationMatches && mutable.value.phase!=NavigationPhase.ARRIVED){
+            if(guidance && destinationMatches && freshness.isFresh(monotonicNow()) && mutable.value.phase!=NavigationPhase.ARRIVED){
                 if(waypointMatches)mutable.value=NavigationSnapshot(NavigationPhase.GUIDING,destinationName=place.place.name,routeConfirmed=true,
                     message=charger?.let{if(waypointManual)"직접 확인한 ${it.name} 경유 안내" else "${it.name} 경유 포함 길 안내 중"},confirmationSource=if(waypointManual)"USER" else "SDK")
                 else if(waypointNamed)mutable.value=NavigationSnapshot(NavigationPhase.VERIFY_WAYPOINT,
@@ -66,6 +77,7 @@ class NavigationSession(context:Context):AutoCloseable {
             }
         }
         manualWaypointConfirmation={
+            checkHealth()
             if(token==generation && mutable.value.phase==NavigationPhase.VERIFY_WAYPOINT && guidance && destinationMatches && waypointNamed){
                 waypointManual=true;waypointMatches=true;confirm()
             }
@@ -76,8 +88,9 @@ class NavigationSession(context:Context):AutoCloseable {
         }
         val n=NaviHelper(context);client=n
         val l=object:NaviHelperEventListener {
-            override fun onWayPointInfo(waypointInfo:List<WaypointInfo>)=post{
+            override fun onWayPointInfo(waypointInfo:List<WaypointInfo>)=post{receivedAt->
                 if(charger!=null){
+                    freshness.observe(NavigationFreshness.Reading.WAYPOINT,receivedAt)
                     Log.i("ChaParkNavi","waypoints=$waypointInfo")
                     val point=waypointInfo.singleOrNull()
                     waypointNamed=point!=null && point.name==charger.name && point.latitude==0.0 && point.longitude==0.0
@@ -99,18 +112,21 @@ class NavigationSession(context:Context):AutoCloseable {
                 guidance=navigationStatus==NavigationStatus.ROUTE_DRIVE
                 n.getDestinationInfo();confirm()
             }
-            override fun onRouteStateInfo(routeStateInfo:RouteStateInfo)=post{
+            override fun onRouteStateInfo(routeStateInfo:RouteStateInfo)=post{receivedAt->
+                freshness.observe(NavigationFreshness.Reading.ROUTE,receivedAt)
                 guidance=routeStateInfo.naviMode in setOf(NaviMode.ROUTE_GUIDING,NaviMode.SIMULATION_GUIDING)
                 if(!routeStateInfo.termsAgreement)fail("내비게이션 앱에서 이용 안내를 확인해 주세요.")
                 else if(!guidance && mutable.value.phase in setOf(NavigationPhase.GUIDING,NavigationPhase.VERIFY_WAYPOINT))fail("길 안내가 종료됐어요. 목적지를 다시 확인해 주세요.")
                 else confirm()
             }
-            override fun onDestinationInfo(destinationInfo:DestinationInfo)=post{
+            override fun onDestinationInfo(destinationInfo:DestinationInfo)=post{receivedAt->
+                freshness.observe(NavigationFreshness.Reading.DESTINATION,receivedAt)
                 destinationMatches=matchesDestination(place.latitude,place.longitude,destinationInfo.latitude,destinationInfo.longitude)
                 Log.i("ChaParkNavi","destination=${destinationInfo.name}, matches=$destinationMatches")
                 if(!destinationMatches && mutable.value.phase in setOf(NavigationPhase.GUIDING,NavigationPhase.VERIFY_WAYPOINT))fail("내비게이션 목적지가 변경됐어요. 다시 확인해 주세요.") else confirm()
             }
             override fun onDestinationArrived(destinationArrivedInfo:DestinationArrivedInfo)=post{
+                checkHealth()
                 if(destinationMatches && mutable.value.phase==NavigationPhase.GUIDING)
                     mutable.value=NavigationSnapshot(NavigationPhase.ARRIVED,destinationName=place.place.name,routeConfirmed=true)
             }
@@ -150,6 +166,8 @@ class NavigationSession(context:Context):AutoCloseable {
                 }
                 fun poll(){
                     if(token!=generation || mutable.value.phase==NavigationPhase.ARRIVED)return
+                    checkHealth()
+                    if(token!=generation)return
                     try {n.getDestinationInfo();n.getRouteStateInfo();if(charger!=null)n.getWaypointInfo()} catch(e:Exception){fail("내비게이션 연결을 확인해 주세요.");return}
                     handler.postDelayed({poll()},2_000)
                 }
@@ -158,6 +176,8 @@ class NavigationSession(context:Context):AutoCloseable {
         }},{post{fail("내비게이션에 연결하지 못했어요. 앱을 열고 다시 시도해 주세요.")}})}
         catch(e:Exception){fail("내비게이션에 연결하지 못했어요.")}
     }
+    /** Recheck before presenting a retained guidance state after backgrounding or suspension. */
+    fun checkHealth(){checkFreshness?.invoke()}
     fun confirmWaypointByUser(){manualWaypointConfirmation?.invoke()}
     fun openScreen(){
         val n=client
@@ -185,7 +205,7 @@ class NavigationSession(context:Context):AutoCloseable {
     override fun close(){
         generation++;handler.removeCallbacksAndMessages(null)
         runCatching{listener?.let{client?.removeListener(it)}};runCatching{client?.release()}
-        client=null;listener=null;guidance=false;destinationMatches=false;ready=false;manualWaypointConfirmation=null
+        client=null;listener=null;guidance=false;destinationMatches=false;ready=false;manualWaypointConfirmation=null;checkFreshness=null
         mutable.value=NavigationSnapshot()
     }
     companion object {

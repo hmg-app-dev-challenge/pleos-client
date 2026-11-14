@@ -147,7 +147,7 @@ class JourneyViewModel(app:Application):AndroidViewModel(app) {
         try {store.save(next);mutable.value=mutable.value.copy(saving=false,error=null,history=store.history())}
         catch(e:Exception){mutable.value=mutable.value.copy(saving=false,error="저장하지 못했습니다. 저장 공간을 확인한 뒤 다시 실행해 주세요.")}
     }
-    fun startVehicleObservation(){battery.start()}
+    fun startVehicleObservation(){navigation.checkHealth();battery.start()}
     fun stopVehicleObservation(){battery.close()}
     fun send(event:JourneyEvent){if(mutable.value.loaded)commands.trySend(Command.Event(event))}
     fun loadPlans(){commands.trySend(Command.LoadPlans)}
