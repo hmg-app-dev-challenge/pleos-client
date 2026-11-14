@@ -352,12 +352,15 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
                 Text(if(s.place.nightToilet==Condition.UNKNOWN)"야간 운영 여부 확인 필요" else "야간 화장실 이용 불가",style=IviType.smallTitle)
                 IviButton("다른 장소 비교",size=IviButtonSize.MEDIUM){send(JourneyEvent.Back)}
             }
-            Panel {
-                Text("충전 경유 계획",style=IviType.smallTitle)
-                Text("선택한 충전시설을 거쳐 목적지로 안내해요. 충전 속도와 이용 조건을 먼저 확인해 주세요.",style=IviType.smallBody)
+            SelectedCharger(s,send)
+            if(s.needsChargingReview) Panel(Modifier.testTag("charging-review")) {
+                Text("충전시설 후보",style=IviType.smallTitle)
+                Text("목적지 지역에 연결한 후보예요. 경로와 우회 거리, 커넥터와 운영 조건을 내비와 출처에서 확인해 주세요.",style=IviType.smallBody)
                 IviButton("경유 없이 이동",size=IviButtonSize.MEDIUM,filled=s.chargerId==null){send(JourneyEvent.Charger(null))}
                 val uri=androidx.compose.ui.platform.LocalUriHandler.current
-                com.chapark.app.data.ChargingPlaces.all.forEach{charger->
+                val chargers=com.chapark.app.data.ChargingPlaces.forPlace(s.placeId)
+                if(chargers.isEmpty())Text("이 장소에 연결된 충전 후보가 아직 없어요. 내비게이션에서 충전시설을 확인해 주세요.",style=IviType.smallBody)
+                chargers.forEach{charger->
                     Text(charger.name,style=IviType.smallTitle)
                     Text(charger.details,style=IviType.smallBody)
                     Text("${charger.address} · 자료 확인 ${charger.checkedOn}",style=IviType.label)
@@ -382,7 +385,7 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
         4 -> {
             Heading("${names[s.placeId] ?: s.place.name}까지","차량 내비게이션에서 길 안내를 이어가세요.")
             Text(NavigationPlaces.find(s.placeId)?.address ?: "주소 확인 필요",style=IviType.smallBody)
-            com.chapark.app.data.ChargingPlaces.find(s.chargerId)?.let{Text("경유 · ${it.name} · ${it.address}",style=IviType.smallBody)}
+            SelectedCharger(s,send)
             Panel {
                 Text(when(s.route){RoutePhase.NONE->"이동 준비";RoutePhase.REQUESTED->"경로를 탐색하고 있어요";RoutePhase.GUIDING->"길 안내 중";RoutePhase.FAILED->"이동 정보를 불러오지 못했어요";RoutePhase.ARRIVED->if(s.parked)"도착 · 주차 완료" else "목적지 도착 · 주차 확인 필요"},style=IviType.title)
                 Text(if(s.decisions.any{it.id=="charge-review"})"배터리가 부족할 수 있어요. 출발 전 충전 계획을 확인해 주세요." else "목적지와 경로를 확인하고, 현장 운영 안내를 따라주세요.",style=IviType.body)
@@ -448,6 +451,19 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
         }
     }
 }
+@Composable private fun SelectedCharger(s:Journey,send:(JourneyEvent)->Unit) {
+    com.chapark.app.data.ChargingPlaces.find(s.chargerId)?.let { charger->
+        Panel(Modifier.testTag("selected-charger")) {
+            Text("선택한 경유지 · ${charger.name}",style=IviType.smallTitle)
+            Text(charger.address,style=IviType.smallBody)
+            Text("조건이나 목적지가 바뀌어도 이전 선택은 유지돼요. 이번 경로에 맞는지 확인해 주세요.",style=IviType.label)
+            if(com.chapark.app.data.ChargingPlaces.forPlace(s.placeId).none{it.id==charger.id})Text("현재 목적지의 연결 후보가 아니에요. 내비에서 경로를 다시 확인해 주세요.",style=IviType.label)
+            if(s.step==3 || (s.step==4 && s.route in setOf(RoutePhase.NONE,RoutePhase.FAILED)))
+                IviButton("선택한 경유지 해제",Modifier.testTag("clear-charger"),size=IviButtonSize.MEDIUM){send(JourneyEvent.Charger(null))}
+        }
+    }
+}
+
 @Composable internal fun PreparationItem(s:Journey,item:DecisionItem,send:(JourneyEvent)->Unit) {
     val omitted=item.id in s.omitted
     Column(Modifier.fillMaxWidth().testTag("preparation-${item.id}"),verticalArrangement=Arrangement.spacedBy(12.dp)) {
@@ -471,7 +487,7 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
         Text(entry.address,style=IviType.label,color=p.secondary)
         Text("주차 · ${condition(evidence.parking)}\n차내 숙박 · ${condition(place.overnight)}\n야간 화장실 · ${condition(place.nightToilet)}\n취사 · ${condition(place.cooking)}",style=IviType.label)
         Text("${evidence.scenery.label} · 조망 확인 필요",style=IviType.label)
-        Text("충전시설 · 연결 후보 확인 필요",style=IviType.label,color=p.secondary)
+        Text(if(com.chapark.app.data.ChargingPlaces.forPlace(place.id).isEmpty())"충전시설 · 연결 후보 확인 필요" else "충전시설 · 지역 후보 ${com.chapark.app.data.ChargingPlaces.forPlace(place.id).size}곳 · 경로 확인 필요",style=IviType.label,color=p.secondary)
         val dates=evidence.facts.mapNotNull{it.checkedOn}.distinct()
         Text("자료 확인 · ${dates.joinToString().ifBlank{"미확인"}}${if(evidence.facts.any{it.checkedOn==null})" · 일부 미확인" else ""}",style=IviType.label)
         Text("출처 · ${runCatching{java.net.URI(entry.source).host}.getOrNull() ?: "확인 필요"}",style=IviType.label,color=p.secondary)
@@ -521,7 +537,7 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
         }
         Text("${s.input.people}인\n${s.input.cookingPlan.label}\n${if(s.input.sleepingBag)"침낭 보유" else "침낭 미보유"}",style=IviType.body)
         HorizontalDivider(color=p.divider)
-        Text("${s.checkedCount}/${s.decisions.size}개 준비 확인",style=IviType.smallTitle)
+        Text("출발 전 필수 ${s.departureCheckedCount}/${s.departureProgress.total}개 확인",style=IviType.smallTitle)
         Text("준비 항목을 확인하고\n편안하게 출발하세요.",style=IviType.label,color=p.tertiary)
     }
 }

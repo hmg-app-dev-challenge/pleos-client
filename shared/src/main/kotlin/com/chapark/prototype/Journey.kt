@@ -31,6 +31,7 @@ data class Journey(
     val place get()=PlaceCatalog.find(placeId) ?: Place(placeId,"장소 정보 확인 필요","저장된 장소 자료를 확인해 주세요.",Condition.UNKNOWN,Condition.UNKNOWN,Condition.UNKNOWN,Condition.UNKNOWN,Condition.UNKNOWN,12)
     val decisions get()=followUps.sorted().map{DecisionItem("followup-$it",Group.BEFORE,"다시 확인 · $it","지난 여행에서 확인하지 못한 정보예요. 이번 장소의 조건도 확인해 주세요.")} + reminders.sorted().map{DecisionItem("reminder-$it",Group.GEAR,"다시 챙기기 · $it","지난 여행에서 빠뜨렸다고 기록한 준비물이에요.")} + PlanningRules.evaluate(place,input,SocReading(soc?.toDouble(),
         if(soc==null && batteryStatus==ReadingStatus.AVAILABLE)ReadingStatus.UNKNOWN else batteryStatus,socSource))
+    val needsChargingReview get()=decisions.any{it.id=="charge-review"}
     val checkedCount get()=decisions.count { it.id in checked }
     val departureItems get()=decisions.filter{it.group!=Group.SITE}
     val siteItems get()=decisions.filter{it.group==Group.SITE}
@@ -101,7 +102,7 @@ object JourneyReducer {
         if(old.completed) return old
         fun update(next:Journey):Journey {
             if(old.step>3) return old
-            return next.copy(omitted=retainedChecks(old.decisions,next.decisions,old.omitted),checked=retainedChecks(old.decisions,next.decisions,old.checked),
+            return next.copy(omitted=retainedChecks(old.decisions,next.decisions,next.omitted),checked=retainedChecks(old.decisions,next.decisions,next.checked),
                 route=RoutePhase.NONE,parked=false,sleepChecks=emptySet(),exitChecks=emptySet(),sleepReady=false)
         }
         fun toggle(set:Set<String>,id:String)=if(id in set)set-id else set+id
@@ -120,8 +121,13 @@ object JourneyReducer {
                 else -> old
             }
             is JourneyEvent.Conditions -> if(event.value.valid) update(old.copy(input=event.value)) else old
-            is JourneyEvent.Charger -> if(event.id==null || com.chapark.app.data.ChargingPlaces.find(event.id)!=null)update(old.copy(chargerId=event.id,checked=old.checked-"charge-review")) else old
-            is JourneyEvent.Place -> if(PlaceCatalog.all.any{it.id==event.id}) update(old.copy(placeId=event.id)) else old
+            is JourneyEvent.Charger -> when {
+                event.id==old.chargerId -> old
+                event.id==null && old.step==4 && old.route in setOf(RoutePhase.NONE,RoutePhase.FAILED) -> old.copy(chargerId=null,route=RoutePhase.NONE)
+                event.id==null || (old.needsChargingReview && com.chapark.app.data.ChargingPlaces.forPlace(old.placeId).any{it.id==event.id}) -> update(old.copy(chargerId=event.id,checked=old.checked-"charge-review",omitted=old.omitted-"charge-review"))
+                else -> old
+            }
+            is JourneyEvent.Place -> if(PlaceCatalog.all.any{it.id==event.id}) update(old.copy(placeId=event.id,checked=if(event.id!=old.placeId)old.checked-"charge-review" else old.checked,omitted=if(event.id!=old.placeId)old.omitted-"charge-review" else old.omitted)) else old
             is JourneyEvent.Soc -> if(old.batteryVisible && (event.value==null || event.value in 0..100))
                 update(old.copy(soc=event.value,socSource=Source.MANUAL,socReceivedAtMillis=event.receivedAt,
                     batteryStatus=if(event.value==null)ReadingStatus.UNKNOWN else ReadingStatus.AVAILABLE)) else old
