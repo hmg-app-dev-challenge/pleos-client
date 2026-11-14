@@ -1,0 +1,11 @@
+
+com.chapark.ivi.CatalogCacheTest:...
+com.chapark.ivi.JourneyLayoutTest:..
+com.chapark.ivi.MvpPlanningScreenTest:..
+com.chapark.ivi.JourneyRegressionTest:.....
+
+Time: 19.884
+
+OK (12 tests)
+
+

@@ -71,13 +71,25 @@ internal class CatalogCache(context:Context){
                 val entries=(0 until facts.length()).map{i->
                     val f=facts.getJSONObject(i)
                     val date=if(f.isNull("checkedOn"))null else f.getString("checkedOn").also{LocalDate.parse(it)}
-                    Evidence(text(f,"label"),text(f,"detail",2000),url(f,"url"),date,Condition.valueOf(f.getString("condition")))
+                    Evidence(text(f,"label"),text(f,"detail",2000),url(f,"url"),date,Condition.valueOf(f.getString("condition")),if(f.has("sourceName") && !f.isNull("sourceName"))text(f,"sourceName",120) else URI(f.getString("url")).host)
                 }
                 fun condition(key:String,label:String):Condition {
                     val proposed=Condition.valueOf(o.getString(key))
                     return if(proposed!=Condition.UNKNOWN && entries.none{it.label==label && it.condition==proposed && it.fresh(LocalDate.now())})Condition.UNKNOWN else proposed
                 }
-                evidence[id]=PlaceEvidence(Scenery.valueOf(o.getString("scenery")),entries,condition("parking","주차"))
+                val primary=Scenery.valueOf(o.getString("scenery"))
+                val tags=if(o.has("sceneryTags"))o.getJSONArray("sceneryTags").let{array->
+                    require(array.length() in 1..Scenery.entries.size)
+                    (0 until array.length()).map{Scenery.valueOf(array.getString(it))}.toSet()
+                } else setOf(primary)
+                require(primary in tags)
+                val moments=if(o.has("bestMoment"))o.getJSONArray("bestMoment").let{array->
+                    require(array.length()<=BestMoment.entries.size)
+                    (0 until array.length()).map{BestMoment.valueOf(array.getString(it))}.toSet()
+                } else emptySet()
+                val direction=if(!o.has("viewDirection") || o.isNull("viewDirection"))null else o.getDouble("viewDirection").also{require(it.isFinite() && it in 0.0..360.0)}
+                val directionDate=entries.firstOrNull{it.label=="조망 방향" && it.condition==Condition.ALLOWED}?.checkedOn
+                evidence[id]=PlaceEvidence(primary,entries,condition("parking","주차"),viewingDirectionDegrees=direction,viewingCheckedOn=directionDate,sceneryTags=tags,bestMoments=moments)
                 NavigationPlace(Place(id,text(o,"name"),"출처와 운영 조건을 확인해 주세요.",condition("overnight","차내 숙박"),
                     condition("nightToilet","야간 화장실"),condition("cooking","취사"),condition("fire","화기"),condition("pets","반려동물"),12),
                     lat,lon,text(o,"address"),url(o,"source"))

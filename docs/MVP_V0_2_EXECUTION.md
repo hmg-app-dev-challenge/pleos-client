@@ -124,3 +124,13 @@ NaviHelper 3.0.5의 요청 API는 Unit 반환이다. 호출 반환/예외를 고
 [빌드·Lint](verification/mvp-v02-vehicle/build.txt), JVM 66개(shared 52/phone 7/IVI 7), [서버 7개](verification/mvp-v02-vehicle/server-tests.txt), [P단/SOC/화면·저장 15개](verification/mvp-v02-vehicle/device-tests.txt), [비P 잠금 1개](verification/mvp-v02-vehicle/non-park-test.txt), [SOC 20% 및 schema 11 저장 3개](verification/mvp-v02-vehicle/capability-tests.txt), [전체 여행 1개](verification/mvp-v02-vehicle/flow-tests.txt) 통과. 전체 흐름은 수동 초점 개입 없이 24.78초에 내비 전환·복귀/재생성·6개 수면/5개 철수·archive·다크 완료까지 진행했고 요청 호출 반환 1개와 실제 안내 관측을 별도로 검사했다.
 
 비P 첫 시도는 Virtual Console 비활성(HTTP 503) 때문에 값을 변경하지 못했다. Console 세션 heartbeat를 활성화하고 다시 검증했으며 이후 D단에서 NOT_PARK/UX RESTRICTED, P단 복귀를 확인했다. `console-api.py`는 비2xx를 실패 종료해 이런 준비 실패가 통과처럼 보이지 않게 했다. 실제 차량의 권한/지원 조합, 서비스 단절 하드웨어 시험 및 EV 잔여시간은 이 결과에 포함하지 않는다.
+
+## V02-04B/08A: 자료 계약과 최종 화면 회귀
+
+2026-11-14. 장소 풍경은 복수 태그이며 SEA/MOUNTAIN/RIVER/LAKE/FOREST/CITY_NIGHT를 지원한다. 추천 시간은 SUNSET/SUNRISE/NIGHT_VIEW/STARS의 복수 선택 계약으로 읽는다. 추천 시간과 조망 방향은 속성별 출처·최근 확인 근거가 없으면 표시하지 않는다. 출처 이름은 자료에 명시된 이름 또는 출처 도메인을 표시한다. 기존 단일 풍경 캐시는 계속 읽으며, 잘못된 enum·대표 풍경 누락·범위 밖 방위는 거절한다. 풍경 필터는 Pleos 선택 컴포넌트를 두 행으로 배치해 좁은 창에서 글자가 잘리지 않게 했다.
+
+번들·서버 카탈로그 `2026-11-14.4`의 기존 4곳 자료에 현재 확인된 단일 태그, 빈 추천 시간, null 조망 방위를 명시했다. 방문 조건을 추가 확인한 것으로 날짜를 갱신하지 않았다. 서해안·차내 숙박·야간 화장실·취사 불가·바다 조망을 모두 갖춘 대표 장소 3곳의 운영 근거는 여전히 미확보다. 자료 계약 구현과 대표 데이터 확보를 구분한다.
+
+[카탈로그/큰 글자/내비/충전 화면 10개](verification/mvp-v02-final/device-tests.txt), [최종 메타데이터/큰 글자/계획/양 테마 12개](verification/mvp-v02-final/metadata-ui-tests.txt), [실제 SOC 20→37 구독 1개](verification/mvp-v02-final/soc-subscription.txt)가 통과했다. SOC는 검증 후 20으로 복귀했다. 큰 글자는 800dp 폭, 1.3배 글꼴, 내부 화면 0~6 전체를 Light/Dark로 검사했고 [Dark 계획](verification/mvp-v02-final/large-dark-plan.png)·[Light 철수](verification/mvp-v02-final/large-light-checkout.png)를 시각 확인했다. 내용은 스크롤하며 주요 CTA는 화면 안에 유지된다.
+
+Navi 단독 안내/재연결은 SDK로 확인했다. 경유지는 이름만 확인되고 좌표가 0,0인 기존 에뮬레이터 제약이 재현되어 VERIFY_WAYPOINT에서 자동 확정을 막았고, 명시적인 사용자 위치 확인 뒤 USER 출처로 안내를 열었다. 이를 경유 좌표 자동 검증 성공으로 해석하지 않는다. UI 회귀와 전체 흐름은 수동 초점 복귀 없이 완료됐다. SOC 구독 첫 실행은 변경 명령이 시험의 20초 대기 이후 도착해 실패했으며, 시작 3초 뒤 변경하도록 자동화한 재실행이 통과했다.

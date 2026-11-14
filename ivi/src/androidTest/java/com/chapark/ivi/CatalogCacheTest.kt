@@ -13,6 +13,16 @@ class CatalogCacheTest {
         assertEquals(Condition.UNKNOWN,value.evidence.getValue("test").parking)
         assertEquals(Condition.UNKNOWN,value.places.single().place.overnight)
     }
+    @Test fun multipleSceneryAndRecommendationNeedIndependentEvidence(){
+        val root=JSONObject(payload());val place=root.getJSONArray("places").getJSONObject(0)
+        place.put("sceneryTags",org.json.JSONArray(listOf("SEA","FOREST")));place.put("bestMoment",org.json.JSONArray(listOf("SUNSET","STARS")))
+        val info=CatalogCache.parse(root.toString()).evidence.getValue("test")
+        assertEquals(2,info.sceneryTags.size)
+        assertTrue(info.confirmedBestMoments(java.time.LocalDate.now()).isEmpty())
+        assertEquals("example.org",info.facts.single().sourceName)
+        place.put("sceneryTags",org.json.JSONArray(listOf("FOREST")))
+        assertTrue(runCatching{CatalogCache.parse(root.toString())}.isFailure)
+    }
     @Test fun incompatibleRulesInvalidCoordinatesAndDuplicateIdsAreRejected(){
         fun rejected(raw:String){assertTrue(runCatching{CatalogCache.parse(raw)}.isFailure)}
         rejected(payload().replace("mvp-v02-rules-3","future"))

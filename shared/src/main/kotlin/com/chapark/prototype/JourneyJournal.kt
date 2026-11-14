@@ -60,7 +60,7 @@ object JourneyJournal {
         val reading=kind in setOf("PREPARATION_COMPLETED","TRIP_COMPLETED")
         val evidence=com.chapark.app.data.PlaceEvidenceCatalog.find(next.placeId)
         val context=if(com.chapark.app.data.NavigationPlaces.find(next.placeId)!=null)PlaceMemory(
-            listOf(evidence.scenery.label),evidence.facts.mapNotNull{it.checkedOn}.distinct().sorted(),
+            evidence.sceneryTags.map{it.label},evidence.facts.mapNotNull{it.checkedOn}.distinct().sorted(),
             evidence.facts.isEmpty() || evidence.facts.any{it.checkedOn==null}) else null
         val computed=if(kind=="PREPARATION_COMPLETED")listOf(JourneyRecord("PLACE_CONTEXT",now,"REFERENCE",label=next.place.name,placeId=next.placeId,placeMemory=context))+solarRecords(next,now)+
             com.chapark.app.data.PlaceEvidenceCatalog.find(next.placeId).facts.map{fact->

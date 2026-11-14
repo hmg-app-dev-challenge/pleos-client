@@ -1,0 +1,10 @@
+
+com.chapark.ivi.BatterySessionTest:SUBSCRIPTION: BatterySnapshot(value=37, status=AVAILABLE, source=EMULATOR, receivedAt=1794623634184, delivery=subscription, capability=READ)
+.
+
+Time: 2.356
+
+OK (1 test)
+
+
+

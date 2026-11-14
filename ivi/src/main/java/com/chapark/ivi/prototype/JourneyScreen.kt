@@ -306,15 +306,17 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
         }
         2 -> {
             Heading("오늘의 쉼터를 비교해요","숙박 조건과 필요한 준비를 비교하고, 오늘의 쉼터를 골라보세요.")
-            IviSegments(listOf("전체","바다","산","강","숲"),listOf(null,"SEA","MOUNTAIN","RIVER","FOREST").indexOf(scenery)){
-                onScenery(listOf(null,"SEA","MOUNTAIN","RIVER","FOREST")[it])
+            (listOf<Scenery?>(null)+Scenery.entries).chunked(4).forEach { filters->
+                IviSegments(filters.map{it?.label ?: "전체"},filters.indexOfFirst{it?.name==scenery}){
+                    onScenery(filters[it]?.name)
+                }
             }
             IviToggleRow("이용 조건이 확인된 곳만",confirmedOnly,onConfirmed)
             Text("주차·차내 숙박·야간 화장실과 최근 근거가 모두 확인된 후보를 골라요.",style=IviType.label)
             if(candidates.isEmpty()) Panel {
                 Text("조건에 맞는 장소가 없어요",style=IviType.title)
                 Text("풍경 또는 이용 조건 필터를 바꿔 비교할 수 있어요.",style=IviType.body)
-                NavigationPlaces.all.filter{scenery==null || PlaceEvidenceCatalog.find(it.place.id).scenery.name==scenery}.forEach{
+                NavigationPlaces.all.filter{scenery==null || PlaceEvidenceCatalog.find(it.place.id).sceneryTags.any{tag->tag.name==scenery}}.forEach{
                     Text("${it.place.name} · ${PlaceEvidenceCatalog.find(it.place.id).exclusions(it,java.time.LocalDate.now()).joinToString()}",style=IviType.smallBody)
                 }
                 IviButton("전체 장소 보기",size=IviButtonSize.MEDIUM){onScenery(null);onConfirmed(false)}
@@ -531,7 +533,7 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
         Text(place.name,style=IviType.smallTitle)
         Text(entry.address,style=IviType.label,color=p.secondary)
         Text("주차 · ${condition(evidence.parking)}\n차내 숙박 · ${condition(place.overnight)}\n야간 화장실 · ${condition(place.nightToilet)}\n취사 · ${condition(place.cooking)}",style=IviType.label)
-        Text("${evidence.scenery.label} · 조망 확인 필요",style=IviType.label)
+        Text("${evidence.sceneryTags.joinToString(" · "){it.label}} · 조망 확인 필요",style=IviType.label)
         Text(if(com.chapark.app.data.ChargingPlaces.forPlace(place.id).isEmpty())"충전시설 · 연결 후보 확인 필요" else "충전시설 · 지역 후보 ${com.chapark.app.data.ChargingPlaces.forPlace(place.id).size}곳 · 경로 확인 필요",style=IviType.label,color=p.secondary)
         val dates=evidence.facts.mapNotNull{it.checkedOn}.distinct()
         Text("자료 확인 · ${dates.joinToString().ifBlank{"미확인"}}${if(evidence.facts.any{it.checkedOn==null})" · 일부 미확인" else ""}",style=IviType.label)
@@ -551,10 +553,13 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
         Text("취사 · ${condition(place.cooking)}\n화기 · ${condition(place.fire)}",style=IviType.smallBody)
         Text("반려동물 · ${condition(place.pets)}",style=IviType.smallBody)
         val evidence=PlaceEvidenceCatalog.find(place.id)
-        Text("주변 풍경 · ${evidence.scenery.label} · 조망 방향 확인 필요",style=IviType.label)
+        Text("주변 풍경 · ${evidence.sceneryTags.joinToString(" · "){it.label}} · 조망 방향 확인 필요",style=IviType.label)
+        Text("추천 시간 · ${evidence.confirmedBestMoments(java.time.LocalDate.now()).joinToString(" · "){it.label}.ifBlank{"확인 필요"}}",style=IviType.label)
+        Text("조망 방위 · ${evidence.confirmedViewingDirection(java.time.LocalDate.now())?.let{"${it.toInt()}°"} ?: "확인 필요"}",style=IviType.label)
         Text("지도 대표 위치 · 차량 진입구 확인 필요",style=IviType.label,color=p.tertiary)
         val uri=androidx.compose.ui.platform.LocalUriHandler.current
         evidence.facts.forEach{fact->
+            Text("출처 · ${fact.sourceName ?: "미확인"}",style=IviType.label,color=p.tertiary)
             Text("${fact.label} · ${fact.detail}",style=IviType.smallBody)
             Text("자료 확인 · ${fact.checkedOn ?: "미확인"}${if(!fact.fresh(java.time.LocalDate.now()))" · 최신 운영 정보 확인 필요" else ""}",style=IviType.label,color=p.tertiary)
         }

@@ -3,13 +3,25 @@ package com.chapark.app.data
 import com.chapark.app.domain.Condition
 import java.time.LocalDate
 
-enum class Scenery(val label:String){SEA("바다"),MOUNTAIN("산"),RIVER("강"),FOREST("숲")}
-data class Evidence(val label:String,val detail:String,val url:String?,val checkedOn:String?,val condition:Condition=Condition.UNKNOWN){
+enum class Scenery(val label:String){SEA("바다"),MOUNTAIN("산"),RIVER("강"),FOREST("숲"),LAKE("호수"),CITY_NIGHT("도시 야경")}
+enum class BestMoment(val label:String){SUNRISE("일출"),SUNSET("일몰"),NIGHT_VIEW("야경"),STARS("별 보기")}
+data class Evidence(val label:String,val detail:String,val url:String?,val checkedOn:String?,val condition:Condition=Condition.UNKNOWN,
+    val sourceName:String?=url?.let{runCatching{java.net.URI(it).host}.getOrNull()}){
     // Product freshness policy, not a guarantee that operators have not changed conditions.
     fun fresh(on:LocalDate)=checkedOn?.let{runCatching{val d=LocalDate.parse(it);!d.isAfter(on) && !d.plusDays(30).isBefore(on)}.getOrDefault(false)} ?: false
 }
 data class PlaceEvidence(val scenery:Scenery,val facts:List<Evidence>,val parking:Condition=Condition.UNKNOWN,
-    val viewingDirectionDegrees:Double?=null,val viewingCheckedOn:String?=null){
+    val viewingDirectionDegrees:Double?=null,val viewingCheckedOn:String?=null,
+    val sceneryTags:Set<Scenery> = setOf(scenery),val bestMoments:Set<BestMoment> = emptySet()){
+    init { require(sceneryTags.isNotEmpty() && scenery in sceneryTags) }
+    fun confirmedBestMoments(on:LocalDate)=bestMoments.filter{moment->facts.any{
+        it.label=="추천 시간" && it.detail==moment.label && it.condition==Condition.ALLOWED && it.url!=null && it.fresh(on)
+    }}
+    fun confirmedViewingDirection(on:LocalDate)=viewingDirectionDegrees?.takeIf{degrees->
+        degrees.isFinite() && degrees in 0.0..360.0 && viewingCheckedOn!=null && facts.any{
+            it.label=="조망 방향" && it.checkedOn==viewingCheckedOn && it.condition==Condition.ALLOWED && it.url!=null && it.fresh(on)
+        }
+    }
     fun exclusions(place:NavigationPlace,on:LocalDate):List<String> = buildList {
         if(parking!=Condition.ALLOWED)add("주차 조건 확인 필요")
         if(place.place.overnight!=Condition.ALLOWED)add("차내 숙박 조건 확인 필요")
@@ -18,7 +30,7 @@ data class PlaceEvidence(val scenery:Scenery,val facts:List<Evidence>,val parkin
     }
 }
 object PlaceEvidenceCatalog {
-    const val VERSION="2026-11-14.3"
+    const val VERSION="2026-11-14.4"
     private const val POLICY="https://reservation.knps.or.kr/contents/usagePolicy.do"
     private const val MONG="https://reservation.knps.or.kr/contents/C/serviceGuide.do?deptId=B081002&parkId=B08&prdDvcd=C"
     fun find(id:String):PlaceEvidence=AcceptedCatalog.snapshot?.evidence?.get(id) ?: when(id){
@@ -35,6 +47,6 @@ object PlaceEvidenceCatalog {
     }
     fun filter(scenery:Scenery?,confirmedOnly:Boolean,on:LocalDate)=NavigationPlaces.all.filter {
         val info=find(it.place.id)
-        (scenery==null || info.scenery==scenery) && (!confirmedOnly || info.exclusions(it,on).isEmpty())
+        (scenery==null || scenery in info.sceneryTags) && (!confirmedOnly || info.exclusions(it,on).isEmpty())
     }
 }

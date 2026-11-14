@@ -20,11 +20,16 @@ import java.io.File
 
 class JourneyLayoutTest {
     @get:Rule val compose=createComposeRule()
-    @Test fun allSevenStagesFitNarrowWindowInBothThemes() {
+    @Test fun allSevenStagesFitNarrowWindowInBothThemes() = verifyLayout(1f)
+    @Test fun largeTextKeepsPrimaryActionInsideWindow() = verifyLayout(1.3f)
+    private fun verifyLayout(fontScale:Float) {
         var current by mutableStateOf(Journey())
         compose.setContent {
+            val density=androidx.compose.ui.platform.LocalDensity.current
+            CompositionLocalProvider(androidx.compose.ui.platform.LocalDensity provides androidx.compose.ui.unit.Density(density.density,fontScale)) {
             Box(Modifier.requiredSize(800.dp,1000.dp).clipToBounds().testTag("narrow-window")) {
                 JourneyScreen(JourneyUi(current,loaded=true),{})
+            }
             }
         }
         for(dark in listOf(false,true)) for(step in 0..6) {
@@ -37,7 +42,7 @@ class JourneyLayoutTest {
             assertTrue(button.left>=window.left && button.right<=window.right && button.bottom<=window.bottom)
             if(step in setOf(0,1,2,5,6)) {
                 val dir=File(InstrumentationRegistry.getInstrumentation().targetContext.filesDir,"verification").apply{mkdirs()}
-                File(dir,"narrow-${if(dark)"dark" else "light"}-$step.png").outputStream().use {
+                File(dir,"narrow-$fontScale-${if(dark)"dark" else "light"}-$step.png").outputStream().use {
                     compose.onNodeWithTag("narrow-window").captureToImage().asAndroidBitmap().compress(Bitmap.CompressFormat.PNG,100,it)
                 }
             }
