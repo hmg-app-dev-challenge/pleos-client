@@ -7,11 +7,11 @@ import org.junit.Test
 class JourneyJournalTest {
     @Test fun checksRecordAcceptedChangesAndKeepOldMeaning(){
         var s=Journey(step=3)
-        s=JourneyJournal.apply(s,JourneyEvent.Check("bedding-count"),100)
+        s=JourneyJournal.apply(s,JourneyEvent.Check("bedding-set"),100)
         assertEquals(true,s.records.single().confirmed)
         val changed=JourneyJournal.apply(s,JourneyEvent.Conditions(s.input.copy(people=3)),200)
-        assertFalse("bedding-count" in changed.checked)
-        assertTrue(changed.records.single().label!!.contains("1명"))
+        assertFalse("bedding-set" in changed.checked)
+        assertTrue(changed.records.single().label!!.contains("침구 1세트"))
         assertEquals(changed,JourneyJournal.apply(changed,JourneyEvent.Check("missing"),300))
     }
     @Test fun reconnectDoesNotInventAnotherDepartureAndArrivalOriginIsPreserved(){

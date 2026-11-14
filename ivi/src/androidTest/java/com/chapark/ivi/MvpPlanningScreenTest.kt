@@ -20,7 +20,7 @@ import java.io.File
 class MvpPlanningScreenTest {
     @get:Rule val compose=createComposeRule()
     @Test fun tabsKeepPlanAndCompareThreePlacesWithoutAddingAStage(){
-        var state by mutableStateOf(Journey(step=1,placeId="camp-nanji",input=TripInput(people=3,cookingPlan=CookingPlan.SIMPLE,schedule=TripSchedule("2026-11-14","Asia/Seoul")),checked=setOf("water")))
+        var state by mutableStateOf(Journey(step=1,placeId="camp-nanji",input=TripInput(people=3,cookingPlan=CookingPlan.SIMPLE,schedule=TripSchedule("2026-11-14","Asia/Seoul")),checked=setOf("drinking-water")))
         compose.setContent { Box(Modifier.requiredSize(1602.dp,1100.dp)){JourneyScreen(JourneyUi(state,loaded=true),{state=JourneyReducer.apply(state,it)})} }
         compose.onNodeWithText("1 차박 계획").assertExists()
         compose.onNodeWithText("5 철수와 기록").assertExists()
@@ -34,7 +34,7 @@ class MvpPlanningScreenTest {
         val dir=File(InstrumentationRegistry.getInstrumentation().targetContext.filesDir,"verification").apply{mkdirs()}
         File(dir,"mvp-planning-wide.png").outputStream().use{compose.onRoot().captureToImage().asAndroidBitmap().compress(Bitmap.CompressFormat.PNG,100,it)}
         compose.onNodeWithText("여행 조건").performScrollTo().performClick()
-        compose.runOnIdle{assertEquals(3,state.input.people);assertEquals(CookingPlan.SIMPLE,state.input.cookingPlan);assertEquals(setOf("water"),state.checked)}
+        compose.runOnIdle{assertEquals(3,state.input.people);assertEquals(CookingPlan.SIMPLE,state.input.cookingPlan);assertEquals(setOf("drinking-water"),state.checked)}
         compose.onNodeWithText("장소 비교").performClick()
         compose.onNodeWithTag("journey-next").performClick()
         compose.runOnIdle{assertEquals(3,state.step);assertEquals(JourneyStage.PREPARING,state.stage)}

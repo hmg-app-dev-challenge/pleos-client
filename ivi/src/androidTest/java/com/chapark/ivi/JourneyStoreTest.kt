@@ -15,11 +15,11 @@ class JourneyStoreTest {
         val restored=store.decode(preferencesOf(intPreferencesKey("schema") to 1,
             intPreferencesKey("step") to 4,intPreferencesKey("people") to 2,
             stringPreferencesKey("place") to "demo-b",stringPreferencesKey("route") to "GUIDING",
-            stringSetPreferencesKey("checked") to setOf("water"))).first
+            stringSetPreferencesKey("checked") to setOf("drinking-water"))).first
         assertEquals(4,restored.step)
         assertEquals(RoutePhase.GUIDING,restored.route)
         assertEquals("demo-b",restored.placeId)
-        assertEquals(setOf("water"),restored.checked)
+        assertEquals(setOf("drinking-water"),restored.checked)
         assertEquals(35,restored.input.batteryThreshold)
         assertEquals(Source.DEMO,restored.socSource)
         assertNull(restored.socReceivedAtMillis)
@@ -34,7 +34,7 @@ class JourneyStoreTest {
             putString("stream","STORE_BEFORE: step=${original.step}, completed=${original.completed}, uid=${android.os.Process.myUid()}\n")
         })
         try {
-            val sample=Journey(records=listOf(JourneyRecord("PREPARATION_CHECK",100L,"USER","water","생수 · 확인",false,"camp-nanji")),tripId="test-trip",input=TripInput(3,com.chapark.app.domain.CookingPlan.COOKING,false,true,45,8,TripSchedule("2026-12-31","Asia/Seoul")),socSource=Source.MANUAL,socReceivedAtMillis=1234L,step=4,soc=null,route=RoutePhase.REQUESTED,restricted=true,dark=true,checked=setOf("water"))
+            val sample=Journey(records=listOf(JourneyRecord("PREPARATION_CHECK",100L,"USER","drinking-water","생수 · 확인",false,"camp-nanji")),tripId="test-trip",input=TripInput(3,com.chapark.app.domain.CookingPlan.COOKING,false,true,45,8,TripSchedule("2026-12-31","Asia/Seoul")),socSource=Source.MANUAL,socReceivedAtMillis=1234L,step=4,soc=null,route=RoutePhase.REQUESTED,restricted=true,dark=true,checked=setOf("drinking-water"))
             if(original.completed)store.save(original)
             store.save(sample)
             if(original.completed && original.tripId!=null)assertNotNull(store.archivedRecord(original.tripId!!))
@@ -49,7 +49,7 @@ class JourneyStoreTest {
             assertEquals(1234L,restored.first.socReceivedAtMillis)
             assertTrue(restored.first.restricted)
             assertTrue(restored.first.dark)
-            assertEquals(setOf("water"),restored.first.checked)
+            assertEquals(setOf("drinking-water"),restored.first.checked)
             assertNotNull(restored.second)
         } finally { store.save(original) }
     }

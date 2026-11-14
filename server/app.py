@@ -34,7 +34,7 @@ class Handler(BaseHTTPRequestHandler):
         if self.path=='/v1/catalog':
             return self.reply(200,json.loads((ROOT/'server/catalog.json').read_text()))
         if self.path=='/v1/rules':
-            return self.reply(200,{'schemaVersion':1,'version':'mvp-v02-model-1','engine':'bundled-shared',
+            return self.reply(200,{'schemaVersion':1,'version':'mvp-v02-rules-2','engine':'bundled-shared',
                 'departureRequires':['validSchedule','allDepartureChecks'],'siteChecksAfterArrival':True,
                 'batteryThreshold':'user','unsupportedBattery':'hidden'})
         if self.path=='/v1/plans':

@@ -7,7 +7,7 @@ import org.junit.Test
 
 class MvpContractTest {
     @Test fun planningTabsPreserveDraftAndCannotChangeOtherStagesOrDrivingState(){
-        val draft=Journey(step=1,checked=setOf("water"),input=TripInput(people=3))
+        val draft=Journey(step=1,checked=setOf("drinking-water"),input=TripInput(people=3))
         val places=JourneyReducer.apply(draft,JourneyEvent.PlanningTab(1))
         assertEquals(draft.copy(step=2),places)
         assertEquals(draft,JourneyReducer.apply(places,JourneyEvent.PlanningTab(0)))
@@ -32,25 +32,25 @@ class MvpContractTest {
     }
     @Test fun omissionIsMutuallyExclusiveRecordedAndCarriedToNextTrip() {
         var state=Journey(step=3)
-        state=JourneyJournal.apply(state,JourneyEvent.Check("water"),10)
-        state=JourneyJournal.apply(state,JourneyEvent.Omit("water"),20)
-        assertFalse("water" in state.checked)
-        assertEquals(PreparationStatus.OMITTED,state.preparationStatus("water"))
+        state=JourneyJournal.apply(state,JourneyEvent.Check("drinking-water"),10)
+        state=JourneyJournal.apply(state,JourneyEvent.Omit("drinking-water"),20)
+        assertFalse("drinking-water" in state.checked)
+        assertEquals(PreparationStatus.OMITTED,state.preparationStatus("drinking-water"))
         assertEquals("PREPARATION_OMITTED",state.records.last().kind)
-        assertTrue(JourneyReducer.apply(state,JourneyEvent.NewTrip).reminders.contains(state.decisions.single{it.id=="water"}.title))
+        assertTrue(JourneyReducer.apply(state,JourneyEvent.NewTrip).reminders.contains(state.decisions.single{it.id=="drinking-water"}.title))
         assertEquals(state,JourneyReducer.apply(state,JourneyEvent.Omit("missing")))
-        assertEquals(state.copy(restricted=true),JourneyReducer.apply(state.copy(restricted=true),JourneyEvent.Omit("water")))
-        val checked=JourneyReducer.apply(state,JourneyEvent.Check("water"))
-        assertEquals(PreparationStatus.COMPLETED,checked.preparationStatus("water"))
-        assertFalse("water" in checked.omitted)
+        assertEquals(state.copy(restricted=true),JourneyReducer.apply(state.copy(restricted=true),JourneyEvent.Omit("drinking-water")))
+        val checked=JourneyReducer.apply(state,JourneyEvent.Check("drinking-water"))
+        assertEquals(PreparationStatus.COMPLETED,checked.preparationStatus("drinking-water"))
+        assertFalse("drinking-water" in checked.omitted)
     }
     @Test fun quantityChangeInvalidatesOmissionButPreservesUnchangedChecksAndHistory() {
-        var state=Journey(step=3,checked=setOf("water"))
-        state=JourneyJournal.apply(state,JourneyEvent.Omit("bedding-count"),10)
+        var state=Journey(step=3,checked=setOf("drinking-water"))
+        state=JourneyJournal.apply(state,JourneyEvent.Omit("bedding-set"),10)
         state=JourneyJournal.apply(state,JourneyEvent.Conditions(state.input.copy(people=3)),20)
-        assertTrue("water" in state.checked)
-        assertFalse("bedding-count" in state.omitted)
-        assertEquals(3,state.decisions.single{it.id=="bedding-count"}.quantity)
+        assertTrue("drinking-water" in state.checked)
+        assertFalse("bedding-set" in state.omitted)
+        assertEquals(3,state.decisions.single{it.id=="bedding-set"}.quantity)
         assertEquals("PREPARATION_OMITTED",state.records.single().kind)
     }
     @Test fun fiveDisplayStagesDoNotInventArrivalOrCompletion() {

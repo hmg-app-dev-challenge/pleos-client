@@ -22,20 +22,20 @@ class PreparationOmissionTest {
 
     @Test fun omittedRequiredItemStaysBlockedAndCanBeCheckedAfterHomeRoundTrip() {
         val draft=Journey(step=3,placeId="camp-nanji",input=TripInput(schedule=TripSchedule("2026-11-14","Asia/Seoul")))
-        var state by mutableStateOf(draft.copy(checked=draft.departureItems.map{it.id}.toSet()-"water"))
+        var state by mutableStateOf(draft.copy(checked=draft.departureItems.map{it.id}.toSet()-"drinking-water"))
         compose.setContent{JourneyScreen(JourneyUi(state,loaded=true),{state=JourneyJournal.apply(state,it,1000)})}
-        compose.onNodeWithTag("omit-water").performScrollTo().performClick()
-        compose.onNodeWithTag("omitted-water").assertExists()
+        compose.onNodeWithTag("omit-drinking-water").performScrollTo().performClick()
+        compose.onNodeWithTag("omitted-drinking-water").assertExists()
         compose.onNodeWithTag("journey-next").assertIsNotEnabled()
-        compose.runOnIdle{assertTrue("water" in state.omitted);assertEquals("PREPARATION_OMITTED",state.records.last().kind)}
+        compose.runOnIdle{assertTrue("drinking-water" in state.omitted);assertEquals("PREPARATION_OMITTED",state.records.last().kind)}
         compose.onNodeWithTag("journey-home").performClick()
         compose.onNodeWithTag("journey-resume").performClick()
-        compose.onNodeWithTag("omitted-water").assertExists()
-        compose.onNodeWithTag("omit-water").performScrollTo().performClick()
+        compose.onNodeWithTag("omitted-drinking-water").assertExists()
+        compose.onNodeWithTag("omit-drinking-water").performScrollTo().performClick()
         compose.onNodeWithTag("journey-next").assertIsNotEnabled()
-        compose.onNodeWithText("생수·쓰레기 봉투").performScrollTo().performClick()
+        compose.onNodeWithText("식수 챙김 확인").performScrollTo().performClick()
         compose.onNodeWithTag("journey-next").assertIsEnabled()
-        compose.runOnIdle{assertTrue("water" in state.checked);assertFalse("water" in state.omitted)}
+        compose.runOnIdle{assertTrue("drinking-water" in state.checked);assertFalse("drinking-water" in state.omitted)}
     }
 
     @Test fun optionalItemExplainsProgressAndUsesBothPleosThemes() {
@@ -56,7 +56,7 @@ class PreparationOmissionTest {
     }
 
     @Test fun pastOmissionsHaveTheirOwnGroupAndHistoryUsesOmissionLabels() {
-        val record=JourneyRecord("PREPARATION_OMITTED",1000,"USER",subject="water",label="생수",confirmed=true,placeId="camp-nanji")
+        val record=JourneyRecord("PREPARATION_OMITTED",1000,"USER",subject="drinking-water",label="생수",confirmed=true,placeId="camp-nanji")
         val archive=ArchivedTrip("past","난지캠핑장","2026-11-14","Asia/Seoul",listOf(record,record.copy(confirmed=false)),listOf("생수"))
         val state=Journey(step=3,placeId="camp-nanji",reminders=setOf("생수"))
         compose.setContent{JourneyScreen(JourneyUi(state,loaded=true,history=listOf(archive)),{})}

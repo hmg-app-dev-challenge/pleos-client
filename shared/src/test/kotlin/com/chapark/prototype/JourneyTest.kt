@@ -43,18 +43,18 @@ class JourneyTest {
     }
     @Test fun drivingLocksEveryJourneyMutationAndKeepsDraft() {
         val s=Journey(step=3,restricted=true)
-        for(e in listOf(JourneyEvent.Next,JourneyEvent.Back,JourneyEvent.Check("water"),JourneyEvent.Place("demo-a"),JourneyEvent.NewTrip,JourneyEvent.Soc(60)))
+        for(e in listOf(JourneyEvent.Next,JourneyEvent.Back,JourneyEvent.Check("drinking-water"),JourneyEvent.Place("demo-a"),JourneyEvent.NewTrip,JourneyEvent.Soc(60)))
             assertEquals(s,apply(s,e))
         assertEquals(3,apply(s,JourneyEvent.Driving(false)).step)
     }
     @Test fun batteryAndPlaceChangeActionsAndInvalidateOnlyChangedChecks() {
-        val initial=Journey(step=3,checked=setOf("water","charge-review","meal-ready"))
+        val initial=Journey(step=3,checked=setOf("drinking-water","charge-review","meal-ready"))
         assertTrue(initial.decisions.any{it.id=="charge-review"})
         assertTrue(initial.decisions.any{it.id=="meal-ready"})
         val high=apply(initial,JourneyEvent.Soc(60))
         assertFalse(high.decisions.any{it.id=="charge-review"})
         assertFalse("charge-review" in high.checked)
-        assertTrue("water" in high.checked)
+        assertTrue("drinking-water" in high.checked)
         val other=apply(high,JourneyEvent.Place("demo-a"))
         assertFalse(other.decisions.any{it.id=="meal-ready"})
         assertFalse("meal-ready" in other.checked)
@@ -75,12 +75,12 @@ class JourneyTest {
         assertEquals(arrived,apply(arrived,JourneyEvent.NavigationLost))
     }
     @Test fun familyQuantityChangesInvalidateOnlyAffectedChecks() {
-        var s=Journey(step=3,checked=setOf("water","bedding-count"))
+        var s=Journey(step=3,checked=setOf("drinking-water","bedding-set"))
         s=apply(s,JourneyEvent.Conditions(s.input.copy(people=3,endHour=8,batteryThreshold=20)))
         assertEquals(3,s.input.people)
         assertEquals(8,s.input.endHour)
-        assertFalse("bedding-count" in s.checked)
-        assertTrue("water" in s.checked)
+        assertFalse("bedding-set" in s.checked)
+        assertTrue("drinking-water" in s.checked)
         assertTrue(s.decisions.any{it.id=="extra-sleeping-space"})
         assertFalse(s.decisions.any{it.id=="charge-review"})
         assertTrue(apply(s,JourneyEvent.Soc(19)).decisions.any{it.id=="charge-review"})

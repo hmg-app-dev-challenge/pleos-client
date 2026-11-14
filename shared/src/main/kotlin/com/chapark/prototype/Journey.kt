@@ -145,3 +145,12 @@ object JourneyReducer {
         }
     }
 }
+
+/** Split legacy combined items require fresh confirmation; their omissions remain visible. */
+fun migrateCombinedPreparation(s:Journey):Journey {
+    val legacy=mapOf("water" to "생수·쓰레기 봉투", "bedding-count" to "${s.input.people}명분 침구·매트 확인")
+    val missing=legacy.filterKeys{it in s.omitted}.values.toSet()
+    return s.copy(checked=s.checked-legacy.keys,omitted=s.omitted-legacy.keys,
+        reminders=s.reminders+if(s.step<=3)missing else emptySet(),
+        forgotten=s.forgotten+if(s.step>=4)missing else emptySet())
+}

@@ -20,7 +20,7 @@ enum class CookingPlan(val label:String) { NONE("취사 안 함"), SIMPLE("간�
 }
 /** Compatibility defaults, not vehicle capacity or a safety threshold. Final MVP policies remain configurable. */
 object TripPolicy {
-    const val RULE_VERSION="mvp-v02-model-1"
+    const val RULE_VERSION="mvp-v02-rules-2"
     const val MAX_PEOPLE=Int.MAX_VALUE
     const val DEFAULT_SOC_THRESHOLD=35
     const val DEFAULT_END_HOUR=10
@@ -31,7 +31,7 @@ data class TripInput(val people: Int = 1, val cookingPlan: CookingPlan = Cooking
     val cookingNeedsReview:Boolean=false) {
     val valid get() = people in 1..TripPolicy.MAX_PEOPLE && batteryThreshold in 0..100 && endHour in 0..23 && (schedule==null || schedule.valid)
 }
-enum class Group(val label: String) { BEFORE("출발 전 행동"), SITE("현장 확인"), GEAR("준비물") }
+enum class Group(val label: String) { BEFORE("출발 전 할 일"), SITE("현장에서 할 일"), GEAR("챙길 것") }
 enum class PreparationCategory { PACK, BEFORE_DEPARTURE, ON_SITE, CHECKOUT }
 enum class PreparationStatus { PENDING, COMPLETED, OMITTED }
 data class DecisionItem(val id: String, val group: Group, val title: String, val reason: String,
@@ -48,7 +48,7 @@ object PlanningRules {
     const val DEMO_SOC_THRESHOLD = 35.0
     fun evaluate(place: Place, input: TripInput, soc: SocReading): List<DecisionItem> = buildList {
         if (soc.status==ReadingStatus.UNSUPPORTED) Unit
-        else if (!soc.usable) add(DecisionItem("battery-check", Group.BEFORE, "배터리 확인 필요", "유효한 잔량을 확인하지 못했어요."))
+        else if (!soc.usable) add(DecisionItem("battery-check", Group.BEFORE, "배터리 확인 필요", "배터리 잔량을 확인하지 못해 충전 경유를 판단할 수 없어요."))
         else if (soc.percent!! < input.batteryThreshold)
             add(DecisionItem("charge-review", Group.BEFORE, "충전 경유 검토", "현재 잔량이 확인 기준 ${input.batteryThreshold}% 미만이에요. 출발 전 충전 계획을 확인하세요."))
         when (place.overnight) {
@@ -61,9 +61,11 @@ object PlanningRules {
                 if (place.nightToilet == Condition.UNKNOWN) "야간 운영이 확인되지 않았어요." else "야간에는 이용할 수 없어요."))
         if(input.cookingPlan==CookingPlan.SIMPLE) add(DecisionItem("simple-meal",Group.GEAR,"간편식 챙김 확인","현장 취사 없이 먹을 수 있는 식사를 준비하세요."))
         if (input.cookingPlan==CookingPlan.COOKING) when (place.cooking) {
-            Condition.RESTRICTED -> add(DecisionItem("meal-ready", Group.BEFORE, "조리된 식사 준비", "이 장소는 현장 취사가 제한돼요."))
-            Condition.UNKNOWN -> add(DecisionItem("cooking-check", Group.BEFORE, "취사 허용 여부 확인", "조리 도구를 정하기 전에 운영 안내를 확인하세요."))
+            Condition.RESTRICTED -> add(DecisionItem("meal-ready", Group.BEFORE, "조리된 식사 준비", "취사 불가 장소예요. 식사 계획을 바꿔 주세요."))
+            Condition.UNKNOWN -> add(DecisionItem("cooking-check", Group.BEFORE, "취사 허용 여부 확인", "취사 가능 여부를 출처에서 다시 확인해 주세요."))
             Condition.ALLOWED -> {
+                add(DecisionItem("cooking-food",Group.GEAR,"식재료 챙김 확인","취사 예정에 맞는 식재료를 준비하세요."))
+                add(DecisionItem("cooking-cleanup",Group.GEAR,"취사 정리 용품","취사 후 사용한 도구와 주변을 정리해요."))
                 if (place.fire == Condition.ALLOWED)
                     add(DecisionItem("cooking-gear", Group.GEAR, "조리 도구 챙김 확인", "현장 취사와 화기 사용 조건에 맞춰 준비하세요."))
                 else add(DecisionItem("fire-check-${place.fire}", Group.BEFORE, "허용된 조리 방식 확인", "화기 제한이 전기 조리 허용을 뜻하지는 않아요."))
@@ -76,10 +78,14 @@ object PlanningRules {
         }
         if (place.demoTemperatureC < 10 && !input.sleepingBag)
             add(DecisionItem("warmth", Group.GEAR, "보온 침구 추가 또는 장소 재검토", "예상 기온 ${place.demoTemperatureC}°C · 침낭 미보유"))
-        add(DecisionItem("bedding-count", Group.GEAR, "${input.people}명분 침구·매트 확인", "인원에 맞는 수량과 실제 잠자리를 확인하세요.",quantity=input.people))
+        add(DecisionItem("sleeping-mat",Group.GEAR,"매트 ${input.people}개","함께하는 인원에 맞춰 준비하세요.",quantity=input.people))
+        add(DecisionItem("bedding-set",Group.GEAR,"침구 ${input.people}세트","함께하는 인원에 맞춰 준비하세요.",quantity=input.people))
         if (input.people >= 3) add(DecisionItem("extra-sleeping-space", Group.BEFORE, "추가 잠자리 검토", "${input.people}명이 차에서 잘 수 있다는 뜻은 아니에요. 공간과 텐트 등 추가 잠자리를 확인하세요."))
         if (input.sleepingBag) add(DecisionItem("sleeping-bag", Group.GEAR, "침낭 챙김 확인", "보유와 실제 챙김은 별개예요."))
-        add(DecisionItem("water", Group.GEAR, "생수·쓰레기 봉투", "기본 준비물"))
+        add(DecisionItem("place-recheck",Group.BEFORE,"장소 이용 조건 재확인","출발 전 운영 시간과 주차·숙박 조건을 출처에서 다시 확인해 주세요."))
+        add(DecisionItem("phone-charge",Group.BEFORE,"휴대폰 충전 확인","길 안내와 연락에 사용할 휴대폰을 충전해 주세요."))
+        add(DecisionItem("drinking-water",Group.GEAR,"식수 챙김 확인","함께하는 인원과 일정에 맞춰 마실 물을 준비하세요."))
+        add(DecisionItem("waste-kit",Group.GEAR,"쓰레기 회수 용품","가져간 쓰레기를 회수할 봉투와 용품을 준비하세요."))
         add(DecisionItem("site-rules", Group.SITE, "현장 운영 안내 확인", "숙박·주차·취사 조건을 현장에서 다시 확인하세요."))
     }.distinctBy { it.id }
 }

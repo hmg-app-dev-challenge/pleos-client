@@ -348,6 +348,10 @@ private fun primary(s:Journey):Pair<String,Boolean> = when {
                 Text("다른 날짜는 조건 확인 단계에서 변경할 수 있어요.",style=IviType.label)
             }
             if(s.input.cookingNeedsReview) Panel { CookingSelection(s,send) }
+            if(s.place.nightToilet!=Condition.ALLOWED) Panel {
+                Text(if(s.place.nightToilet==Condition.UNKNOWN)"야간 운영 여부 확인 필요" else "야간 화장실 이용 불가",style=IviType.smallTitle)
+                IviButton("다른 장소 비교",size=IviButtonSize.MEDIUM){send(JourneyEvent.Back)}
+            }
             Panel {
                 Text("충전 경유 계획",style=IviType.smallTitle)
                 Text("선택한 충전시설을 거쳐 목적지로 안내해요. 충전 속도와 이용 조건을 먼저 확인해 주세요.",style=IviType.smallBody)

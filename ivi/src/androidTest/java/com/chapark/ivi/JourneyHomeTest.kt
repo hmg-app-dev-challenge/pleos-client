@@ -26,7 +26,7 @@ class JourneyHomeTest {
         }
         for(dark in listOf(false,true)) for(step in 1..6) {
             val original=Journey(tripId="home-$dark-$step",step=step,dark=dark,placeId="camp-nanji",
-                checked=setOf("water"),omitted=setOf("sleeping-bag"),
+                checked=setOf("drinking-water"),omitted=setOf("sleeping-bag"),
                 route=if(step==4)RoutePhase.GUIDING else if(step>=5)RoutePhase.ARRIVED else RoutePhase.NONE,
                 parked=step>=5,sleepReady=step==6,sleepChecks=Journey.SLEEP_IDS,exitChecks=setOf("gear"))
             compose.runOnIdle{current=original}

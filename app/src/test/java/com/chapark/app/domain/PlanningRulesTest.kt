@@ -42,8 +42,8 @@ class PlanningRulesTest {
     @Test fun checksOnlySurviveUnchangedMeaning() {
         val old = rules(input = TripInput(cookingPlan=com.chapark.app.domain.CookingPlan.COOKING))
         val next = rules(DemoPlaces.all[1], TripInput(cookingPlan=com.chapark.app.domain.CookingPlan.COOKING))
-        assertEquals(setOf("water"), retainedChecks(old, next, setOf("water", "cooking-gear")))
-        val changed = old.map { if (it.id == "water") it.copy(reason = "changed") else it }
-        assertTrue(retainedChecks(old, changed, setOf("water")).isEmpty())
+        assertEquals(setOf("drinking-water"), retainedChecks(old, next, setOf("drinking-water", "cooking-gear")))
+        val changed = old.map { if (it.id == "drinking-water") it.copy(reason = "changed") else it }
+        assertTrue(retainedChecks(old, changed, setOf("drinking-water")).isEmpty())
     }
 }

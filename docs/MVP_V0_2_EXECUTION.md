@@ -56,3 +56,11 @@ IVI debug/시험 APK 빌드·Lint 통과. [홈 3개와 800dp 양 테마 회귀 1
 지난 누락 준비물을 실제 체크 목록의 맨 앞 별도 그룹으로 모았다. 완료 화면에는 다음에 챙길 목록을 표시하고, 지난 기록의 상세 사건은 누락·누락 취소를 확인·확인 해제와 구분한다. schema 7의 omitted·journal·archive·다음 여행 reminder 계약을 그대로 사용한다. 기존 규칙의 필수 여부를 임의 변경하지 않았으며 선택 항목 화면 검증은 별도 fixture다. F-04의 기본 항목·취사 전체 규칙 개편과 장소별 충전 관계는 아직 남아 있으므로 V02-05 전체 완료는 아니다.
 
 JVM 46개와 IVI debug/시험 APK 빌드·Lint 통과. 화면 회귀 9개가 통과했다. 필수 누락의 차단/취소/재확인·홈 왕복, 선택 항목의 양 테마 표시, 지난 누락 그룹/기록 사건, 홈/계획/800dp 양 테마를 검사한다. [단위 결과](verification/mvp-v02-omission/unit-tests.txt), [화면 결과](verification/mvp-v02-omission/ui-tests.txt), [Light 컴포넌트](verification/mvp-v02-omission/omission-light.png), [Dark 컴포넌트](verification/mvp-v02-omission/omission-dark.png). 에뮬레이터 DrivingView 반복 ANR/초점 전환으로 시험 Activity가 멈춰 한 차례 task 초점을 복귀시켰다. 무인 실행 안정성이나 새 release 전체 인수 결과로 해석하지 않는다.
+
+## V02-05B: 준비 규칙 보완과 schema 8
+
+2026-11-14. PRD F-04 기본 규칙에 장소 조건 재확인·휴대폰 충전·식수·쓰레기 회수 용품을 분리했다. 인원 N명에 매트 N개·침구 N세트를 별도로 표시한다. COOKING+취사 허용에는 식재료·정리 용품을 추가하며 화기 허용까지 확인된 경우에만 기존 조리 도구 항목을 유지한다. NONE/SIMPLE은 취사 도구를 추가하지 않는다. 미확인·취사 불가 안내와 야간 화장실 미확인/불가 시 장소 비교 버튼을 제공한다. 기존 반려동물·추가 잠자리·침낭 규칙은 보존했다. 선택 필수 정책을 임의로 변경하지 않았다.
+
+규칙 계약은 `mvp-v02-rules-2`, 번들/서버 자료 version은 `2026-11-14.2`다. 사실의 확인일은 변경하지 않았다. DataStore schema 8은 1~7의 합쳐진 water/bedding-count 체크를 새 분리 항목의 완료로 추정하지 않는다. 원래 누락은 출발 전에는 reminder, 이동 이후에는 forgotten에 기존 문구 그대로 남긴다. 기록 사건·내비·진행·archive는 유지한다. 폰 저장 상태도 같은 변환과 누락 이월 저장을 적용했다. 형식 변경은 기존 archive를 다시 쓰지 않는다.
+
+JVM 49개(27개 취사/취사허용/화기 조합을 한 시험 내에서 검증), 서버 6개, 저장/마이그레이션/캐시 8개, 화면 6개가 통과했다. 폰·IVI debug 빌드와 Lint 통과. [검증 결과](verification/mvp-v02-rules/)에 보관한다. 화면 시험은 이번에는 수동 초점 복귀 없이 완료됐다. 새 release 인수와 전체 V02-05 완료를 의미하지 않는다.

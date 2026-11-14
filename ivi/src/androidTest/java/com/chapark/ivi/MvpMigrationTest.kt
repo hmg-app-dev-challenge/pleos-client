@@ -17,9 +17,9 @@ class MvpMigrationTest {
             val state=store().decode(preferencesOf(intPreferencesKey("schema") to version,
                 stringPreferencesKey("tripId") to "legacy",intPreferencesKey("step") to 4,
                 stringPreferencesKey("route") to "GUIDING",booleanPreferencesKey("cooking") to true,
-                stringPreferencesKey("place") to "camp-nanji",stringSetPreferencesKey("checked") to setOf("water"))).first
+                stringPreferencesKey("place") to "camp-nanji",stringSetPreferencesKey("checked") to setOf("drinking-water"))).first
             assertEquals("legacy",state.tripId);assertEquals(4,state.step)
-            assertEquals(RoutePhase.GUIDING,state.route);assertEquals(setOf("water"),state.checked)
+            assertEquals(RoutePhase.GUIDING,state.route);assertEquals(setOf("drinking-water"),state.checked)
             assertEquals(CookingPlan.COOKING,state.input.cookingPlan)
             assertTrue(state.input.cookingNeedsReview);assertTrue(state.omitted.isEmpty())
         }
@@ -29,7 +29,7 @@ class MvpMigrationTest {
         val archiveBefore=store.syncSnapshot()
         try{
             for(mode in CookingPlan.entries){
-                val sample=Journey(tripId="mvp-storage-test",step=3,placeId="camp-nanji",input=TripInput(cookingPlan=mode),checked=setOf("water"),omitted=setOf("bedding-count"))
+                val sample=Journey(tripId="mvp-storage-test",step=3,placeId="camp-nanji",input=TripInput(cookingPlan=mode),checked=setOf("drinking-water"),omitted=setOf("bedding-set"))
                 store.save(sample);val loaded=store.load().first
                 assertEquals(mode,loaded.input.cookingPlan);assertFalse(loaded.input.cookingNeedsReview)
                 assertEquals(sample.omitted,loaded.omitted);assertEquals(sample.checked,loaded.checked)
@@ -39,6 +39,19 @@ class MvpMigrationTest {
             }
             assertEquals(archiveBefore,store.syncSnapshot())
         }finally{store.save(original)}
+    }
+    @Test fun combinedLegacyChecksAreReconfirmedWithoutLosingOmissionsOrRoute() {
+        for(version in 1..7){
+            val state=store().decode(preferencesOf(intPreferencesKey("schema") to version,
+                intPreferencesKey("step") to 4, stringPreferencesKey("route") to "GUIDING",
+                stringPreferencesKey("place") to "camp-nanji",stringPreferencesKey("cookingPlan") to "NONE",
+                stringSetPreferencesKey("checked") to setOf("water","bedding-count","sleeping-bag"),
+                stringSetPreferencesKey("omitted") to setOf("water"))).first
+            assertEquals(setOf("sleeping-bag"),state.checked)
+            assertTrue(state.omitted.isEmpty())
+            assertTrue("생수·쓰레기 봉투" in state.forgotten)
+            assertEquals(RoutePhase.GUIDING,state.route);assertEquals(4,state.step)
+        }
     }
     @Test fun unknownNewCookingCannotSilentlyPassDepartureReview() {
         val state=store().decode(preferencesOf(intPreferencesKey("schema") to 7,

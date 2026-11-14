@@ -1,0 +1,10 @@
+
+com.chapark.ivi.PreparationOmissionTest:...
+com.chapark.ivi.MvpPlanningScreenTest:..
+com.chapark.ivi.JourneyLayoutTest:.
+
+Time: 14.725
+
+OK (6 tests)
+
+

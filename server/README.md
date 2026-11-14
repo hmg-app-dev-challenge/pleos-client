@@ -50,7 +50,7 @@ python3 -m unittest discover -s server -v
 | 메서드·경로 | 동작 |
 | --- | --- |
 | GET `/v1/catalog` | schema 1, 자료 version, ruleVersion, 장소별 좌표·풍경·조건·출처·확인일 |
-| GET `/v1/rules` | `mvp-v02-model-1`과 번들 규칙의 호환 계약. 외부 실행 코드를 받지 않음 |
+| GET `/v1/rules` | `mvp-v02-rules-2`과 번들 규칙의 호환 계약. 외부 실행 코드를 받지 않음 |
 | GET `/v1/plans` | 삭제되지 않은 계획 목록. 앱은 미완료·호환 가능한 조건만 표시 |
 | GET `/v1/plans/{id}` | 활성 계획의 revision과 data, 없음 404·삭제 410 |
 | PUT `/v1/plans/{id}` | `{baseRevision,data}`. 같은 내용 재시도는 revision 유지, 변경은 +1, 불일치 409 |
@@ -63,4 +63,4 @@ python3 -m unittest discover -s server -v
 
 ## MVP PRD v0.2 모델 전환 (2026-11-14)
 
-계획 data schema 2는 `cookingPlan`(NONE/SIMPLE/COOKING), `cookingNeedsReview`, `omitted`, `ruleVersion`을 보존한다. 기존 data schema 1도 읽고 쓸 수 있다. 앱에서 이전 Boolean 취사 true를 가져오면 사용자 재확인이 필요하다. 기록/목록 envelope schema는 1을 유지한다. 카탈로그의 ruleVersion은 `mvp-v02-model-1`이고 장소 사실의 checkedOn은 재조회 없이 갱신하지 않았다.
+계획 data schema 2는 `cookingPlan`(NONE/SIMPLE/COOKING), `cookingNeedsReview`, `omitted`, `ruleVersion`을 보존한다. 기존 data schema 1도 읽고 쓸 수 있다. 앱에서 이전 Boolean 취사 true를 가져오면 사용자 재확인이 필요하다. 기록/목록 envelope schema는 1을 유지한다. 카탈로그의 ruleVersion은 `mvp-v02-rules-2`이고 장소 사실의 checkedOn은 재조회 없이 갱신하지 않았다.
