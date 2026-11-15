@@ -1,0 +1,12 @@
+1
+10
+Physical size: 2560x1440
+Physical density: 160
+Starting: Intent { cmp=com.chapark.ivi/.IviActivity }
+Status: ok
+LaunchState: COLD
+Activity: com.chapark.ivi/.IviActivity
+TotalTime: 296
+WaitTime: 299
+Complete
+6753

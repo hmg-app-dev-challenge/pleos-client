@@ -17,4 +17,4 @@ __pycache__/
 
 .local-signing/
 
-apk/*.apk
+# 대회 제출 APK는 버전 관리에 포함합니다. 서명키는 위 규칙으로 제외합니다.

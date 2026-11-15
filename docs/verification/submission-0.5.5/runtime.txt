@@ -1,0 +1,109 @@
+6753
+    topResumedActivity=ActivityRecord{3b16b92 u10 com.chapark.ivi/.IviActivity t1000016}
+    topResumedActivity=ActivityRecord{7b75159 u10 ai.umos.drivingview/.DrivingViewActivity t1000013}
+      topResumedActivity=ActivityRecord{f558384 u10 ai.umos.homescreen/.HomeActivity t1000011}
+    flags=0x0
+    versionCode=8 minSdk=28 targetSdk=34
+    versionName=0.5.5
+    flags=[ HAS_CODE ALLOW_CLEAR_USER_DATA ]
+--------- beginning of crash
+11-15 16:11:30.710  1871  1871 F DEBUG   :       #05 pc 00000000000b7df8  /apex/ai.pleos.hardware.placesense.service/bin/ai.pleos.hardware.placesense-sdv-service (_RNCNvNtCsgEvhZdlx7kS_3std9panicking19begin_panic_handler0B5_.llvm.16398278913478926933+96) (BuildId: a864ccc14dd4c61d288f80be25453496)
+11-15 16:11:30.710  1871  1871 F DEBUG   :       #06 pc 00000000000b6e34  /apex/ai.pleos.hardware.placesense.service/bin/ai.pleos.hardware.placesense-sdv-service (_RINvNtNtCsgEvhZdlx7kS_3std10sys_common9backtrace26___rust_end_short_backtraceNCNvNtB6_9panicking19begin_panic_handler0zEB6_.llvm.16398278913478926933+28) (BuildId: a864ccc14dd4c61d288f80be25453496)
+11-15 16:11:30.710  1871  1871 F DEBUG   :       #07 pc 00000000000b7bf8  /apex/ai.pleos.hardware.placesense.service/bin/ai.pleos.hardware.placesense-sdv-service (rust_begin_unwind+60) (BuildId: a864ccc14dd4c61d288f80be25453496)
+11-15 16:11:30.710  1871  1871 F DEBUG   :       #08 pc 00000000000783b0  /apex/ai.pleos.hardware.placesense.service/bin/ai.pleos.hardware.placesense-sdv-service (_RNvNtCshYZxXgsOdMC_4core9panicking9panic_fmt+44) (BuildId: a864ccc14dd4c61d288f80be25453496)
+11-15 16:11:30.710  1871  1871 F DEBUG   :       #09 pc 00000000000783e8  /apex/ai.pleos.hardware.placesense.service/bin/ai.pleos.hardware.placesense-sdv-service (_RNvNtCshYZxXgsOdMC_4core9panicking5panic+48) (BuildId: a864ccc14dd4c61d288f80be25453496)
+11-15 16:11:30.710  1871  1871 F DEBUG   :       #10 pc 000000000006fecc  /apex/ai.pleos.hardware.placesense.service/bin/ai.pleos.hardware.placesense-sdv-service (_RNvMs1_NtCs4n8ryMKSsZS_13app_framework3appNtB5_3App3new+4100) (BuildId: a864ccc14dd4c61d288f80be25453496)
+11-15 16:11:30.710  1871  1871 F DEBUG   :       #11 pc 0000000000090c24  /apex/ai.pleos.hardware.placesense.service/bin/ai.pleos.hardware.placesense-sdv-service (_RNvMNtNtCsl2zq25kAYhx_10placesense9transport3appNtB2_13PlacesenseApp5start+128) (BuildId: a864ccc14dd4c61d288f80be25453496)
+11-15 16:11:30.710  1871  1871 F DEBUG   :       #12 pc 0000000000056a98  /apex/ai.pleos.hardware.placesense.service/bin/ai.pleos.hardware.placesense-sdv-service (_RNCNvCsaBm0219RLMt_40ai_pleos_hardware_placesense_sdv_service4main0B3_+968) (BuildId: a864ccc14dd4c61d288f80be25453496)
+11-15 16:11:30.710  1871  1871 F DEBUG   :       #13 pc 00000000000564a8  /apex/ai.pleos.hardware.placesense.service/bin/ai.pleos.hardware.placesense-sdv-service (_RNvCsaBm0219RLMt_40ai_pleos_hardware_placesense_sdv_service4main+1616) (BuildId: a864ccc14dd4c61d288f80be25453496)
+11-15 16:11:30.710  1871  1871 F DEBUG   :       #14 pc 0000000000046324  /apex/ai.pleos.hardware.placesense.service/bin/ai.pleos.hardware.placesense-sdv-service (_RNCINvNtCsgEvhZdlx7kS_3std2rt10lang_startuE0CsaBm0219RLMt_40ai_pleos_hardware_placesense_sdv_service+8) (BuildId: a864ccc14dd4c61d288f80be25453496)
+11-15 16:11:30.710  1871  1871 F DEBUG   :       #15 pc 00000000000b261c  /apex/ai.pleos.hardware.placesense.service/bin/ai.pleos.hardware.placesense-sdv-service (_RNvNtCsgEvhZdlx7kS_3std2rt19lang_start_internal+676) (BuildId: a864ccc14dd4c61d288f80be25453496)
+11-15 16:11:30.710  1871  1871 F DEBUG   :       #16 pc 0000000000056d64  /apex/ai.pleos.hardware.placesense.service/bin/ai.pleos.hardware.placesense-sdv-service (main+44) (BuildId: a864ccc14dd4c61d288f80be25453496)
+11-15 16:11:30.710  1871  1871 F DEBUG   :       #17 pc 000000000005f610  /apex/com.android.runtime/lib64/bionic/libc.so (__libc_init+104) (BuildId: a87908b48b368e6282bcc9f34bcfc28c)
+11-15 16:11:30.744  1875  1875 F libc    : Fatal signal 6 (SIGABRT), code -1 (SI_QUEUE) in tid 1875 (ai.pleos.hardwa), pid 1875 (ai.pleos.hardwa)
+11-15 16:11:30.755  1882  1882 F DEBUG   : *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** ***
+11-15 16:11:30.755  1882  1882 F DEBUG   : Build fingerprint: 'Pleos/crp_avd_arm64/crp_avd_arm64:14/RELEASE.release_connect_v2.1.0/release_connect_v2.1.0:user/test-keys'
+11-15 16:11:30.755  1882  1882 F DEBUG   : Revision: '0'
+11-15 16:11:30.755  1882  1882 F DEBUG   : ABI: 'arm64'
+11-15 16:11:30.755  1882  1882 F DEBUG   : Timestamp: 2026-11-15 16:11:30.748381208+0900
+11-15 16:11:30.755  1882  1882 F DEBUG   : Process uptime: 1s
+11-15 16:11:30.755  1882  1882 F DEBUG   : Cmdline: /apex/ai.pleos.profile/bin/ai.pleos.hardware.profile.exe
+11-15 16:11:30.755  1882  1882 F DEBUG   : pid: 1875, tid: 1875, name: ai.pleos.hardwa  >>> /apex/ai.pleos.profile/bin/ai.pleos.hardware.profile.exe <<<
+11-15 16:11:30.755  1882  1882 F DEBUG   : uid: 1054
+11-15 16:11:30.755  1882  1882 F DEBUG   : tagged_addr_ctrl: 0000000000000001 (PR_TAGGED_ADDR_ENABLE)
+11-15 16:11:30.755  1882  1882 F DEBUG   : pac_enabled_keys: 000000000000000f (PR_PAC_APIAKEY, PR_PAC_APIBKEY, PR_PAC_APDAKEY, PR_PAC_APDBKEY)
+11-15 16:11:30.755  1882  1882 F DEBUG   : signal 6 (SIGABRT), code -1 (SI_QUEUE), fault addr --------
+11-15 16:11:30.755  1882  1882 F DEBUG   :     x0  0000000000000000  x1  0000000000000753  x2  0000000000000006  x3  0000007fc9532c90
+11-15 16:11:30.755  1882  1882 F DEBUG   :     x4  097a1f6e656d4862  x5  097a1f6e656d4862  x6  097a1f6e656d4862  x7  7f7f7f7f7f7f7f7f
+11-15 16:11:30.755  1882  1882 F DEBUG   :     x8  00000000000000f0  x9  0000007dac878090  x10 0000000000000001  x11 0000007dac8cb058
+11-15 16:11:30.755  1882  1882 F DEBUG   :     x12 00000000000087f1  x13 000000000000012f  x14 0000007fc9531d2c  x15 000006200687c0cf
+11-15 16:11:30.755  1882  1882 F DEBUG   :     x16 0000007dac938d08  x17 0000007dac90ce90  x18 0000007db46ca000  x19 0000000000000753
+11-15 16:11:30.755  1882  1882 F DEBUG   :     x20 0000000000000753  x21 00000000ffffffff  x22 000000582989b72e  x23 000000582989b7ba
+11-15 16:11:30.755  1882  1882 F DEBUG   :     x24 000000582989a000  x25 000000582999c3a8  x26 000000582999b000  x27 000000582989a000
+11-15 16:11:30.755  1882  1882 F DEBUG   :     x28 000000582999c3b0  x29 0000007fc9532d10
+11-15 16:11:30.755  1882  1882 F DEBUG   :     lr  0000007dac8bc9b8  sp  0000007fc9532c70  pc  0000007dac8bc9e4  pst 0000000000000000
+11-15 16:11:30.755  1882  1882 F DEBUG   : 16 total frames
+11-15 16:11:30.755  1882  1882 F DEBUG   : backtrace:
+11-15 16:11:30.755  1882  1882 F DEBUG   :       #00 pc 00000000000669e4  /apex/com.android.runtime/lib64/bionic/libc.so (abort+164) (BuildId: a87908b48b368e6282bcc9f34bcfc28c)
+11-15 16:11:30.755  1882  1882 F DEBUG   :       #01 pc 00000000000e53fc  /apex/ai.pleos.profile/bin/ai.pleos.hardware.profile.exe (_RNvNtNtCsgEvhZdlx7kS_3std3sys4unix14abort_internal+4) (BuildId: 199b6ed8674cc43200487876d7e923cc)
+11-15 16:11:30.755  1882  1882 F DEBUG   :       #02 pc 00000000000e1d24  /apex/ai.pleos.profile/bin/ai.pleos.hardware.profile.exe (_RNvNtCsgEvhZdlx7kS_3std7process5abort+4) (BuildId: 199b6ed8674cc43200487876d7e923cc)
+11-15 16:11:30.755  1882  1882 F DEBUG   :       #03 pc 0000000000060718  /apex/ai.pleos.profile/bin/ai.pleos.hardware.profile.exe (_RNCNvMs1_NtCs4n8ryMKSsZS_13app_framework3appNtB7_3App3new0B9_+396) (BuildId: 199b6ed8674cc43200487876d7e923cc)
+11-15 16:11:30.755  1882  1882 F DEBUG   :       #04 pc 00000000000e3844  /apex/ai.pleos.profile/bin/ai.pleos.hardware.profile.exe (_RNvNtCsgEvhZdlx7kS_3std9panicking20rust_panic_with_hook+600) (BuildId: 199b6ed8674cc43200487876d7e923cc)
+11-15 16:11:30.755  1882  1882 F DEBUG   :       #05 pc 00000000000e3504  /apex/ai.pleos.profile/bin/ai.pleos.hardware.profile.exe (_RNCNvNtCsgEvhZdlx7kS_3std9panicking19begin_panic_handler0B5_.llvm.16398278913478926933+96) (BuildId: 199b6ed8674cc43200487876d7e923cc)
+11-15 16:11:30.755  1882  1882 F DEBUG   :       #06 pc 00000000000e2540  /apex/ai.pleos.profile/bin/ai.pleos.hardware.profile.exe (_RINvNtNtCsgEvhZdlx7kS_3std10sys_common9backtrace26___rust_end_short_backtraceNCNvNtB6_9panicking19begin_panic_handler0zEB6_.llvm.16398278913478926933+28) (BuildId: 199b6ed8674cc43200487876d7e923cc)
+11-15 16:11:30.755  1882  1882 F DEBUG   :       #07 pc 00000000000e3304  /apex/ai.pleos.profile/bin/ai.pleos.hardware.profile.exe (rust_begin_unwind+60) (BuildId: 199b6ed8674cc43200487876d7e923cc)
+11-15 16:11:30.755  1882  1882 F DEBUG   :       #08 pc 0000000000068a90  /apex/ai.pleos.profile/bin/ai.pleos.hardware.profile.exe (_RNvNtCshYZxXgsOdMC_4core9panicking9panic_fmt+44) (BuildId: 199b6ed8674cc43200487876d7e923cc)
+11-15 16:11:30.755  1882  1882 F DEBUG   :       #09 pc 0000000000068ac8  /apex/ai.pleos.profile/bin/ai.pleos.hardware.profile.exe (_RNvNtCshYZxXgsOdMC_4core9panicking5panic+48) (BuildId: 199b6ed8674cc43200487876d7e923cc)
+11-15 16:11:30.755  1882  1882 F DEBUG   :       #10 pc 000000000006050c  /apex/ai.pleos.profile/bin/ai.pleos.hardware.profile.exe (_RNvMs1_NtCs4n8ryMKSsZS_13app_framework3appNtB5_3App3new+4100) (BuildId: 199b6ed8674cc43200487876d7e923cc)
+11-15 16:11:30.755  1882  1882 F DEBUG   :       #11 pc 00000000000941f8  /apex/ai.pleos.profile/bin/ai.pleos.hardware.profile.exe (_RNvNtCslygL4Z4GfPN_14driver_profile11profile_hal3run+1020) (BuildId: 199b6ed8674cc43200487876d7e923cc)
+11-15 16:11:30.755  1882  1882 F DEBUG   :       #12 pc 00000000000e6748  /apex/ai.pleos.profile/bin/ai.pleos.hardware.profile.exe (_RNCINvNtCsgEvhZdlx7kS_3std2rt10lang_startuE0Cs1CCsBOzBhKn_4main+8) (BuildId: 199b6ed8674cc43200487876d7e923cc)
+11-15 16:11:30.755  1882  1882 F DEBUG   :       #13 pc 00000000000dd450  /apex/ai.pleos.profile/bin/ai.pleos.hardware.profile.exe (_RNvNtCsgEvhZdlx7kS_3std2rt19lang_start_internal+676) (BuildId: 199b6ed8674cc43200487876d7e923cc)
+11-15 16:11:30.755  1882  1882 F DEBUG   :       #14 pc 00000000000e67a0  /apex/ai.pleos.profile/bin/ai.pleos.hardware.profile.exe (main+44) (BuildId: 199b6ed8674cc43200487876d7e923cc)
+11-15 16:11:30.755  1882  1882 F DEBUG   :       #15 pc 000000000005f610  /apex/com.android.runtime/lib64/bionic/libc.so (__libc_init+104) (BuildId: a87908b48b368e6282bcc9f34bcfc28c)
+11-15 16:11:33.646  2396  2413 F libc    : Fatal signal 6 (SIGABRT), code -1 (SI_QUEUE) in tid 2413 (binder:2396_1), pid 2396 (ai.pleos.hardwa)
+11-15 16:11:33.668  2453  2453 F DEBUG   : *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** ***
+11-15 16:11:33.668  2453  2453 F DEBUG   : Build fingerprint: 'Pleos/crp_avd_arm64/crp_avd_arm64:14/RELEASE.release_connect_v2.1.0/release_connect_v2.1.0:user/test-keys'
+11-15 16:11:33.668  2453  2453 F DEBUG   : Revision: '0'
+11-15 16:11:33.668  2453  2453 F DEBUG   : ABI: 'arm64'
+11-15 16:11:33.668  2453  2453 F DEBUG   : Timestamp: 2026-11-15 16:11:33.655379209+0900
+11-15 16:11:33.668  2453  2453 F DEBUG   : Process uptime: 1s
+11-15 16:11:33.668  2453  2453 F DEBUG   : Cmdline: /apex/ai.pleos.profile/bin/ai.pleos.hardware.profile.exe
+11-15 16:11:33.668  2453  2453 F DEBUG   : pid: 2396, tid: 2413, name: binder:2396_1  >>> /apex/ai.pleos.profile/bin/ai.pleos.hardware.profile.exe <<<
+11-15 16:11:33.668  2453  2453 F DEBUG   : uid: 1054
+11-15 16:11:33.668  2453  2453 F DEBUG   : tagged_addr_ctrl: 0000000000000001 (PR_TAGGED_ADDR_ENABLE)
+11-15 16:11:33.668  2453  2453 F DEBUG   : pac_enabled_keys: 000000000000000f (PR_PAC_APIAKEY, PR_PAC_APIBKEY, PR_PAC_APDAKEY, PR_PAC_APDBKEY)
+11-15 16:11:33.668  2453  2453 F DEBUG   : signal 6 (SIGABRT), code -1 (SI_QUEUE), fault addr --------
+11-15 16:11:33.668  2453  2453 F DEBUG   :     x0  0000000000000000  x1  000000000000096d  x2  0000000000000006  x3  00000077fc441d80
+11-15 16:11:33.668  2453  2453 F DEBUG   :     x4  097a1f6e656d4862  x5  097a1f6e656d4862  x6  097a1f6e656d4862  x7  7f7f7f7f7f7f7f7f
+11-15 16:11:33.668  2453  2453 F DEBUG   :     x8  00000000000000f0  x9  0000007a95cb0090  x10 0000000000000001  x11 0000007a95d03058
+11-15 16:11:33.668  2453  2453 F DEBUG   :     x12 00000000000063a3  x13 0000000000000130  x14 00000077fc440e1c  x15 000006200aaeb035
+11-15 16:11:33.668  2453  2453 F DEBUG   :     x16 0000007a95d70d08  x17 0000007a95d44e90  x18 00000077f7d70000  x19 000000000000095c
+11-15 16:11:33.668  2453  2453 F DEBUG   :     x20 000000000000096d  x21 00000000ffffffff  x22 00000058c0f2b72e  x23 00000058c0f2b7ba
+11-15 16:11:33.668  2453  2453 F DEBUG   :     x24 00000058c0f2a000  x25 00000058c102c3a8  x26 00000058c102b000  x27 00000058c0f2a000
+11-15 16:11:33.668  2453  2453 F DEBUG   :     x28 00000058c102c3b0  x29 00000077fc441e00
+11-15 16:11:33.668  2453  2453 F DEBUG   :     lr  0000007a95cf49b8  sp  00000077fc441d60  pc  0000007a95cf49e4  pst 0000000000000000
+11-15 16:11:33.668  2453  2453 F DEBUG   : 23 total frames
+11-15 16:11:33.668  2453  2453 F DEBUG   : backtrace:
+11-15 16:11:33.668  2453  2453 F DEBUG   :       #00 pc 00000000000669e4  /apex/com.android.runtime/lib64/bionic/libc.so (abort+164) (BuildId: a87908b48b368e6282bcc9f34bcfc28c)
+11-15 16:11:33.668  2453  2453 F DEBUG   :       #01 pc 00000000000e53fc  /apex/ai.pleos.profile/bin/ai.pleos.hardware.profile.exe (_RNvNtNtCsgEvhZdlx7kS_3std3sys4unix14abort_internal+4) (BuildId: 199b6ed8674cc43200487876d7e923cc)
+11-15 16:11:33.668  2453  2453 F DEBUG   :       #02 pc 00000000000e1d24  /apex/ai.pleos.profile/bin/ai.pleos.hardware.profile.exe (_RNvNtCsgEvhZdlx7kS_3std7process5abort+4) (BuildId: 199b6ed8674cc43200487876d7e923cc)
+11-15 16:11:33.668  2453  2453 F DEBUG   :       #03 pc 0000000000060718  /apex/ai.pleos.profile/bin/ai.pleos.hardware.profile.exe (_RNCNvMs1_NtCs4n8ryMKSsZS_13app_framework3appNtB7_3App3new0B9_+396) (BuildId: 199b6ed8674cc43200487876d7e923cc)
+11-15 16:11:33.668  2453  2453 F DEBUG   :       #04 pc 00000000000e3844  /apex/ai.pleos.profile/bin/ai.pleos.hardware.profile.exe (_RNvNtCsgEvhZdlx7kS_3std9panicking20rust_panic_with_hook+600) (BuildId: 199b6ed8674cc43200487876d7e923cc)
+11-15 16:11:33.668  2453  2453 F DEBUG   :       #05 pc 00000000000e3504  /apex/ai.pleos.profile/bin/ai.pleos.hardware.profile.exe (_RNCNvNtCsgEvhZdlx7kS_3std9panicking19begin_panic_handler0B5_.llvm.16398278913478926933+96) (BuildId: 199b6ed8674cc43200487876d7e923cc)
+11-15 16:11:33.668  2453  2453 F DEBUG   :       #06 pc 00000000000e2540  /apex/ai.pleos.profile/bin/ai.pleos.hardware.profile.exe (_RINvNtNtCsgEvhZdlx7kS_3std10sys_common9backtrace26___rust_end_short_backtraceNCNvNtB6_9panicking19begin_panic_handler0zEB6_.llvm.16398278913478926933+28) (BuildId: 199b6ed8674cc43200487876d7e923cc)
+11-15 16:11:33.668  2453  2453 F DEBUG   :       #07 pc 00000000000e3304  /apex/ai.pleos.profile/bin/ai.pleos.hardware.profile.exe (rust_begin_unwind+60) (BuildId: 199b6ed8674cc43200487876d7e923cc)
+11-15 16:11:33.668  2453  2453 F DEBUG   :       #08 pc 0000000000068a90  /apex/ai.pleos.profile/bin/ai.pleos.hardware.profile.exe (_RNvNtCshYZxXgsOdMC_4core9panicking9panic_fmt+44) (BuildId: 199b6ed8674cc43200487876d7e923cc)
+11-15 16:11:33.668  2453  2453 F DEBUG   :       #09 pc 0000000000068ac8  /apex/ai.pleos.profile/bin/ai.pleos.hardware.profile.exe (_RNvNtCshYZxXgsOdMC_4core9panicking5panic+48) (BuildId: 199b6ed8674cc43200487876d7e923cc)
+11-15 16:11:33.668  2453  2453 F DEBUG   :       #10 pc 00000000000c7890  /apex/ai.pleos.profile/bin/ai.pleos.hardware.profile.exe (_RNvMs6_NtCsf67IRpgs8dU_17sdv_occupant_user4userNtB5_4User8add_user+2496) (BuildId: 199b6ed8674cc43200487876d7e923cc)
+11-15 16:11:33.668  2453  2453 F DEBUG   :       #11 pc 000000000008a484  /apex/ai.pleos.profile/bin/ai.pleos.hardware.profile.exe (_RNvXs0_NtCslygL4Z4GfPN_14driver_profile20profile_aidl_serviceNtB5_18ProfileAidlServiceNtNtNtNtNtNtNtCseUW9mgpBVu1_30ai_pleos_hardware_profile_aidl4aidl2ai5pleos8hardware7profile8IProfile8IProfile7addUser+96) (BuildId: 199b6ed8674cc43200487876d7e923cc)
+11-15 16:11:33.668  2453  2453 F DEBUG   :       #12 pc 0000000000050f4c  /apex/ai.pleos.profile/bin/ai.pleos.hardware.profile.exe (_RNvXs8_NtNtNtNtNtNtCseUW9mgpBVu1_30ai_pleos_hardware_profile_aidl4aidl2ai5pleos8hardware7profile8IProfileNtB5_9BnProfileNtNtCsjDEFhBkDXPQ_6binder6binder9Remotable11on_transact+1216) (BuildId: 199b6ed8674cc43200487876d7e923cc)
+11-15 16:11:33.668  2453  2453 F DEBUG   :       #13 pc 0000000000044e04  /apex/ai.pleos.profile/bin/ai.pleos.hardware.profile.exe (_RNvXs2_NtCsjDEFhBkDXPQ_6binder6nativeINtB5_6BinderNtNtNtNtNtNtNtCseUW9mgpBVu1_30ai_pleos_hardware_profile_aidl4aidl2ai5pleos8hardware7profile8IProfile9BnProfileENtNtB7_6binder21InterfaceClassMethods11on_transactB10_+44) (BuildId: 199b6ed8674cc43200487876d7e923cc)
+11-15 16:11:33.668  2453  2453 F DEBUG   :       #14 pc 000000000001100c  /system/lib64/libbinder_ndk.so (ABBinder::onTransact(unsigned int, android::Parcel const&, android::Parcel*, unsigned int)+140) (BuildId: 26f448d2981ae4f25962fa95a574ef1e)
+11-15 16:11:33.668  2453  2453 F DEBUG   :       #15 pc 0000000000076570  /system/lib64/libbinder.so (android::BBinder::transact(unsigned int, android::Parcel const&, android::Parcel*, unsigned int)+304) (BuildId: 4982579177a812ffb5fa115c3209c0ba)
+11-15 16:11:33.668  2453  2453 F DEBUG   :       #16 pc 0000000000061b04  /system/lib64/libbinder.so (android::IPCThreadState::executeCommand(int)+1016) (BuildId: 4982579177a812ffb5fa115c3209c0ba)
+11-15 16:11:33.668  2453  2453 F DEBUG   :       #17 pc 000000000006164c  /system/lib64/libbinder.so (android::IPCThreadState::getAndExecuteCommand()+160) (BuildId: 4982579177a812ffb5fa115c3209c0ba)
+11-15 16:11:33.668  2453  2453 F DEBUG   :       #18 pc 0000000000061f80  /system/lib64/libbinder.so (android::IPCThreadState::joinThreadPool(bool)+112) (BuildId: 4982579177a812ffb5fa115c3209c0ba)
+11-15 16:11:33.668  2453  2453 F DEBUG   :       #19 pc 000000000006b5c0  /system/lib64/libbinder.so (android::PoolThread::threadLoop()+24) (BuildId: 4982579177a812ffb5fa115c3209c0ba)
+11-15 16:11:33.668  2453  2453 F DEBUG   :       #20 pc 0000000000014dd8  /system/lib64/libutils.so (android::Thread::_threadLoop(void*)+284) (BuildId: 919964170df42fb4f36227f16b36278b)
+11-15 16:11:33.668  2453  2453 F DEBUG   :       #21 pc 00000000000cb6a8  /apex/com.android.runtime/lib64/bionic/libc.so (__pthread_start(void*)+208) (BuildId: a87908b48b368e6282bcc9f34bcfc28c)
+11-15 16:11:33.668  2453  2453 F DEBUG   :       #22 pc 000000000006821c  /apex/com.android.runtime/lib64/bionic/libc.so (__start_thread+64) (BuildId: a87908b48b368e6282bcc9f34bcfc28c)
